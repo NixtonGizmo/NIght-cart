@@ -34,7 +34,6 @@
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
-        .input-field:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
         .otp-input { width: 60px; height: 60px; text-align: center; font-size: 24px; font-weight: 600; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; outline: none; color: white; transition: all 0.2s; }
         .otp-input:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
     </style>
@@ -79,10 +78,10 @@
                         <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Phone Number</label>
                         <div class="flex gap-2">
                             <div class="flex items-center justify-center px-4 py-3.5 bg-brand-black border border-white/10 rounded-xl text-neutral-400">+91</div>
-                            <input type="tel" id="phoneNumber" placeholder="Enter 10 digit number" maxlength="10" required class="input-field flex-1 bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none transition-all tracking-wide">
+                            <input type="tel" id="phoneNumber" placeholder="Enter 10 digit number" maxlength="10" required class="flex-1 bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all tracking-wide">
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Get OTP</button>
+                    <button id="getOtpBtn" type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Get OTP</button>
                 </form>
             </div>
 
@@ -101,7 +100,7 @@
                     <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 3)">
                     <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 4)">
                 </div>
-                <button onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
+                <button id="verifyBtn" onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
                 <div class="text-center mt-6">
                     <button onclick="goBack()" class="text-xs text-neutral-600 hover:text-white mt-3 block mx-auto">Change Phone Number</button>
                 </div>
@@ -110,6 +109,7 @@
     </main>
     
     <script>
+        // --- Cursor Logic ---
         document.addEventListener('DOMContentLoaded', function() {
             const cursorDot = document.getElementById('cursor-dot');
             const cursorRing = document.getElementById('cursor-ring');
@@ -126,19 +126,106 @@
             }
         });
 
-        function showOTPStep(e) {
+        // --- API CONFIGURATION ---
+        const API_URL = 'https://night-cart.onrender.com';
+
+        // --- STEP 1: SEND OTP ---
+        async function showOTPStep(e) {
             e.preventDefault();
             const phone = document.getElementById('phoneNumber').value;
-            if(phone.length === 10) {
-                document.getElementById('displayPhone').innerText = `+91 ${phone}`;
-                document.getElementById('phoneStep').classList.add('hidden');
-                document.getElementById('otpStep').classList.remove('hidden');
-                document.getElementById('otpStep').classList.add('animate-fade-in');
-                const otpInputs = document.querySelectorAll('.otp-input');
-                if(otpInputs.length > 0) otpInputs[0].focus();
+            
+            if(phone.length !== 10) {
+                alert("Please enter a valid 10-digit number");
+                return;
+            }
+
+            const btn = document.getElementById('getOtpBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            try {
+                // Call Backend using the URL defined above
+                const response = await fetch(`${API_URL}/api/send-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: "+91" + phone })
+                });
+                
+                const data = await response.json();
+
+                if(data.success) {
+                    // Switch to OTP Screen
+                    document.getElementById('displayPhone').innerText = `+91 ${phone}`;
+                    document.getElementById('phoneStep').classList.add('hidden');
+                    document.getElementById('otpStep').classList.remove('hidden');
+                    document.getElementById('otpStep').classList.add('animate-fade-in');
+                    
+                    // Focus first input
+                    document.querySelectorAll('.otp-input')[0].focus();
+                } else {
+                    alert("Error: " + (data.message || "Could not send OTP"));
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Cannot connect to server. Check internet connection.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
+        // --- STEP 2: VERIFY OTP ---
+        async function verifyOTP() {
+            const inputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            inputs.forEach(input => otp += input.value);
+            
+            const phone = document.getElementById('phoneNumber').value;
+
+            if(otp.length !== 4) {
+                alert("Please enter the full 4-digit code");
+                return;
+            }
+
+            const btn = document.getElementById('verifyBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                // Call Backend
+                const response = await fetch(`${API_URL}/api/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: "+91" + phone, otp: otp })
+                });
+
+                const data = await response.json();
+
+                if(data.success) {
+                    // Save login state
+                    localStorage.setItem('nc_isLoggedIn', 'true');
+                    localStorage.setItem('nc_userName', 'User');
+                    
+                    alert("Login Successful!");
+                    window.location.href = 'index.html';
+                } else {
+                    alert("Invalid OTP. Please try again.");
+                    // Clear inputs
+                    inputs.forEach(input => input.value = '');
+                    inputs[0].focus();
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Server connection error.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- HELPERS ---
         function goBack() {
             document.getElementById('otpStep').classList.add('hidden');
             document.getElementById('phoneStep').classList.remove('hidden');
@@ -148,23 +235,6 @@
             if (current.value.length === 1 && nextIndex <= 4) {
                 const inputs = document.querySelectorAll('.otp-input');
                 if (inputs[nextIndex]) inputs[nextIndex].focus();
-            }
-        }
-
-        function verifyOTP() {
-            const inputs = document.querySelectorAll('.otp-input');
-            let otp = '';
-            inputs.forEach(input => otp += input.value);
-            
-            if(otp.length === 4) {
-                // SET LOGIN STATE
-                localStorage.setItem('nc_isLoggedIn', 'true');
-                localStorage.setItem('nc_userName', 'Guest User');
-                
-                alert("Login Successful!");
-                window.location.href = 'index.html'; 
-            } else {
-                alert("Please enter a valid 4-digit OTP");
             }
         }
     </script>
