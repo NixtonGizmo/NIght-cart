@@ -10,9 +10,9 @@ app.use(cors()); // Allows your GitHub frontend to talk to this server
 app.use(express.json()); // Allows server to read JSON data
 
 // 2. DATABASE CONNECTION
-// REPLACE THE STRING BELOW WITH YOUR MONGODB ATLAS URL
-// It looks like: mongodb+srv://<username>:<password>@cluster0.mongodb.net/...
-const MONGO_URI = process.env.MONGO_URI || 'YOUR_MONGODB_CONNECTION_STRING_HERE';
+// This tries to get the URL from Environment Variables (Render), 
+// or falls back to the string below if testing locally.
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:BgK18x5FvZYftNWi@cluster0.3demhgn.mongodb.net/nightcart?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
@@ -39,10 +39,14 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   category: String
 }));
 
+// 4. ROUTES
 
-// 4. API ROUTES
+// --- A. HOME ROUTE (Fixes "Cannot GET /" error) ---
+app.get('/', (req, res) => {
+  res.send('<h1>🚀 Night Cart Server is Running!</h1><p>Your backend is connected successfully.</p>');
+});
 
-// --- A. LOGIN SYSTEM ---
+// --- B. LOGIN SYSTEM ---
 
 // Route to Send OTP
 app.post('/api/send-otp', async (req, res) => {
@@ -98,7 +102,7 @@ app.post('/api/verify-otp', async (req, res) => {
 });
 
 
-// --- B. PRODUCT SYSTEM ---
+// --- C. PRODUCT SYSTEM ---
 
 // Route to Get All Products (For Main Page)
 app.get('/api/products', async (req, res) => {
