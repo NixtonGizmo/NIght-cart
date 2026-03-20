@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Night Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
+                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { cursor: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::selection { background: white; color: black; }
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s, height 0.15s, background 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        .sidebar-link.active { background: rgba(140, 255, 0, 0.1); border-color: rgba(140, 255, 0, 0.3); color: #8CFF00; }
+    </style>
+</head>
+<body class="bg-brand-black text-white font-sans antialiased">
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-brand-dark border-r border-white/5 flex flex-col z-40 flex-shrink-0">
+            <div class="p-6 border-b border-white/5">
+                <a href="index.html" class="flex items-center gap-2 group">
+                    <div class="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:zap" width="18" class="text-black"></iconify-icon>
+                    </div>
+                    <div>
+                        <span class="text-lg font-bold tracking-tight block leading-none">Night Cart</span>
+                        <span class="text-[10px] text-neutral-500 uppercase tracking-widest">Admin</span>
+                    </div>
+                </a>
+            </div>
+            <nav class="flex-1 p-4 space-y-1">
+                <button onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:layout-dashboard" width="20"></iconify-icon>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </button>
+                <button onclick="showSection('products')" data-section="products" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:package" width="20"></iconify-icon>
+                    <span class="text-sm font-medium">Products</span>
+                </button>
+                <button onclick="showSection('orders')" data-section="orders" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:shopping-bag" width="20"></iconify-icon>
+                    <span class="text-sm font-medium">Orders</span>
+                </button>
+            </nav>
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-3 px-4 py-3 bg-brand-gray rounded-xl">
+                    <div class="w-10 h-10 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent font-semibold">A</div>
+                    <div><p class="text-sm font-medium">Admin User</p><p class="text-xs text-neutral-500">admin@nightcart.com</p></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-brand-black">
+            <header class="sticky top-0 z-30 bg-brand-black/80 backdrop-blur-xl border-b border-white/5 h-16 flex items-center justify-between px-8">
+                <h1 id="pageTitle" class="text-xl font-semibold">Dashboard</h1>
+                <a href="index.html" class="text-sm text-brand-accent hover:underline flex items-center gap-1">
+                    <iconify-icon icon="lucide:external-link" width="14"></iconify-icon> View Site
+                </a>
+            </header>
+
+            <div class="p-8">
+                <!-- DASHBOARD -->
+                <section id="dashboard" class="section-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-brand-accent/10 rounded-xl flex items-center justify-center">
+                                    <iconify-icon icon="lucide:indian-rupee" width="24" class="text-brand-accent"></iconify-icon>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold">₹4,50,000</p>
+                            <p class="text-xs text-neutral-500 mt-1">Total Revenue</p>
+                        </div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                                    <iconify-icon icon="lucide:shopping-bag" width="24" class="text-blue-500"></iconify-icon>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold">1,205</p>
+                            <p class="text-xs text-neutral-500 mt-1">Total Orders</p>
+                        </div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                                    <iconify-icon icon="lucide:package" width="24" class="text-purple-500"></iconify-icon>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold">320</p>
+                            <p class="text-xs text-neutral-500 mt-1">Total Products</p>
+                        </div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center">
+                                    <iconify-icon icon="lucide:users" width="24" class="text-orange-500"></iconify-icon>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold">850</p>
+                            <p class="text-xs text-neutral-500 mt-1">Total Users</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PRODUCTS -->
+                <section id="products" class="section-content hidden">
+                    <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                            <h3 class="font-semibold">Product Inventory</h3>
+                            <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-brand-accent text-black font-semibold rounded-lg hover:bg-brand-yellow transition-colors text-sm">
+                                <iconify-icon icon="lucide:plus" width="16"></iconify-icon>
+                                Add Product
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-brand-black/50 text-neutral-500 text-left">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">Product</th>
+                                        <th class="px-6 py-4 font-medium">Category</th>
+                                        <th class="px-6 py-4 font-medium">Price</th>
+                                        <th class="px-6 py-4 font-medium">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ORDERS -->
+                <section id="orders" class="section-content hidden">
+                    <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
+                        <div class="p-6 border-b border-white/5"><h3 class="font-semibold">Recent Orders</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-brand-black/50 text-neutral-500 text-left">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">Order ID</th>
+                                        <th class="px-6 py-4 font-medium">Customer</th>
+                                        <th class="px-6 py-4 font-medium">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <h3 class="font-semibold text-lg">Add New Product</h3>
+                <button onclick="closeModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs text-neutral-500 mb-1 uppercase">Product Name</label>
+                    <input type="text" id="newProdName" placeholder="e.g. Fresh Apples" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-brand-accent/50">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Category</label>
+                        <select id="newProdCat" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
+                            <option value="fruits">Fruits</option>
+                            <option value="snacks">Snacks</option>
+                            <option value="beverages">Beverages</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Weight</label>
+                        <input type="text" id="newProdWeight" placeholder="e.g. 1 kg" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Price (₹)</label>
+                        <input type="number" id="newProdPrice" placeholder="100" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Original Price (₹)</label>
+                        <input type="number" id="newProdOriginalPrice" placeholder="120" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-white/5 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-6 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-sm">Cancel</button>
+                <button onclick="saveProduct()" class="px-6 py-2 rounded-lg bg-brand-accent text-black font-semibold hover:bg-brand-yellow transition-colors text-sm">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cursor
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            if (cursorDot && cursorRing) {
+                document.addEventListener('mousemove', (e) => {
+                    cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
+                    cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
+                });
+                document.querySelectorAll('button, a, input, select').forEach(el => {
+                    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+                    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+                });
+            }
+
+            // Data
+            let products = JSON.parse(localStorage.getItem('nc_products')) || [
+                { id: 1, name: "Fresh Bananas", category: "fruits", price: 49, originalPrice: 65, weight: "1 kg", image: "https://picsum.photos/seed/banana/300/300" },
+                { id: 2, name: "Organic Apples", category: "fruits", price: 89, originalPrice: 120, weight: "500 g", image: "https://picsum.photos/seed/apple/300/300" },
+                { id: 3, name: "Spicy Chips", category: "snacks", price: 35, originalPrice: 45, weight: "150 g", image: "https://picsum.photos/seed/chips/300/300" },
+            ];
+
+            const orders = [
+                { id: "#NC-1024", customer: "Rahul Kumar", status: "Delivered" },
+                { id: "#NC-1023", customer: "Priya Singh", status: "Processing" },
+            ];
+
+            window.renderProductsTable = () => {
+                const tbody = document.getElementById('productsTableBody');
+                tbody.innerHTML = products.map(p => `
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4 font-medium">${p.name} <span class="text-neutral-500 text-xs block">${p.weight}</span></td>
+                        <td class="px-6 py-4 text-neutral-400 capitalize">${p.category}</td>
+                        <td class="px-6 py-4">₹${p.price}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="deleteProduct(${p.id})" class="p-2 hover:bg-red-500/10 rounded-lg transition-colors"><iconify-icon icon="lucide:trash-2" width="16" class="text-red-500"></iconify-icon></button>
+                        </td>
+                    </tr>
+                `).join('');
+            };
+
+            window.renderOrdersTable = () => {
+                const tbody = document.getElementById('ordersTableBody');
+                tbody.innerHTML = orders.map(o => `
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4 font-medium font-mono">${o.id}</td>
+                        <td class="px-6 py-4">${o.customer}</td>
+                        <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500">${o.status}</span></td>
+                    </tr>
+                `).join('');
+            };
+
+            renderProductsTable();
+            renderOrdersTable();
+        });
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            document.querySelectorAll('.sidebar-link').forEach(el => {
+                el.classList.remove('active');
+                if(el.dataset.section === sectionId) el.classList.add('active');
+            });
+            const title = document.getElementById('pageTitle');
+            title.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+        }
+
+        // Modal
+        function openModal() { document.getElementById('productModal').classList.remove('hidden'); document.getElementById('productModal').classList.add('flex'); }
+        function closeModal() { document.getElementById('productModal').classList.add('hidden'); document.getElementById('productModal').classList.remove('flex'); }
+
+        // Save Product Logic
+        function saveProduct() {
+            let currentProducts = JSON.parse(localStorage.getItem('nc_products')) || [];
+            const newProduct = {
+                id: Date.now(),
+                name: document.getElementById('newProdName').value,
+                category: document.getElementById('newProdCat').value,
+                price: Number(document.getElementById('newProdPrice').value),
+                originalPrice: Number(document.getElementById('newProdOriginalPrice').value),
+                weight: document.getElementById('newProdWeight').value,
+                image: `https://picsum.photos/seed/${Date.now()}/300/300`,
+                discount: Math.round(((Number(document.getElementById('newProdOriginalPrice').value) - Number(document.getElementById('newProdPrice').value)) / Number(document.getElementById('newProdOriginalPrice').value)) * 100) || 0
+            };
+            currentProducts.push(newProduct);
+            localStorage.setItem('nc_products', JSON.stringify(currentProducts));
+            alert("Product Saved! Go to main site to see changes.");
+            closeModal();
+            location.reload();
+        }
+
+        function deleteProduct(id) {
+            if(confirm("Are you sure?")) {
+                let currentProducts = JSON.parse(localStorage.getItem('nc_products')) || [];
+                const updatedProducts = currentProducts.filter(p => p.id !== id);
+                localStorage.setItem('nc_products', JSON.stringify(updatedProducts));
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

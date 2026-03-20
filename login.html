@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Night Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
+                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { cursor: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::selection { background: white; color: black; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        .input-field:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
+        .otp-input { width: 60px; height: 60px; text-align: center; font-size: 24px; font-weight: 600; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; outline: none; color: white; transition: all 0.2s; }
+        .otp-input:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
+    </style>
+</head>
+<body class="bg-brand-black text-white font-sans antialiased">
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <a href="index.html" class="flex items-center gap-2 group">
+                    <div class="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:zap" width="18" class="text-black"></iconify-icon>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">Night Cart</span>
+                </a>
+                <a href="index.html" class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">
+                    <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="min-h-screen flex items-center justify-center pt-20 px-6">
+        <div class="w-full max-w-md">
+            <!-- STEP 1: Phone -->
+            <div id="phoneStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 animate-fade-in">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4">
+                        <iconify-icon icon="lucide:smartphone" width="28" class="text-brand-accent"></iconify-icon>
+                    </div>
+                    <h1 class="text-2xl font-semibold tracking-tight">Login with OTP</h1>
+                    <p class="text-neutral-500 mt-1 text-sm">Enter your phone number to receive a code</p>
+                </div>
+                <form onsubmit="showOTPStep(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Phone Number</label>
+                        <div class="flex gap-2">
+                            <div class="flex items-center justify-center px-4 py-3.5 bg-brand-black border border-white/10 rounded-xl text-neutral-400">+91</div>
+                            <input type="tel" id="phoneNumber" placeholder="Enter 10 digit number" maxlength="10" required class="input-field flex-1 bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none transition-all tracking-wide">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Get OTP</button>
+                </form>
+            </div>
+
+            <!-- STEP 2: OTP -->
+            <div id="otpStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 hidden">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4">
+                        <iconify-icon icon="lucide:lock" width="28" class="text-brand-accent"></iconify-icon>
+                    </div>
+                    <h1 class="text-2xl font-semibold tracking-tight">Verify OTP</h1>
+                    <p class="text-neutral-500 mt-1 text-sm">Enter the 4-digit code sent to <span id="displayPhone" class="text-white">+91 XXXXXXXXXX</span></p>
+                </div>
+                <div class="flex justify-center gap-3 mb-8">
+                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 1)">
+                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 2)">
+                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 3)">
+                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 4)">
+                </div>
+                <button onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
+                <div class="text-center mt-6">
+                    <button onclick="goBack()" class="text-xs text-neutral-600 hover:text-white mt-3 block mx-auto">Change Phone Number</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            if (cursorDot && cursorRing) {
+                document.addEventListener('mousemove', (e) => {
+                    cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
+                    cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
+                });
+                const interactives = document.querySelectorAll('a, button, input');
+                interactives.forEach(el => {
+                    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+                    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+                });
+            }
+        });
+
+        function showOTPStep(e) {
+            e.preventDefault();
+            const phone = document.getElementById('phoneNumber').value;
+            if(phone.length === 10) {
+                document.getElementById('displayPhone').innerText = `+91 ${phone}`;
+                document.getElementById('phoneStep').classList.add('hidden');
+                document.getElementById('otpStep').classList.remove('hidden');
+                document.getElementById('otpStep').classList.add('animate-fade-in');
+                const otpInputs = document.querySelectorAll('.otp-input');
+                if(otpInputs.length > 0) otpInputs[0].focus();
+            }
+        }
+
+        function goBack() {
+            document.getElementById('otpStep').classList.add('hidden');
+            document.getElementById('phoneStep').classList.remove('hidden');
+        }
+
+        function moveToNext(current, nextIndex) {
+            if (current.value.length === 1 && nextIndex <= 4) {
+                const inputs = document.querySelectorAll('.otp-input');
+                if (inputs[nextIndex]) inputs[nextIndex].focus();
+            }
+        }
+
+        function verifyOTP() {
+            const inputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            inputs.forEach(input => otp += input.value);
+            
+            if(otp.length === 4) {
+                // SET LOGIN STATE
+                localStorage.setItem('nc_isLoggedIn', 'true');
+                localStorage.setItem('nc_userName', 'Guest User');
+                
+                alert("Login Successful!");
+                window.location.href = 'index.html'; 
+            } else {
+                alert("Please enter a valid 4-digit OTP");
+            }
+        }
+    </script>
+</body>
+</html>
