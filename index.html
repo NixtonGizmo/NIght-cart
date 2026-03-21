@@ -84,9 +84,8 @@
                     <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
                 
-                <!-- Auth Section -->
                 <div class="flex items-center gap-3">
-                    <a id="loginBtn" href="login.html" class="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:user" width="18"></iconify-icon>
                         <span class="hidden sm:inline">Login</span>
                     </a>
@@ -121,7 +120,7 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION (Conditionally Hidden) -->
+    <!-- HERO SECTION -->
     <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-32 md:pt-24">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
@@ -180,7 +179,7 @@
     <section class="py-16 md:py-24 bg-brand-dark">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between mb-10">
-                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight" id="sectionTitle">All Products</h2></div>
+                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">All Products</h2></div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
                 <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
@@ -195,10 +194,11 @@
     <script>
         const API_URL = 'https://night-cart.onrender.com';
         let allProducts = []; 
-        let cart = [];
+        let cart = []; // Initialize empty
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkLoginStatus(); // This will handle the Hero Section visibility
+            loadCart(); // 1. LOAD CART FROM STORAGE FIRST
+            checkLoginStatus();
             loadProductsFromDB(); 
             setupCursor();
         });
@@ -217,7 +217,6 @@
         // --- 2. RENDER LOGIC ---
         function renderProducts(productsToRender) {
             const grid = document.getElementById('productsGrid');
-            
             if (!productsToRender || productsToRender.length === 0) {
                 grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
                 return;
@@ -226,7 +225,7 @@
             grid.innerHTML = productsToRender.map(product => `
                 <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
                     <div class="relative overflow-hidden">
-                        <img src="${product.image}" alt="${product.name}" class="product-image w-full aspect-square object-cover transition-transform duration-500">
+                        <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105">
                         ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
                         <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
                             <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
@@ -254,14 +253,31 @@
             renderProducts(filtered);
         }
 
-        // --- 4. CART LOGIC ---
+        // --- 4. CART LOGIC (UPDATED FOR PERSISTENCE) ---
+
+        // A. Load Cart from LocalStorage
+        function loadCart() {
+            const savedCart = localStorage.getItem('nc_cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateCartUI(); // Update UI immediately on load
+            }
+        }
+
+        // B. Save Cart to LocalStorage
+        function saveCart() {
+            localStorage.setItem('nc_cart', JSON.stringify(cart));
+        }
+
         window.addToCart = (productId) => {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
             
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
-            updateCart();
+            
+            updateCartUI(); // Update UI
+            saveCart();     // Save to Storage
             showNotification(`${product.name} added to cart!`);
         };
 
@@ -270,7 +286,8 @@
             document.getElementById('overlay').classList.toggle('open');
         };
 
-        function updateCart() {
+        // Renamed from updateCart to avoid confusion
+        function updateCartUI() {
             const cartItems = document.getElementById('cartItems');
             const cartCount = document.getElementById('cartCount');
             const cartSubtotal = document.getElementById('cartSubtotal');
@@ -306,17 +323,14 @@
             setTimeout(() => notification.remove(), 2000);
         }
 
-        // --- 5. AUTH LOGIC (MODIFIED TO HIDE HERO) ---
+        // --- 5. AUTH LOGIC ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             const heroSection = document.getElementById('heroSection');
             const userName = localStorage.getItem('nc_userName') || 'User';
             
             if (isLoggedIn === 'true') {
-                // User IS logged in -> HIDE HERO SECTION
                 if (heroSection) heroSection.style.display = 'none';
-                
-                // Update UI
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('navUserName').textContent = userName;
@@ -324,10 +338,7 @@
                 document.getElementById('dropDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
                 document.getElementById('dropGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
             } else {
-                // User NOT logged in -> SHOW HERO SECTION
-                if (heroSection) heroSection.style.display = 'block';
-                
-                // Update UI
+                if (heroSection) heroSection.style.display = 'flex';
                 document.getElementById('loginBtn').classList.remove('hidden');
                 document.getElementById('userProfile').classList.add('hidden');
             }
