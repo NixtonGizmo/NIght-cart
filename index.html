@@ -31,10 +31,8 @@
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes slideDown { from { max-height: 0; opacity: 0; } to { max-height: 300px; opacity: 1; } }
         
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
-        
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
         .product-card:hover .product-image { transform: scale(1.05); }
@@ -47,7 +45,6 @@
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
 
-        /* Widget Animations */
         .widget-container { transition: all 0.3s ease; }
         .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
         .widget-items.open { max-height: 300px; opacity: 1; }
@@ -69,7 +66,8 @@
                     <span class="text-xl font-bold tracking-tight">Night Cart</span>
                 </a>
                 <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                    <!-- Desktop Search Input -->
+                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
                 
                 <div class="flex items-center gap-3">
@@ -92,6 +90,14 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Search Input -->
+        <div class="md:hidden px-6 pb-4">
+            <div class="relative w-full">
+                <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
+                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
             </div>
         </div>
     </nav>
@@ -167,12 +173,9 @@
         <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
     </footer>
 
-    <!-- FLOATING CART WIDGET (Theme Matched) -->
+    <!-- FLOATING CART WIDGET -->
     <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
-        
-        <!-- Main Bar -->
         <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
-            <!-- Left: Image + Info -->
             <div class="flex items-center gap-3">
                 <div class="relative">
                     <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10">
@@ -186,19 +189,13 @@
                     <p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p>
                 </div>
             </div>
-            
-            <!-- Right: Button (Stop propagation so clicking button doesn't toggle list) -->
             <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
                 Checkout
                 <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
             </a>
         </div>
-
-        <!-- Expanded Items List (Hidden by default) -->
         <div id="widgetItems" class="widget-items border-t border-white/5">
-            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList">
-                <!-- Items populated by JS -->
-            </div>
+            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList"></div>
         </div>
     </div>
 
@@ -218,10 +215,18 @@
         async function loadProductsFromDB() {
             try {
                 const response = await fetch(`${API_URL}/api/products`);
+                if (!response.ok) throw new Error("Server not responding");
+                
                 allProducts = await response.json(); 
                 renderProducts(allProducts);
             } catch (error) {
-                document.getElementById('productsGrid').innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load products.</p>';
+                console.error('Error loading products:', error);
+                document.getElementById('productsGrid').innerHTML = `
+                    <div class="col-span-full text-center py-12 text-red-400">
+                        <p>Server is starting up...</p>
+                        <p class="text-xs text-neutral-500 mt-2">Please wait 30 seconds and refresh.</p>
+                    </div>
+                `;
             }
         }
 
@@ -257,9 +262,18 @@
             `).join('');
         }
 
-        // --- 3. FILTER LOGIC ---
+        // --- 3. FILTER LOGIC (UPDATED FOR MOBILE/DESKTOP) ---
         function filterProducts() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            // Get values from both inputs
+            const desktopInput = document.getElementById('searchInputDesktop');
+            const mobileInput = document.getElementById('searchInputMobile');
+            
+            // Determine which value to use (whichever has text or is active)
+            let searchTerm = '';
+            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
+            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
+
+            // Filter
             const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
             renderProducts(filtered);
         }
@@ -267,9 +281,7 @@
         // --- 4. CART LOGIC ---
         function loadCart() {
             const savedCart = localStorage.getItem('nc_cart');
-            if (savedCart) {
-                cart = JSON.parse(savedCart);
-            }
+            if (savedCart) { cart = JSON.parse(savedCart); }
             updateFloatingWidget(); 
         }
 
@@ -278,42 +290,26 @@
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             
             if (totalItems > 0) {
-                // Calculate Savings
-                const savings = cart.reduce((sum, item) => {
-                    const savingPerItem = (item.originalPrice - item.price) * item.quantity;
-                    return sum + savingPerItem;
-                }, 0);
-
-                // Update Main Bar
+                const savings = cart.reduce((sum, item) => sum + ((item.originalPrice - item.price) * item.quantity), 0);
                 document.getElementById('widgetCount').textContent = `${totalItems} Item${totalItems > 1 ? 's' : ''}`;
                 document.getElementById('widgetSavings').textContent = `₹${savings} saved`;
                 document.getElementById('widgetBadge').textContent = totalItems;
                 
-                // Show Last Added Image
                 const lastItem = cart[cart.length - 1];
                 if(lastItem) document.getElementById('widgetImg').src = lastItem.image;
 
-                // Update Expanded List Content
                 const listContainer = document.getElementById('widgetItemsList');
                 listContainer.innerHTML = cart.map(item => `
                     <div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg">
                         <img src="${item.image}" class="w-10 h-10 rounded object-cover">
-                        <div class="flex-1">
-                            <p class="text-xs font-medium truncate">${item.name}</p>
-                            <p class="text-xs text-neutral-500">Qty: ${item.quantity}</p>
-                        </div>
+                        <div class="flex-1"><p class="text-xs font-medium truncate">${item.name}</p><p class="text-xs text-neutral-500">Qty: ${item.quantity}</p></div>
                         <span class="text-xs font-bold">₹${item.price * item.quantity}</span>
                     </div>
                 `).join('');
-
-                // Show Widget
                 widget.classList.remove('hidden');
-            } else {
-                widget.classList.add('hidden');
-            }
+            } else { widget.classList.add('hidden'); }
         }
 
-        // Toggle Items List
         window.toggleWidgetItems = () => {
             const itemsDiv = document.getElementById('widgetItems');
             const arrow = document.getElementById('widgetArrow');
@@ -333,9 +329,7 @@
             showNotification(`${product.name} added!`);
         };
 
-        function saveCart() {
-            localStorage.setItem('nc_cart', JSON.stringify(cart));
-        }
+        function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
 
         function showNotification(message) {
             const notification = document.createElement('div');
@@ -356,8 +350,6 @@
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('navUserName').textContent = userName;
                 document.getElementById('dropName').textContent = userName;
-                document.getElementById('dropDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
-                document.getElementById('dropGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
             } else {
                 if (heroSection) heroSection.style.display = 'flex';
                 document.getElementById('loginBtn').classList.remove('hidden');
