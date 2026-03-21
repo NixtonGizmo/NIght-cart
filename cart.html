@@ -11,16 +11,16 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } }
     </script>
     <style>
+        /* Custom Cursor Styles - FIXED */
         * { cursor: none; }
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; } ::selection { background: white; color: black; }
-        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
-        .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .error-animate { animation: scaleIn 0.3s ease-out forwards, shake 0.5s ease-in-out 0.3s; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
-        
-        /* Custom Cursor Styles */
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s, height 0.15s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
 
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; } ::selection { background: white; color: black; }
+        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
+        .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
+        
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
         .address-input::placeholder { color: #525252; }
@@ -35,7 +35,7 @@
     <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden"><div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10"><div class="p-10"><div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20"><iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon></div><h2 class="text-3xl font-bold mb-2">Order Placed!</h2><p class="text-neutral-400 mb-2">Your order has been placed successfully.</p><p class="text-xs text-neutral-500 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono">#ORD-123</span></p><button onclick="goToHome()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Continue Shopping</button></div></div></div>
 
     <!-- ERROR POPUP -->
-    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center error-animate"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><p class="text-neutral-400 mb-2">Couldn't connect to the server.</p><button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
+    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><p class="text-neutral-400 mb-2">Couldn't connect to the server.</p><button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
 
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
@@ -59,74 +59,76 @@
             <div class="flex items-center gap-4 mb-8"><a href="index.html" class="text-neutral-500 hover:text-white transition-colors"><iconify-icon icon="lucide:arrow-left" width="24"></iconify-icon></a><h1 class="text-3xl md:text-4xl font-semibold tracking-tight">My Cart</h1></div>
 
             <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Cart Items Column -->
+                
+                <!-- LEFT/MIDDLE: Cart Items Column -->
                 <div class="lg:col-span-2 space-y-4" id="cartItemsContainer"></div>
                 
-                <!-- Sidebar Column -->
+                <!-- RIGHT: Sidebar (Address Top, Fees Middle, Checkout Bottom) -->
                 <div class="lg:col-span-1 space-y-6">
                     
-                    <!-- 1. DELIVERY ADDRESS (Top Position) -->
-                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                    <!-- 1. ADDRESS SECTION (Top) -->
+                    <div class="bg-brand-gray rounded-2xl p-5 border border-white/5">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-semibold flex items-center gap-2"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
+                            <h3 class="font-semibold flex items-center gap-2 text-lg"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
                         </div>
                         <div class="space-y-3">
-                            <!-- Nickname -->
-                            <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Nickname</label>
-                                <select id="inputLabel" class="address-input">
-                                    <option value="Home">Home</option>
-                                    <option value="Work">Work</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-neutral-500 block mb-1">Nickname</label>
+                                    <select id="inputLabel" class="address-input text-center">
+                                        <option value="Home">Home</option>
+                                        <option value="Work">Work</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-neutral-500 block mb-1">Full Name</label>
+                                    <input type="text" id="inputName" placeholder="Name" class="address-input text-center">
+                                </div>
                             </div>
-                            <!-- Name -->
-                            <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Full Name</label>
-                                <input type="text" id="inputName" placeholder="John Doe" class="address-input">
-                            </div>
-                            <!-- Phone -->
                             <div>
                                 <label class="text-xs text-neutral-500 block mb-1">Phone Number</label>
-                                <input type="text" id="inputPhone" placeholder="+91 9876543210" class="address-input">
+                                <input type="text" id="inputPhone" placeholder="+91 9876543210" class="address-input text-center">
                             </div>
-                            <!-- House No -->
                             <div>
                                 <label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label>
-                                <input type="text" id="inputHouse" placeholder="404, A Wing" class="address-input">
+                                <input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input text-center">
                             </div>
-                            <!-- Building / Sector -->
                             <div>
                                 <label class="text-xs text-neutral-500 block mb-1">Sector / Building</label>
-                                <input type="text" id="inputBuilding" placeholder="Sunflower Apartments" class="address-input">
+                                <input type="text" id="inputBuilding" placeholder="Building Name" class="address-input text-center">
                             </div>
-                            <!-- Area (Read Only) -->
                             <div class="bg-brand-black/50 p-3 rounded-lg border border-white/5 mt-2">
                                 <div class="flex justify-between items-center">
-                                    <p class="text-xs text-neutral-400">Area (from Map):</p>
+                                    <p class="text-xs text-neutral-400">Area (Map):</p>
                                     <a href="index.html" class="text-xs text-brand-accent hover:underline">Change</a>
                                 </div>
-                                <p id="displayArea" class="text-sm font-medium text-white mt-1 truncate">Select on map first</p>
+                                <p id="displayArea" class="text-sm font-medium text-white mt-1 text-center truncate">Select on map first</p>
                             </div>
-
-                            <!-- Save Address Button -->
-                            <button onclick="saveAddressLocally()" class="w-full mt-2 border border-brand-accent/30 text-brand-accent font-medium py-2.5 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
+                            <button onclick="saveAddressLocally()" class="w-full mt-2 border border-brand-accent/30 text-brand-accent font-medium py-2 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
                                 Save Address
                             </button>
                         </div>
                     </div>
 
-                    <!-- 2. ORDER SUMMARY -->
-                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky top-28">
-                        <h3 class="text-lg font-semibold mb-6">Order Summary</h3>
-                        <div class="space-y-4 mb-6">
+                    <!-- 2. ORDER SUMMARY (Middle) -->
+                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                        <h3 class="text-lg font-semibold mb-4">Order Summary</h3>
+                        <div class="space-y-3 text-sm">
                             <div class="flex justify-between text-neutral-400"><span>Subtotal</span><span id="subtotal">₹0</span></div>
-                            <div class="flex justify-between text-neutral-400"><span>Delivery Fee</span><span id="deliveryFee" class="font-medium">₹0</span></div>
-                            <div class="flex justify-between text-neutral-400"><span>Discount</span><span id="discount" class="text-green-500">- ₹0</span></div>
-                            <div class="border-t border-white/10 pt-4 flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmount">₹0</span></div>
+                            <div class="flex justify-between text-neutral-400"><span>Delivery Fee</span><span id="deliveryFee">₹0</span></div>
+                            <div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div>
+                            <div class="border-t border-white/10 pt-3 flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmount">₹0</span></div>
                         </div>
-                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2"><iconify-icon icon="lucide:check-circle" width="18"></iconify-icon>Place Order</button>
-                        <p class="text-center text-xs text-neutral-500 mt-4">Estimated delivery in 10-15 minutes</p>
+                    </div>
+
+                    <!-- 3. CHECKOUT (Bottom) -->
+                    <div class="sticky bottom-6">
+                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20">
+                            <iconify-icon icon="lucide:check-circle" width="20"></iconify-icon>
+                            Place Order
+                        </button>
+                        <p class="text-center text-xs text-neutral-500 mt-3">Estimated delivery in 10-15 minutes</p>
                     </div>
 
                 </div>
@@ -171,11 +173,11 @@
                 document.getElementById('inputBuilding').value = addr.building || '';
                 document.getElementById('displayArea').textContent = addr.area || 'Not set';
             } else {
-                document.getElementById('displayArea').textContent = "Please select on map";
+                document.getElementById('displayArea').textContent = "Select on map";
             }
         }
 
-        // --- SAVE ADDRESS (NEW) ---
+        // --- SAVE ADDRESS ---
         async function saveAddressLocally() {
             const name = document.getElementById('inputName').value;
             const phone = document.getElementById('inputPhone').value;
@@ -184,50 +186,51 @@
             const building = document.getElementById('inputBuilding').value;
             const area = document.getElementById('displayArea').textContent;
 
-            if(!name || !phone || !house) {
-                showNotification("Fill Name, Phone & House No.");
-                return;
-            }
+            if(!name || !phone || !house) { showNotification("Fill Name, Phone & House No."); return; }
 
-            // 1. Save to LocalStorage
             localStorage.setItem('nc_userName', name);
             localStorage.setItem('nc_userPhone', phone);
             
             const addressObj = { label, houseNo: house, building: building, area: area };
             localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
 
-            // 2. Save to Database (if logged in)
             const userPhone = localStorage.getItem('nc_userPhone');
             if(userPhone) {
                 try {
-                    // We need lat/lng if we want to save properly to DB, try to get from localstorage
                     const lat = localStorage.getItem('nc_location_lat');
                     const lng = localStorage.getItem('nc_location_lng');
-                    
                     if(lat && lng) {
                         await fetch(`${API_URL}/api/addresses`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                phone: userPhone,
-                                label: label,
-                                houseNo: house,
-                                building: building,
-                                landmark: '', // optional
-                                area: area,
-                                lat: parseFloat(lat),
-                                lng: parseFloat(lng)
-                            })
+                            body: JSON.stringify({ phone: userPhone, label, houseNo: house, building, landmark: '', area, lat: parseFloat(lat), lng: parseFloat(lng) })
                         });
                     }
-                } catch(e) { console.error("DB save failed", e); }
+                } catch(e) { console.error(e); }
             }
-            
             showNotification("Address Saved!");
         }
 
-        function renderCartPage() { const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), s=document.querySelector('.lg\\:col-span-1'); if(cart.length===0){c.classList.add('hidden');document.querySelectorAll('.lg\\:col-span-1 > div').forEach(el=>el.classList.add('hidden'));e.classList.remove('hidden');return;} c.classList.remove('hidden');document.querySelectorAll('.lg\\:col-span-1 > div').forEach(el=>el.classList.remove('hidden'));e.classList.add('hidden'); c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-24 h-24 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium">${i.name}</h3><p class="text-sm text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent">₹${i.price}</p></div><div class="flex flex-col items-end gap-3"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="18"></iconify-icon></button><div class="flex items-center gap-2 bg-white/5 rounded-lg"><button onclick="updateQuantity(${i.id},-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-l-lg"><iconify-icon icon="lucide:minus" width="14"></iconify-icon></button><span class="text-sm font-medium w-8 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-r-lg"><iconify-icon icon="lucide:plus" width="14"></iconify-icon></button></div></div></div>`).join(''); updateTotals(); }
-        function updateTotals() { const sub=cart.reduce((s,i)=>s+(i.price*i.quantity),0); let del=0; if(sub>0 && sub<99)del=30; const dis=sub>500?Math.round(sub*0.05):0; const tot=sub+del-dis; document.getElementById('subtotal').textContent=`₹${sub}`; const dEl=document.getElementById('deliveryFee'); if(del===0 && sub>0){dEl.textContent='FREE';dEl.classList.add('text-green-500');}else{dEl.textContent=`₹${del}`;dEl.classList.remove('text-green-500');} document.getElementById('discount').textContent=`- ₹${dis}`; document.getElementById('totalAmount').textContent=`₹${tot}`; }
+        function renderCartPage() { 
+            const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), s=document.querySelector('.lg\\:col-span-1'); 
+            if(cart.length===0){c.classList.add('hidden');s.classList.add('hidden');e.classList.remove('hidden');return;} 
+            c.classList.remove('hidden');s.classList.remove('hidden');e.classList.add('hidden'); 
+            c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-24 h-24 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium">${i.name}</h3><p class="text-sm text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent">₹${i.price}</p></div><div class="flex flex-col items-end gap-3"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="18"></iconify-icon></button><div class="flex items-center gap-2 bg-white/5 rounded-lg"><button onclick="updateQuantity(${i.id},-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-l-lg"><iconify-icon icon="lucide:minus" width="14"></iconify-icon></button><span class="text-sm font-medium w-8 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-r-lg"><iconify-icon icon="lucide:plus" width="14"></iconify-icon></button></div></div></div>`).join(''); 
+            updateTotals(); 
+        }
+        
+        function updateTotals() { 
+            const sub=cart.reduce((s,i)=>s+(i.price*i.quantity),0); 
+            let del=0; if(sub>0 && sub<99)del=30; 
+            const dis=sub>500?Math.round(sub*0.05):0; 
+            const tot=sub+del-dis; 
+            document.getElementById('subtotal').textContent=`₹${sub}`; 
+            const dEl=document.getElementById('deliveryFee'); 
+            if(del===0 && sub>0){dEl.textContent='FREE';dEl.classList.add('text-green-500');}else{dEl.textContent=`₹${del}`;dEl.classList.remove('text-green-500');} 
+            document.getElementById('discount').textContent=`- ₹${dis}`; 
+            document.getElementById('totalAmount').textContent=`₹${tot}`; 
+        }
+        
         function updateNavCount() { const t=cart.reduce((s,i)=>s+i.quantity,0); const n=document.getElementById('navCartCount'); if(t>0){n.textContent=t;n.classList.remove('hidden');}else{n.classList.add('hidden');} }
         function updateQuantity(id,ch) { const i=cart.find(x=>x.id===id); if(i){i.quantity+=ch; if(i.quantity<=0)removeItem(id); else{saveCart();renderCartPage();updateNavCount();}} }
         function removeItem(id) { cart=cart.filter(i=>i.id!==id); saveCart(); renderCartPage(); updateNavCount(); showNotification("Item removed"); }
@@ -245,14 +248,8 @@
             const building = document.getElementById('inputBuilding').value;
             const areaText = document.getElementById('displayArea').textContent;
 
-            if(!userName || !userPhone || !houseNo) {
-                showNotification("Fill all address details");
-                return;
-            }
-            if(areaText === "Select on map first" || areaText === "Not set"){
-                alert("Please select a location on the map first.");
-                return;
-            }
+            if(!userName || !userPhone || !houseNo) { showNotification("Fill all address details"); return; }
+            if(areaText === "Select on map first" || areaText === "Not set"){ alert("Please select a location on the map first."); return; }
 
             const userAddress = { label, houseNo, building, area: areaText, landmark: '' };
             const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -274,13 +271,19 @@
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
         
-        // --- CURSOR LOGIC ---
+        // --- CURSOR LOGIC (FIXED) ---
         function setupCursor() { 
             const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); 
+            if(!d || !r) return;
             document.addEventListener('mousemove',e=>{
                 d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';
                 r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';
             }); 
+            // Add hover effect for buttons
+            document.querySelectorAll('button, a, input').forEach(el => {
+                el.addEventListener('mouseenter', () => r.classList.add('hover'));
+                el.addEventListener('mouseleave', () => r.classList.remove('hover'));
+            });
         }
     </script>
 </body>
