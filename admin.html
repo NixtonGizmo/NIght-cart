@@ -8,9 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    <!-- Leaflet CSS & JS (Map Library) -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet Draw -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
@@ -26,8 +27,13 @@
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .sidebar-link.active { background: rgba(140, 255, 0, 0.1); border-color: rgba(140, 255, 0, 0.3); color: #8CFF00; }
         .modal-open { display: flex; }
-        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 10; }
+        
+        /* Map Optimizations */
+        #map { height: 400px; width: 100%; border-radius: 12px; z-index: 10; background: #050505; /* Dark background while loading */ }
+        /* Fix white flash on map load */
+        .leaflet-container { background: #050505; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+        .leaflet-control-zoom a:hover { background-color: #333 !important; }
         .leaflet-draw-toolbar a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
     </style>
 </head>
@@ -88,75 +94,15 @@
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="section-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <!-- Total Revenue -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="w-12 h-12 bg-brand-accent/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:indian-rupee" width="24" class="text-brand-accent"></iconify-icon></div>
-                            </div>
-                            <p id="dashRevenue" class="text-2xl font-bold">₹0</p>
-                            <p class="text-xs text-neutral-500 mt-1">Total Revenue</p>
-                        </div>
-
-                        <!-- Today's Revenue (NEW) -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:trending-up" width="24" class="text-green-500"></iconify-icon></div>
-                            </div>
-                            <p id="dashTodayRevenue" class="text-2xl font-bold">₹0</p>
-                            <p class="text-xs text-neutral-500 mt-1">Today's Revenue</p>
-                        </div>
-
-                        <!-- Total Products -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:package" width="24" class="text-purple-500"></iconify-icon></div>
-                            </div>
-                            <p id="dashProducts" class="text-2xl font-bold">0</p>
-                            <p class="text-xs text-neutral-500 mt-1">Total Products</p>
-                        </div>
-
-                        <!-- Total Orders -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:shopping-bag" width="24" class="text-blue-500"></iconify-icon></div>
-                            </div>
-                            <p id="dashOrders" class="text-2xl font-bold">0</p>
-                            <p class="text-xs text-neutral-500 mt-1">Total Orders</p>
-                        </div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-brand-accent/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:indian-rupee" width="24" class="text-brand-accent"></iconify-icon></div></div><p id="dashRevenue" class="text-2xl font-bold">₹0</p><p class="text-xs text-neutral-500 mt-1">Total Revenue</p></div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:trending-up" width="24" class="text-green-500"></iconify-icon></div></div><p id="dashTodayRevenue" class="text-2xl font-bold">₹0</p><p class="text-xs text-neutral-500 mt-1">Today's Revenue</p></div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:package" width="24" class="text-purple-500"></iconify-icon></div></div><p id="dashProducts" class="text-2xl font-bold">0</p><p class="text-xs text-neutral-500 mt-1">Total Products</p></div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center"><iconify-icon icon="lucide:shopping-bag" width="24" class="text-blue-500"></iconify-icon></div></div><p id="dashOrders" class="text-2xl font-bold">0</p><p class="text-xs text-neutral-500 mt-1">Total Orders</p></div>
                     </div>
-
-                    <!-- Secondary Stats Row -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <!-- Pending Orders -->
-                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:clock" width="20" class="text-yellow-500"></iconify-icon></div>
-                                <div>
-                                    <p id="dashPending" class="text-xl font-bold">0</p>
-                                    <p class="text-xs text-neutral-500">Pending Orders</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Delivered Orders -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:check-circle" width="20" class="text-green-500"></iconify-icon></div>
-                                <div>
-                                    <p id="dashDelivered" class="text-xl font-bold">0</p>
-                                    <p class="text-xs text-neutral-500">Delivered</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Cancelled Orders (NEW) -->
-                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:x-circle" width="20" class="text-red-500"></iconify-icon></div>
-                                <div>
-                                    <p id="dashCancelled" class="text-xl font-bold">0</p>
-                                    <p class="text-xs text-neutral-500">Cancelled</p>
-                                </div>
-                            </div>
-                        </div>
+                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:clock" width="20" class="text-yellow-500"></iconify-icon></div><div><p id="dashPending" class="text-xl font-bold">0</p><p class="text-xs text-neutral-500">Pending Orders</p></div></div></div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:check-circle" width="20" class="text-green-500"></iconify-icon></div><div><p id="dashDelivered" class="text-xl font-bold">0</p><p class="text-xs text-neutral-500">Delivered</p></div></div></div>
+                        <div class="bg-brand-gray rounded-2xl p-6 border border-white/5"><div class="flex items-center gap-4"><div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center"><iconify-icon icon="lucide:x-circle" width="20" class="text-red-500"></iconify-icon></div><div><p id="dashCancelled" class="text-xl font-bold">0</p><p class="text-xs text-neutral-500">Cancelled</p></div></div></div>
                     </div>
                 </section>
 
@@ -179,17 +125,14 @@
                 <!-- Orders Section -->
                 <section id="orders" class="section-content hidden">
                     <div class="grid lg:grid-cols-3 gap-6">
-                        <!-- Pending -->
                         <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
                             <div class="p-6 border-b border-white/5 flex items-center gap-3 bg-yellow-500/5"><iconify-icon icon="lucide:clock" width="20" class="text-yellow-400"></iconify-icon><h3 class="font-semibold text-yellow-400">Pending</h3><span id="pendingCount" class="ml-auto px-2 py-1 bg-yellow-500/10 text-yellow-400 text-xs font-bold rounded">0</span></div>
                             <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="pendingOrdersList"></div>
                         </div>
-                        <!-- Delivered -->
                         <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
                             <div class="p-6 border-b border-white/5 flex items-center gap-3 bg-green-500/5"><iconify-icon icon="lucide:check-circle" width="20" class="text-green-400"></iconify-icon><h3 class="font-semibold text-green-400">Delivered</h3><span id="deliveredCount" class="ml-auto px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded">0</span></div>
                             <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="deliveredOrdersList"></div>
                         </div>
-                        <!-- Cancelled (NEW) -->
                         <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
                             <div class="p-6 border-b border-white/5 flex items-center gap-3 bg-red-500/5"><iconify-icon icon="lucide:x-circle" width="20" class="text-red-400"></iconify-icon><h3 class="font-semibold text-red-400">Cancelled</h3><span id="cancelledCount" class="ml-auto px-2 py-1 bg-red-500/10 text-red-400 text-xs font-bold rounded">0</span></div>
                             <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="cancelledOrdersList"></div>
@@ -197,15 +140,15 @@
                     </div>
                 </section>
 
-                <!-- Locations Section (Map) -->
+                <!-- Locations Section -->
                 <section id="locations" class="section-content hidden">
                     <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
                         <div class="p-6 border-b border-white/5 flex items-center justify-between">
                             <div class="flex items-center gap-3"><iconify-icon icon="lucide:map-pin" width="20" class="text-brand-accent"></iconify-icon><h3 class="font-semibold">Delivery Zones</h3></div>
-                            <p class="text-xs text-neutral-500">Use the toolbar on the map to draw a shape</p>
+                            <p class="text-xs text-neutral-500">Draw a shape on the map to set area</p>
                         </div>
                         <div class="p-6">
-                            <div id="map" class="rounded-xl border border-white/10"></div>
+                            <div id="map"></div>
                             <div class="mt-4"><h4 class="text-sm font-medium mb-2">Saved Zones</h4><div class="space-y-2" id="locationsList"><p class="text-neutral-500 text-xs">Loading map...</p></div></div>
                         </div>
                     </div>
@@ -250,9 +193,24 @@
             e.preventDefault(); const em=document.getElementById('adminEmail').value, p=document.getElementById('adminPassword').value;
             try{ const r=await fetch(`${API_URL}/api/admin/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:p})}); const d=await r.json(); if(d.success){sessionStorage.setItem('nc_admin_auth','true');showDashboard();}else{document.getElementById('loginError').classList.remove('hidden');} }catch(e){alert("Server error");} }
         function showLogin() { document.getElementById('adminLoginScreen').classList.remove('hidden'); document.getElementById('dashboardScreen').classList.add('hidden'); }
-        function showDashboard() { document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('dashboardScreen').classList.remove('hidden'); loadUsers(); loadProducts(); loadOrders(); initMap(); }
+        function showDashboard() { document.getElementById('adminLoginScreen').classList.add('hidden'); document.getElementById('dashboardScreen').classList.remove('hidden'); loadUsers(); loadProducts(); loadOrders(); }
         function logoutAdmin() { sessionStorage.removeItem('nc_admin_auth'); location.reload(); }
-        function showSection(id) { document.querySelectorAll('.section-content').forEach(el=>el.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.sidebar-link').forEach(el=>{el.classList.remove('active');if(el.dataset.section===id)el.classList.add('active');}); document.getElementById('pageTitle').textContent=id.charAt(0).toUpperCase()+id.slice(1); if(id==='locations' && !map){ setTimeout(initMap, 100); } }
+        
+        function showSection(id) { 
+            document.querySelectorAll('.section-content').forEach(el=>el.classList.add('hidden')); 
+            document.getElementById(id).classList.remove('hidden'); 
+            document.querySelectorAll('.sidebar-link').forEach(el=>{el.classList.remove('active');if(el.dataset.section===id)el.classList.add('active');}); 
+            document.getElementById('pageTitle').textContent=id.charAt(0).toUpperCase()+id.slice(1); 
+            
+            // Initialize Map only when section is clicked
+            if(id==='locations'){ 
+                setTimeout(() => { 
+                    initMap(); 
+                    // FIX: Force map to recalculate size
+                    if(map) map.invalidateSize(); 
+                }, 100); 
+            } 
+        }
         
         // --- USERS ---
         async function loadUsers() { const t=document.getElementById('usersTableBody'); try{ const r=await fetch(`${API_URL}/api/users`); const u=await r.json(); t.innerHTML=u.map(x=>`<tr class="border-b border-white/5 hover:bg-white/5"><td class="px-6 py-4 font-medium">${x.name||'N/A'}</td><td class="px-6 py-4">${x.phone}</td><td class="px-6 py-4">${x.dob||'N/A'}</td><td class="px-6 py-4 capitalize">${x.gender||'N/A'}</td></tr>`).join(''); }catch(e){} }
@@ -265,69 +223,113 @@
         async function saveProduct() { const pr=Number(document.getElementById('newProdPrice').value), op=Number(document.getElementById('newProdOriginalPrice').value); const prod={id:Date.now(),name:document.getElementById('newProdName').value,category:document.getElementById('newProdCat').value,weight:document.getElementById('newProdWeight').value,price:pr,originalPrice:op,image:document.getElementById('newProdImage').value||`https://picsum.photos/seed/${Date.now()}/300/300`,discount:op>pr?Math.round(((op-pr)/op)*100):0}; try{ await fetch(`${API_URL}/api/products`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(prod)}); closeModal('product'); loadProducts(); }catch(e){alert("Error");} }
         async function deleteProduct(id) { if(confirm("Delete?")){await fetch(`${API_URL}/api/products/${id}`,{method:'DELETE'});loadProducts();} }
         
-        // --- ORDERS (WITH CANCEL & TODAY REVENUE) ---
+        // --- ORDERS ---
         async function loadOrders() { 
             try{ 
-                const r=await fetch(`${API_URL}/api/orders`); 
-                const o=await r.json(); 
-                
-                // Filter by status
-                const p=o.filter(x=>x.status==='pending'); 
-                const d=o.filter(x=>x.status==='delivered'); 
-                const c=o.filter(x=>x.status==='cancelled'); // NEW
-
-                // Filter Today's Orders
+                const r=await fetch(`${API_URL}/api/orders`); const o=await r.json(); 
+                const p=o.filter(x=>x.status==='pending'); const d=o.filter(x=>x.status==='delivered'); const c=o.filter(x=>x.status==='cancelled');
                 const today = new Date().toDateString();
                 const todayOrders = o.filter(x => new Date(x.createdAt).toDateString() === today);
-
-                // Calc Revenue
                 const totalRevenue = o.reduce((sum, x) => sum + x.totalAmount, 0);
                 const todayRevenue = todayOrders.reduce((sum, x) => sum + x.totalAmount, 0);
 
-                // Update Dashboard
                 document.getElementById('dashRevenue').textContent = `₹${totalRevenue}`;
-                document.getElementById('dashTodayRevenue').textContent = `₹${todayRevenue}`; // NEW
+                document.getElementById('dashTodayRevenue').textContent = `₹${todayRevenue}`;
                 document.getElementById('dashOrders').textContent=o.length; 
                 document.getElementById('dashPending').textContent=p.length; 
                 document.getElementById('dashDelivered').textContent=d.length; 
-                document.getElementById('dashCancelled').textContent=c.length; // NEW
+                document.getElementById('dashCancelled').textContent=c.length; 
 
-                // Update Counts in Order Section
                 document.getElementById('pendingCount').textContent=p.length; 
                 document.getElementById('deliveredCount').textContent=d.length; 
-                document.getElementById('cancelledCount').textContent=c.length; // NEW
+                document.getElementById('cancelledCount').textContent=c.length; 
 
-                // Render Pending
                 const pL=document.getElementById('pendingOrdersList');
-                if(p.length>0){ pL.innerHTML=p.map(x=>`<div class="bg-brand-black/50 p-4 rounded-xl border border-white/5"><div class="flex justify-between items-center mb-3"><div><p class="font-mono text-xs text-neutral-500">${x.orderId}</p><p class="font-semibold">${x.userName}</p><p class="text-xs text-neutral-400">${x.userPhone}</p></div><p class="text-lg font-bold text-white">₹${x.totalAmount}</p></div><div class="mb-3 border-t border-white/5 pt-3"><p class="text-xs font-bold text-neutral-500 mb-2">Items:</p><div class="space-y-1">${x.items.map(i=>`<div class="flex justify-between text-xs text-neutral-300"><span>• ${i.name}</span><span class="text-neutral-500">x${i.quantity}</span></div>`).join('')}</div></div><div class="text-xs text-neutral-500 mb-3">${new Date(x.createdAt).toLocaleTimeString()}</div><div class="flex gap-2">
-                    <button onclick="markDelivered('${x._id}')" class="flex-1 bg-green-500/10 text-green-500 py-2 rounded-lg text-xs font-medium hover:bg-green-500/20">Deliver</button>
-                    <button onclick="cancelOrder('${x._id}')" class="flex-1 bg-red-500/10 text-red-500 py-2 rounded-lg text-xs font-medium hover:bg-red-500/20">Cancel</button>
-                </div></div>`).join(''); } else { pL.innerHTML='<p class="text-center text-neutral-500 text-sm py-8">No pending orders</p>'; }
-                
-                // Render Delivered
+                if(p.length>0){ pL.innerHTML=p.map(x=>`<div class="bg-brand-black/50 p-4 rounded-xl border border-white/5"><div class="flex justify-between items-center mb-3"><div><p class="font-mono text-xs text-neutral-500">${x.orderId}</p><p class="font-semibold">${x.userName}</p><p class="text-xs text-neutral-400">${x.userPhone}</p></div><p class="text-lg font-bold text-white">₹${x.totalAmount}</p></div><div class="mb-3 border-t border-white/5 pt-3"><p class="text-xs font-bold text-neutral-500 mb-2">Items:</p><div class="space-y-1">${x.items.map(i=>`<div class="flex justify-between text-xs text-neutral-300"><span>• ${i.name}</span><span class="text-neutral-500">x${i.quantity}</span></div>`).join('')}</div></div><div class="text-xs text-neutral-500 mb-3">${new Date(x.createdAt).toLocaleTimeString()}</div><div class="flex gap-2"><button onclick="markDelivered('${x._id}')" class="flex-1 bg-green-500/10 text-green-500 py-2 rounded-lg text-xs font-medium hover:bg-green-500/20">Deliver</button><button onclick="cancelOrder('${x._id}')" class="flex-1 bg-red-500/10 text-red-500 py-2 rounded-lg text-xs font-medium hover:bg-red-500/20">Cancel</button></div></div>`).join(''); } else { pL.innerHTML='<p class="text-center text-neutral-500 text-sm py-8">No pending orders</p>'; }
                 const dL=document.getElementById('deliveredOrdersList');
                 if(d.length>0){ dL.innerHTML=d.map(x=>`<div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 opacity-70"><div class="flex justify-between items-center mb-3"><div><p class="font-mono text-xs text-neutral-500">${x.orderId}</p><p class="font-semibold">${x.userName}</p></div><p class="font-bold">₹${x.totalAmount}</p></div><div class="border-t border-white/5 pt-2"><div class="space-y-1">${x.items.map(i=>`<div class="flex justify-between text-xs text-neutral-400"><span>• ${i.name}</span><span>x${i.quantity}</span></div>`).join('')}</div></div></div>`).join(''); } else { dL.innerHTML='<p class="text-center text-neutral-500 text-sm py-8">No delivered orders</p>'; }
-
-                // Render Cancelled (NEW)
                 const cL=document.getElementById('cancelledOrdersList');
                 if(c.length>0){ cL.innerHTML=c.map(x=>`<div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 opacity-60 border-red-500/20"><div class="flex justify-between items-center mb-2"><div><p class="font-mono text-xs text-neutral-500">${x.orderId}</p><p class="font-semibold text-neutral-300">${x.userName}</p></div><p class="font-bold text-red-400 line-through">₹${x.totalAmount}</p></div><div class="flex justify-between text-xs text-red-500/80 mt-2 pt-2 border-t border-white/5"><span>Cancelled</span><span>${new Date(x.createdAt).toLocaleTimeString()}</span></div></div>`).join(''); } else { cL.innerHTML='<p class="text-center text-neutral-500 text-sm py-8">No cancelled orders</p>'; }
-
             }catch(e){} 
         }
-        
         async function markDelivered(id) { try{ await fetch(`${API_URL}/api/orders/${id}/deliver`,{method:'PUT'}); loadOrders(); }catch(e){alert("Error");} }
-        
-        // NEW: Cancel Order
-        async function cancelOrder(id) { 
-            if(confirm("Are you sure you want to cancel this order?")) {
-                try{ await fetch(`${API_URL}/api/orders/${id}/cancel`,{method:'PUT'}); loadOrders(); }catch(e){alert("Error");} 
-            }
+        async function cancelOrder(id) { if(confirm("Cancel this order?")){ try{ await fetch(`${API_URL}/api/orders/${id}/cancel`,{method:'PUT'}); loadOrders(); }catch(e){alert("Error");} } }
+
+        // --- LOCATIONS (Optimized Map) ---
+        function initMap() {
+            if (map) return;
+
+            map = L.map('map', {
+                center: [20.5937, 78.9629],
+                zoom: 5,
+                zoomControl: true
+            });
+
+            // FASTEST DARK MAP TILES (CartoDB Dark Matter)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
+
+            const drawControl = new L.Control.Draw({
+                edit: { featureGroup: drawnItems },
+                draw: {
+                    polygon: { allowIntersection: false, shapeOptions: { color: '#8CFF00', fillOpacity: 0.2 } },
+                    polyline: false, rectangle: false, circle: false, circlemarker: false, marker: false
+                }
+            });
+            map.addControl(drawControl);
+
+            map.on('draw:created', function (e) {
+                const layer = e.layer;
+                const type = e.layerType;
+                if (type === 'polygon') {
+                    const latlngs = layer.getLatLngs()[0];
+                    const coordinates = latlngs.map(p => [p.lng, p.lat]);
+                    const name = prompt("Enter a name for this delivery zone:");
+                    if (name) {
+                        saveLocation(name, coordinates);
+                        drawnItems.addLayer(layer);
+                    } else { map.removeLayer(layer); }
+                }
+            });
+
+            loadLocations();
         }
 
-        // --- LOCATIONS (MAP) ---
-        function initMap() { if (map) return; map = L.map('map').setView([20.5937, 78.9629], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map); drawnItems = new L.FeatureGroup(); map.addLayer(drawnItems); const drawControl = new L.Control.Draw({ edit: { featureGroup: drawnItems }, draw: { polygon: { allowIntersection: false }, polyline: false, rectangle: false, circle: false, circlemarker: false, marker: false } }); map.addControl(drawControl); map.on('draw:created', function (e) { const layer = e.layer; if (e.layerType === 'polygon') { const latlngs = layer.getLatLngs()[0]; const coordinates = latlngs.map(p => [p.lng, p.lat]); const name = prompt("Enter a name for this delivery zone:"); if (name) { saveLocation(name, coordinates); drawnItems.addLayer(layer); } else { map.removeLayer(layer); } } }); loadLocations(); }
-        async function loadLocations() { const l = document.getElementById('locationsList'); try{ const r = await fetch(`${API_URL}/api/locations`); const data = await r.json(); if(data.length === 0){ l.innerHTML = '<p class="text-neutral-500 text-xs">Draw a shape on the map to add a zone.</p>'; return; } drawnItems.clearLayers(); l.innerHTML = data.map(x => { if(x.area && x.area.coordinates){ const latlngs = x.area.coordinates[0].map(c => [c[1], c[0]]); L.polygon(latlngs, { color: '#8CFF00', fillOpacity: 0.2 }).addTo(drawnItems); map.fitBounds(drawnItems.getBounds()); } return `<div class="flex items-center justify-between p-3 bg-brand-black/50 rounded-lg border border-white/5"><div class="flex items-center gap-2"><iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon><span class="text-sm">${x.name}</span></div><button onclick="deleteLocation('${x._id}')" class="text-red-500 text-xs hover:underline">Delete</button></div>`; }).join(''); }catch(e){} }
-        async function saveLocation(name, coordinates) { try{ await fetch(`${API_URL}/api/locations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, coordinates }) }); loadLocations(); } catch(e) { alert("Error"); } }
+        async function loadLocations() { 
+            const l = document.getElementById('locationsList');
+            try{ 
+                const r = await fetch(`${API_URL}/api/locations`); const data = await r.json(); 
+                if(data.length === 0){ l.innerHTML = '<p class="text-neutral-500 text-xs">Draw a shape on the map to add a zone.</p>'; return; }
+                drawnItems.clearLayers();
+                l.innerHTML = data.map(x => {
+                    if(x.area && x.area.coordinates){
+                        const latlngs = x.area.coordinates[0].map(c => [c[1], c[0]]);
+                        L.polygon(latlngs, { color: '#8CFF00', fillOpacity: 0.2 }).addTo(drawnItems);
+                    }
+                    return `<div class="flex items-center justify-between p-3 bg-brand-black/50 rounded-lg border border-white/5"><div class="flex items-center gap-2"><iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon><span class="text-sm">${x.name}</span></div><button onclick="deleteLocation('${x._id}')" class="text-red-500 text-xs hover:underline">Delete</button></div>`;
+                }).join('');
+                // Fit map to show all zones
+                if(drawnItems.getLayers().length > 0) map.fitBounds(drawnItems.getBounds());
+            }catch(e){} 
+        }
+
+        async function saveLocation(name, coordinates) {
+            try{
+                await fetch(`${API_URL}/api/locations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, coordinates })
+                });
+                loadLocations();
+            } catch(e) { alert("Error"); }
+        }
+
         async function deleteLocation(id){ if(confirm("Delete this zone?")){ await fetch(`${API_URL}/api/locations/${id}`,{method:'DELETE'}); loadLocations(); } }
     </script>
 </body>
