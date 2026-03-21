@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Night Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { cursor: none; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::selection { background: white; color: black; }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+    </style>
+</head>
+<body class="bg-brand-black text-white font-sans antialiased">
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
+                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
+                        <g transform="translate(12, 18) scale(0.8)" fill="#8CFF00">
+                            <path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" />
+                            <circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" />
+                        </g>
+                        <line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
+                        <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text>
+                    </svg>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
+                        <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon> Back to Shop
+                    </a>
+                    <button onclick="logoutUser()" class="text-sm text-red-500 hover:underline">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 md:pt-32 pb-16 min-h-screen">
+        <div class="max-w-4xl mx-auto px-6">
+            
+            <!-- Profile Header -->
+            <div class="bg-brand-gray rounded-3xl border border-white/5 p-8 mb-8">
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center border-2 border-brand-accent/30">
+                        <iconify-icon icon="lucide:user" width="40" class="text-brand-accent"></iconify-icon>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h1 id="profileName" class="text-3xl font-bold">User Name</h1>
+                        <p class="text-neutral-500 mt-1">Member since 2024</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Account Details -->
+                <div class="bg-brand-gray rounded-2xl border border-white/5 p-6">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <iconify-icon icon="lucide:settings-2" width="20" class="text-brand-accent"></iconify-icon>
+                        Account Details
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-3 border-b border-white/5">
+                            <span class="text-neutral-500">Full Name</span>
+                            <span id="detName" class="font-medium">User</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-white/5">
+                            <span class="text-neutral-500">Phone Number</span>
+                            <span id="detPhone" class="font-medium">+91...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-white/5">
+                            <span class="text-neutral-500">Email Address</span>
+                            <span id="detEmail" class="font-medium text-neutral-600">Not Added</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-white/5">
+                            <span class="text-neutral-500">Gender</span>
+                            <span id="detGender" class="font-medium capitalize">Not Set</span>
+                        </div>
+                        <div class="flex justify-between items-center py-3">
+                            <span class="text-neutral-500">Date of Birth</span>
+                            <span id="detDob" class="font-medium">Not Set</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order History -->
+                <div class="bg-brand-gray rounded-2xl border border-white/5 p-6">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <iconify-icon icon="lucide:history" width="20" class="text-brand-accent"></iconify-icon>
+                        Order History
+                    </h3>
+                    <div id="orderHistory" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+                        <p class="text-neutral-500 text-sm text-center py-4">Loading orders...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'https://night-cart.onrender.com';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCursor();
+            loadProfile();
+        });
+
+        function setupCursor() {
+            const d = document.getElementById('cursor-dot');
+            const r = document.getElementById('cursor-ring');
+            document.addEventListener('mousemove', e => {
+                d.style.left = e.clientX - 4 + 'px'; d.style.top = e.clientY - 4 + 'px';
+                r.style.left = e.clientX - 20 + 'px'; r.style.top = e.clientY - 20 + 'px';
+            });
+        }
+
+        function loadProfile() {
+            const name = localStorage.getItem('nc_userName') || 'User';
+            const phone = localStorage.getItem('nc_userPhone') || 'N/A';
+            const dob = localStorage.getItem('nc_userDob') || 'Not Set';
+            const gender = localStorage.getItem('nc_userGender') || 'Not Set';
+
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('detName').textContent = name;
+            document.getElementById('detPhone').textContent = phone;
+            document.getElementById('detDob').textContent = dob;
+            document.getElementById('detGender').textContent = gender;
+
+            // Load Orders
+            loadOrders(phone);
+        }
+
+        async function loadOrders(phone) {
+            const container = document.getElementById('orderHistory');
+            try {
+                // Fetch orders from backend using phone number
+                const res = await fetch(`${API_URL}/api/orders/user/${phone}`);
+                const orders = await res.json();
+
+                if (orders.length === 0) {
+                    container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No orders found.</p>';
+                    return;
+                }
+
+                container.innerHTML = orders.map(o => `
+                    <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-neutral-500">${new Date(o.createdAt).toLocaleDateString()}</span>
+                            <span class="text-xs font-bold ${o.status === 'pending' ? 'text-yellow-500' : 'text-green-500'} uppercase">${o.status}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">${o.items.length} Item(s)</span>
+                            <span class="font-bold">₹${o.totalAmount}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Failed to load orders.</p>';
+            }
+        }
+
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
