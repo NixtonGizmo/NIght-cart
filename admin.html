@@ -184,9 +184,7 @@
                                         <th class="px-6 py-4 font-medium">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="productsTableBody">
-                                    <tr><td colspan="5" class="text-center p-8 text-neutral-500">Loading...</td></tr>
-                                </tbody>
+                                <tbody id="productsTableBody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -418,7 +416,7 @@
             }
         }
 
-        // --- ORDERS ---
+        // --- ORDERS (UPDATED) ---
         async function loadOrders() {
             try {
                 const res = await fetch(`${API_URL}/api/orders`);
@@ -445,7 +443,21 @@
                                 </div>
                                 <p class="text-lg font-bold text-white">₹${o.totalAmount}</p>
                             </div>
-                            <div class="text-xs text-neutral-500 mb-3">${o.items.length} items • ${new Date(o.createdAt).toLocaleTimeString()}</div>
+                            
+                            <!-- ITEMS LIST (FIXED) -->
+                            <div class="mb-3 border-t border-white/5 pt-3">
+                                <p class="text-xs font-bold text-neutral-500 mb-2">Items:</p>
+                                <div class="space-y-1">
+                                    ${o.items.map(item => `
+                                        <div class="flex justify-between text-xs text-neutral-300">
+                                            <span>• ${item.name}</span>
+                                            <span class="text-neutral-500">x${item.quantity}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="text-xs text-neutral-500 mb-3">${new Date(o.createdAt).toLocaleTimeString()}</div>
                             <button onclick="markDelivered('${o._id}')" class="w-full bg-green-500/10 text-green-500 py-2 rounded-lg text-sm font-medium hover:bg-green-500/20 transition-colors">
                                 Mark as Delivered
                             </button>
@@ -460,12 +472,24 @@
                 if(delivered.length > 0) {
                     deliveredList.innerHTML = delivered.map(o => `
                         <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 opacity-70">
-                            <div class="flex justify-between items-center">
+                            <div class="flex justify-between items-center mb-3">
                                 <div>
                                     <p class="font-mono text-xs text-neutral-500">${o.orderId}</p>
                                     <p class="font-semibold">${o.userName}</p>
                                 </div>
                                 <p class="font-bold">₹${o.totalAmount}</p>
+                            </div>
+                            
+                            <!-- ITEMS LIST (FIXED) -->
+                            <div class="border-t border-white/5 pt-2">
+                                 <div class="space-y-1">
+                                    ${o.items.map(item => `
+                                        <div class="flex justify-between text-xs text-neutral-400">
+                                            <span>• ${item.name}</span>
+                                            <span>x${item.quantity}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
                         </div>
                     `).join('');
