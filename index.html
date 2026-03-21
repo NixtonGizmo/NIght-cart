@@ -30,16 +30,11 @@
         ::selection { background: white; color: black; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes deliveryBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { max-height: 0; opacity: 0; } to { max-height: 300px; opacity: 1; } }
         
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
-        .animate-pulse-custom { animation: pulse 2s ease-in-out infinite; }
-        .animate-bounce-custom { animation: deliveryBounce 1s ease-in-out infinite; }
-        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         
-        .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; } .delay-400 { animation-delay: 400ms; }
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
         .product-card:hover .product-image { transform: scale(1.05); }
@@ -51,6 +46,11 @@
         
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
+
+        /* Widget Animations */
+        .widget-container { transition: all 0.3s ease; }
+        .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+        .widget-items.open { max-height: 300px; opacity: 1; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -85,16 +85,10 @@
                         </button>
                         <div id="profileDropdown" class="profile-dropdown">
                             <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
-                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center">
-                                    <iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon>
-                                </div>
+                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div>
                                 <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
                             </div>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex justify-between text-neutral-400"><span>DOB:</span><span id="dropDob" class="text-white">Not Set</span></div>
-                                <div class="flex justify-between text-neutral-400"><span>Gender:</span><span id="dropGender" class="text-white capitalize">Not Set</span></div>
-                            </div>
-                            <button onclick="logoutUser()" class="w-full mt-4 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
+                            <button onclick="logoutUser()" class="w-full mt-2 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
                         </div>
                     </div>
                 </div>
@@ -120,10 +114,10 @@
                     </h1>
                     <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
                 </div>
-                <div class="hidden md:block relative">
-                    <div class="relative animate-bounce-custom">
+                <div class="hidden md:block relative animate-fade-in delay-300">
+                    <div class="relative">
                         <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
-                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold animate-pulse-custom">10 MIN</div>
+                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold">10 MIN</div>
                     </div>
                 </div>
             </div>
@@ -173,26 +167,38 @@
         <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
     </footer>
 
-    <!-- FLOATING CART WIDGET (Like the image) -->
-    <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-white text-black rounded-2xl shadow-2xl z-40 hidden transform translate-y-24 transition-transform duration-300">
-        <div class="flex items-center justify-between p-3">
-            <!-- Left Side: Image + Details -->
+    <!-- FLOATING CART WIDGET (Theme Matched) -->
+    <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
+        
+        <!-- Main Bar -->
+        <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
+            <!-- Left: Image + Info -->
             <div class="flex items-center gap-3">
-                <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-gray-100">
+                <div class="relative">
+                    <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10">
+                    <span id="widgetBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                </div>
                 <div class="text-left">
                     <div class="flex items-center gap-2">
-                        <span id="widgetCount" class="font-bold text-gray-900">1 Item</span>
-                        <iconify-icon icon="lucide:chevron-up" width="16" class="text-gray-500"></iconify-icon>
+                        <span id="widgetCount" class="font-bold text-white">0 Items</span>
+                        <iconify-icon id="widgetArrow" icon="lucide:chevron-up" width="16" class="text-neutral-400 transition-transform duration-300"></iconify-icon>
                     </div>
-                    <p id="widgetSavings" class="text-sm text-green-600 font-medium">₹0 saved, more coming up!</p>
+                    <p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p>
                 </div>
             </div>
             
-            <!-- Right Side: Button -->
-            <a href="cart.html" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
-                Go to Cart
+            <!-- Right: Button (Stop propagation so clicking button doesn't toggle list) -->
+            <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
+                Checkout
                 <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
             </a>
+        </div>
+
+        <!-- Expanded Items List (Hidden by default) -->
+        <div id="widgetItems" class="widget-items border-t border-white/5">
+            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList">
+                <!-- Items populated by JS -->
+            </div>
         </div>
     </div>
 
@@ -278,24 +284,42 @@
                     return sum + savingPerItem;
                 }, 0);
 
-                // Update Content
+                // Update Main Bar
                 document.getElementById('widgetCount').textContent = `${totalItems} Item${totalItems > 1 ? 's' : ''}`;
-                document.getElementById('widgetSavings').textContent = `₹${savings} saved, more coming up!`;
+                document.getElementById('widgetSavings').textContent = `₹${savings} saved`;
+                document.getElementById('widgetBadge').textContent = totalItems;
                 
                 // Show Last Added Image
                 const lastItem = cart[cart.length - 1];
                 if(lastItem) document.getElementById('widgetImg').src = lastItem.image;
 
-                // Show Widget with animation
+                // Update Expanded List Content
+                const listContainer = document.getElementById('widgetItemsList');
+                listContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg">
+                        <img src="${item.image}" class="w-10 h-10 rounded object-cover">
+                        <div class="flex-1">
+                            <p class="text-xs font-medium truncate">${item.name}</p>
+                            <p class="text-xs text-neutral-500">Qty: ${item.quantity}</p>
+                        </div>
+                        <span class="text-xs font-bold">₹${item.price * item.quantity}</span>
+                    </div>
+                `).join('');
+
+                // Show Widget
                 widget.classList.remove('hidden');
-                // Trigger reflow
-                void widget.offsetWidth; 
-                widget.classList.remove('translate-y-24');
             } else {
-                widget.classList.add('translate-y-24');
-                setTimeout(() => widget.classList.add('hidden'), 300);
+                widget.classList.add('hidden');
             }
         }
+
+        // Toggle Items List
+        window.toggleWidgetItems = () => {
+            const itemsDiv = document.getElementById('widgetItems');
+            const arrow = document.getElementById('widgetArrow');
+            itemsDiv.classList.toggle('open');
+            arrow.style.transform = itemsDiv.classList.contains('open') ? 'rotate(0deg)' : 'rotate(180deg)';
+        };
 
         window.addToCart = (productId) => {
             const product = allProducts.find(p => p.id === productId);
@@ -315,9 +339,9 @@
 
         function showNotification(message) {
             const notification = document.createElement('div');
-            notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50';
+            notification.className = 'fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg';
             notification.textContent = message; document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
+            setTimeout(() => notification.remove(), 1500);
         }
 
         // --- 5. AUTH LOGIC ---
