@@ -32,11 +32,15 @@
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .otp-input { width: 60px; height: 60px; text-align: center; font-size: 24px; font-weight: 600; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; outline: none; color: white; transition: all 0.2s; }
         .otp-input:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        
+        /* Custom Popup Animation */
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .popup-animate { animation: scaleIn 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -44,6 +48,23 @@
     <div id="cursor-ring"></div>
     <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
     
+    <!-- SUCCESS POPUP MODAL -->
+    <div id="successModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl text-center popup-animate">
+            <div class="p-8">
+                <div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <iconify-icon icon="lucide:check-circle" width="40" class="text-green-500"></iconify-icon>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Login Successful!</h2>
+                <p class="text-neutral-400 text-sm mb-6">Welcome back to Night Cart.</p>
+                <div class="flex items-center justify-center gap-2 text-brand-accent text-sm">
+                    <iconify-icon icon="lucide:loader-2" width="16" class="animate-spin"></iconify-icon>
+                    Redirecting...
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
@@ -65,7 +86,6 @@
     <!-- Main Content -->
     <main class="min-h-screen flex items-center justify-center pt-20 px-6">
         <div class="w-full max-w-md">
-            
             <!-- STEP 1: Phone -->
             <div id="phoneStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 animate-fade-in">
                 <div class="text-center mb-8">
@@ -119,15 +139,15 @@
                 </div>
                 <form onsubmit="saveProfile(event)" class="space-y-5">
                     <div>
-                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Full Name</label>
-                        <input type="text" id="profileName" placeholder="Enter your name" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Full Name</label>
+                        <input type="text" id="profileName" placeholder="Enter your name" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Date of Birth</label>
-                        <input type="date" id="profileDob" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Date of Birth</label>
+                        <input type="date" id="profileDob" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Gender</label>
+                        <label class="block text-xs text-neutral-500 mb-1 uppercase">Gender</label>
                         <div class="flex gap-4">
                             <label class="flex-1 flex items-center gap-2 p-3 bg-brand-black border border-white/10 rounded-xl cursor-pointer hover:border-brand-accent/50 transition-all">
                                 <input type="radio" name="gender" value="male" required class="accent-brand-accent">
@@ -142,74 +162,67 @@
                     <button id="saveProfileBtn" type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Save & Continue</button>
                 </form>
             </div>
-
         </div>
     </main>
     
     <script>
-        // --- Cursor Logic ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const cursorDot = document.getElementById('cursor-dot');
-            const cursorRing = document.getElementById('cursor-ring');
-            if (cursorDot && cursorRing) {
-                document.addEventListener('mousemove', (e) => {
-                    cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
-                    cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
-                });
-                const interactives = document.querySelectorAll('a, button, input');
-                interactives.forEach(el => {
-                    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
-                    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
-                });
-            }
+        const API_URL = 'https://night-cart.onrender.com';
+        let currentPhone = ''; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCursor();
         });
 
-        // --- API CONFIGURATION ---
-        const API_URL = 'https://night-cart.onrender.com';
-        let currentPhone = ''; // Store phone for final step
+        // --- POPUP LOGIC ---
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // --- CURSOR ---
+        function setupCursor() {
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            document.addEventListener('mousemove', (e) => {
+                cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
+                cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
+            });
+        }
 
         // --- STEP 1: SEND OTP ---
         async function showOTPStep(e) {
             e.preventDefault();
             const phone = document.getElementById('phoneNumber').value;
-            
-            if(phone.length !== 10) {
-                alert("Please enter a valid 10-digit number");
-                return;
-            }
+            if(phone.length !== 10) { alert("Please enter a valid 10-digit number"); return; }
             
             currentPhone = "+91" + phone;
 
             const btn = document.getElementById('getOtpBtn');
-            const originalText = btn.innerText;
             btn.innerText = "Sending...";
             btn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/api/send-otp`, {
+                const res = await fetch(`${API_URL}/api/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: currentPhone })
                 });
-                
-                const data = await response.json();
-
+                const data = await res.json();
                 if(data.success) {
                     document.getElementById('displayPhone').innerText = currentPhone;
                     document.getElementById('phoneStep').classList.add('hidden');
                     document.getElementById('otpStep').classList.remove('hidden');
-                    document.getElementById('otpStep').classList.add('animate-fade-in');
                     document.querySelectorAll('.otp-input')[0].focus();
-                } else {
-                    alert("Error: " + (data.message || "Could not send OTP"));
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Cannot connect to server.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+                } else { alert("Error: " + data.message); }
+            } catch (err) { alert("Server connection error"); }
+            finally { btn.innerText = "Get OTP"; btn.disabled = false; }
         }
 
         // --- STEP 2: VERIFY OTP ---
@@ -217,113 +230,86 @@
             const inputs = document.querySelectorAll('.otp-input');
             let otp = '';
             inputs.forEach(input => otp += input.value);
-
-            if(otp.length !== 4) {
-                alert("Please enter the full 4-digit code");
-                return;
-            }
+            if(otp.length !== 4) { alert("Please enter the full 4-digit code"); return; }
 
             const btn = document.getElementById('verifyBtn');
-            const originalText = btn.innerText;
             btn.innerText = "Verifying...";
             btn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/api/verify-otp`, {
+                const res = await fetch(`${API_URL}/api/verify-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone: currentPhone, otp: otp })
                 });
-
-                const data = await response.json();
+                const data = await res.json();
 
                 if(data.success) {
-                    // Check if user is new or existing
+                    // SAVE PHONE ALWAYS
+                    localStorage.setItem('nc_userPhone', currentPhone);
+
                     if(data.isNew) {
-                        // Go to Step 3: Complete Profile
+                        // New user -> Go to Profile Step
                         document.getElementById('otpStep').classList.add('hidden');
                         document.getElementById('profileStep').classList.remove('hidden');
-                        document.getElementById('profileStep').classList.add('animate-fade-in');
                     } else {
-                        // Existing user: Save to LocalStorage and Redirect
+                        // Existing user -> Login Directly
                         localStorage.setItem('nc_isLoggedIn', 'true');
                         localStorage.setItem('nc_userName', data.user.name || 'User');
                         localStorage.setItem('nc_userDob', data.user.dob || 'Not Set');
                         localStorage.setItem('nc_userGender', data.user.gender || 'Not Set');
                         
-                        alert("Login Successful!");
-                        window.location.href = 'index.html';
+                        // SHOW POPUP
+                        showSuccessModal();
+                        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
                     }
                 } else {
                     alert("Invalid OTP. Please try again.");
                     inputs.forEach(input => input.value = '');
                     inputs[0].focus();
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Server connection error.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            } catch (error) { alert("Server connection error."); }
+            finally { btn.innerText = "Verify & Login"; btn.disabled = false; }
         }
 
         // --- STEP 3: SAVE PROFILE ---
         async function saveProfile(e) {
             e.preventDefault();
-            
             const name = document.getElementById('profileName').value;
             const dob = document.getElementById('profileDob').value;
             const gender = document.querySelector('input[name="gender"]:checked').value;
 
             const btn = document.getElementById('saveProfileBtn');
-            const originalText = btn.innerText;
             btn.innerText = "Saving...";
             btn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/api/update-profile`, {
+                const res = await fetch(`${API_URL}/api/update-profile`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        phone: currentPhone, 
-                        name: name, 
-                        dob: dob, 
-                        gender: gender 
-                    })
+                    body: JSON.stringify({ phone: currentPhone, name, dob, gender })
                 });
-
-                const data = await response.json();
+                const data = await res.json();
 
                 if(data.success) {
-                    // Save to LocalStorage for UI display
                     localStorage.setItem('nc_isLoggedIn', 'true');
                     localStorage.setItem('nc_userName', name);
+                    localStorage.setItem('nc_userPhone', currentPhone); // Ensure phone saved
                     localStorage.setItem('nc_userDob', dob);
                     localStorage.setItem('nc_userGender', gender);
 
-                    alert("Profile Saved! Welcome aboard.");
-                    window.location.href = 'index.html';
-                } else {
-                    alert("Error saving profile.");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Server connection error.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+                    // SHOW POPUP
+                    showSuccessModal();
+                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                } else { alert("Error saving profile."); }
+            } catch (err) { alert("Server connection error."); }
+            finally { btn.innerText = "Save & Continue"; btn.disabled = false; }
         }
 
         // --- HELPERS ---
         function goBack(step) {
-            if(step === 1) {
-                document.getElementById('otpStep').classList.add('hidden');
-                document.getElementById('phoneStep').classList.remove('hidden');
-            }
+            if(step === 1) { document.getElementById('otpStep').classList.add('hidden'); document.getElementById('phoneStep').classList.remove('hidden'); }
         }
-
         function moveToNext(current, nextIndex) {
             if (current.value.length === 1 && nextIndex <= 4) {
                 const inputs = document.querySelectorAll('.otp-input');
