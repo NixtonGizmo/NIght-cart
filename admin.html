@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Night Cart</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family/Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <script>
         tailwind.config = {
@@ -29,6 +29,7 @@
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .sidebar-link.active { background: rgba(140, 255, 0, 0.1); border-color: rgba(140, 255, 0, 0.3); color: #8CFF00; }
+        .modal-open { display: flex; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -115,7 +116,7 @@
                                     <iconify-icon icon="lucide:indian-rupee" width="24" class="text-brand-accent"></iconify-icon>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold">₹4,50,000</p>
+                            <p class="text-2xl font-bold">₹0</p>
                             <p class="text-xs text-neutral-500 mt-1">Total Revenue</p>
                         </div>
                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
@@ -124,7 +125,7 @@
                                     <iconify-icon icon="lucide:package" width="24" class="text-purple-500"></iconify-icon>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold">320</p>
+                            <p id="dashProducts" class="text-2xl font-bold">0</p>
                             <p class="text-xs text-neutral-500 mt-1">Total Products</p>
                         </div>
                     </div>
@@ -195,6 +196,13 @@
                     <label class="block text-xs text-neutral-500 mb-1 uppercase">Product Name</label>
                     <input type="text" id="newProdName" placeholder="e.g. Fresh Apples" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-brand-accent/50">
                 </div>
+                <div>
+                    <label class="block text-xs text-neutral-500 mb-1 uppercase">Image URL</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newProdImage" placeholder="https://..." class="flex-1 bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
+                        <button onclick="generateRandomImage()" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-xs whitespace-nowrap">Random</button>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs text-neutral-500 mb-1 uppercase">Category</label>
@@ -217,13 +225,6 @@
                     <div>
                         <label class="block text-xs text-neutral-500 mb-1 uppercase">Original Price (₹)</label>
                         <input type="number" id="newProdOriginalPrice" placeholder="120" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs text-neutral-500 mb-1 uppercase">Image URL</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="newProdImage" placeholder="https://..." class="flex-1 bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none">
-                        <button onclick="generateRandomImage()" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-xs">Random</button>
                     </div>
                 </div>
             </div>
@@ -328,10 +329,14 @@
             try {
                 const res = await fetch(`${API_URL}/api/products`);
                 const products = await res.json();
+                
+                // Update dashboard count
+                document.getElementById('dashProducts').textContent = products.length;
+
                 tbody.innerHTML = products.map(p => `
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4"><img src="${p.image}" class="w-10 h-10 rounded-lg object-cover"></td>
-                        <td class="px-6 py-4 font-medium">${p.name}</td>
+                        <td class="px-6 py-4 font-medium">${p.name} <span class="text-neutral-500 text-xs block">${p.weight}</span></td>
                         <td class="px-6 py-4 text-neutral-400 capitalize">${p.category}</td>
                         <td class="px-6 py-4">₹${p.price}</td>
                         <td class="px-6 py-4">
@@ -342,31 +347,44 @@
             } catch (err) { console.error(err); }
         }
 
-        function openModal() { document.getElementById('productModal').classList.remove('hidden'); document.getElementById('productModal').classList.add('flex'); }
-        function closeModal() { document.getElementById('productModal').classList.add('hidden'); }
-        function generateRandomImage() { document.getElementById('newProdImage').value = `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/300/300`; }
+        function openModal() { document.getElementById('productModal').classList.remove('hidden'); document.getElementById('productModal').classList.add('modal-open'); }
+        function closeModal() { document.getElementById('productModal').classList.add('hidden'); document.getElementById('productModal').classList.remove('modal-open'); }
+        
+        function generateRandomImage() {
+            const seed = Math.random().toString(36).substring(7);
+            document.getElementById('newProdImage').value = `https://picsum.photos/seed/${seed}/300/300`;
+        }
 
         async function saveProduct() {
             const price = Number(document.getElementById('newProdPrice').value);
             const originalPrice = Number(document.getElementById('newProdOriginalPrice').value);
             const product = {
-                id: Date.now(),
+                id: Date.now(), // Unique ID
                 name: document.getElementById('newProdName').value,
                 category: document.getElementById('newProdCat').value,
                 weight: document.getElementById('newProdWeight').value,
                 price: price,
                 originalPrice: originalPrice,
                 image: document.getElementById('newProdImage').value || `https://picsum.photos/seed/${Date.now()}/300/300`,
-                discount: Math.round(((originalPrice - price) / originalPrice) * 100) || 0
+                discount: originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
             };
+
             try {
-                await fetch(`${API_URL}/api/products`, {
+                const res = await fetch(`${API_URL}/api/products`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(product)
                 });
-                closeModal(); loadProducts();
-            } catch (err) { alert("Error saving product"); }
+                const data = await res.json();
+                if(data.success) {
+                    closeModal();
+                    loadProducts();
+                } else {
+                    alert("Failed to save product");
+                }
+            } catch (err) {
+                alert("Error saving product");
+            }
         }
 
         async function deleteProduct(id) {
