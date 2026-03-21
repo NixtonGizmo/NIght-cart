@@ -55,7 +55,7 @@
     <div id="cursor-ring"></div>
     <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
     
-    <!-- ERROR POPUP (Server Down) -->
+    <!-- ERROR POPUP -->
     <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center animate-scale-in">
             <div class="p-10">
@@ -64,10 +64,8 @@
                 </div>
                 <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
                 <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
-                <p class="text-xs text-neutral-500 mb-8">Check Render Logs or wait 30 seconds and retry.</p>
-                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">
-                    Close
-                </button>
+                <p class="text-xs text-neutral-500 mb-8">Check Render Logs or wait 30 seconds.</p>
+                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button>
             </div>
         </div>
     </div>
@@ -76,22 +74,17 @@
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
-                
-                <!-- NEW LOGO SVG -->
-                <a href="index.html" class="flex items-center gap-2 group hover:opacity-80 transition-opacity">
-                    <svg width="140" height="46" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Moon (White) -->
+                <!-- LOGO SVG (30% BIGGER) -->
+                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
+                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
-                        <!-- Cart Icon (Brand Green) -->
                         <g transform="translate(12, 18) scale(0.8)" fill="#8CFF00">
                             <path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" />
                             <circle cx="10" cy="22" r="4" />
                             <circle cx="26" cy="22" r="4" />
                         </g>
-                        <!-- Speed Lines (Brand Green) -->
                         <line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
                         <line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
-                        <!-- Text -->
                         <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32">
                             <tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan>
                         </text>
@@ -125,7 +118,6 @@
             </div>
         </div>
         
-        <!-- Mobile Search -->
         <div class="md:hidden px-6 pb-4">
             <div class="relative w-full">
                 <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
@@ -401,7 +393,7 @@
         // --- 6. CURSOR LOGIC ---
         function setupCursor() {
             const cursorDot = document.getElementById('cursor-dot');
-            const cursorRing = document.getElementById('cursorRing');
+            const cursorRing = document.getElementById('cursor-ring');
             document.addEventListener('mousemove', (e) => {
                 cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
                 cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
