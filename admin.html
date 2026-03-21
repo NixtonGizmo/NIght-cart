@@ -46,7 +46,7 @@
     <div id="dashboardScreen" class="flex h-screen overflow-hidden hidden">
         <aside class="w-64 bg-brand-dark border-r border-white/5 flex flex-col z-40 flex-shrink-0">
             <div class="p-6 border-b border-white/5">
-                <!-- LOGO SVG (30% BIGGER) -->
+                <!-- LOGO SVG -->
                 <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
                     <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
@@ -61,10 +61,18 @@
                 </a>
             </div>
             <nav class="flex-1 p-4 space-y-1">
-                <button onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left"><iconify-icon icon="lucide:layout-dashboard" width="20"></iconify-icon><span class="text-sm font-medium">Dashboard</span></button>
-                <button onclick="showSection('users')" data-section="users" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left"><iconify-icon icon="lucide:users" width="20"></iconify-icon><span class="text-sm font-medium">Users</span></button>
-                <button onclick="showSection('products')" data-section="products" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left"><iconify-icon icon="lucide:package" width="20"></iconify-icon><span class="text-sm font-medium">Products</span></button>
-                <button onclick="showSection('orders')" data-section="orders" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left"><iconify-icon icon="lucide:truck" width="20"></iconify-icon><span class="text-sm font-medium">Orders</span></button>
+                <button onclick="showSection('dashboard')" data-section="dashboard" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:layout-dashboard" width="20"></iconify-icon><span class="text-sm font-medium">Dashboard</span>
+                </button>
+                <button onclick="showSection('users')" data-section="users" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:users" width="20"></iconify-icon><span class="text-sm font-medium">Users</span>
+                </button>
+                <button onclick="showSection('products')" data-section="products" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:package" width="20"></iconify-icon><span class="text-sm font-medium">Products</span>
+                </button>
+                <button onclick="showSection('orders')" data-section="orders" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent text-neutral-400 hover:text-white hover:bg-white/5 transition-all text-left">
+                    <iconify-icon icon="lucide:truck" width="20"></iconify-icon><span class="text-sm font-medium">Orders</span>
+                </button>
             </nav>
         </aside>
 
@@ -79,7 +87,7 @@
                 <section id="dashboard" class="section-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         
-                        <!-- Total Revenue Card -->
+                        <!-- Revenue Card -->
                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-12 h-12 bg-brand-accent/10 rounded-xl flex items-center justify-center">
@@ -90,7 +98,7 @@
                             <p class="text-xs text-neutral-500 mt-1">Total Revenue</p>
                         </div>
 
-                        <!-- Total Products Card -->
+                        <!-- Products Card -->
                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
@@ -101,11 +109,11 @@
                             <p class="text-xs text-neutral-500 mt-1">Total Products</p>
                         </div>
 
-                        <!-- Total Orders Card -->
+                        <!-- Orders Card -->
                         <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
-                                    <iconify-icon icon="lucide:truck" width="24" class="text-green-500"></iconify-icon>
+                                    <iconify-icon icon="lucide:shopping-bag" width="24" class="text-green-500"></iconify-icon>
                                 </div>
                             </div>
                             <p id="dashOrders" class="text-2xl font-bold">0</p>
@@ -118,32 +126,86 @@
                 <!-- Users Section -->
                 <section id="users" class="section-content hidden">
                     <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
-                        <div class="p-6 border-b border-white/5"><h3 class="font-semibold">Registered Users</h3></div>
-                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-brand-black/50 text-neutral-500 text-left"><tr><th class="px-6 py-4 font-medium">Name</th><th class="px-6 py-4 font-medium">Phone</th><th class="px-6 py-4 font-medium">DOB</th><th class="px-6 py-4 font-medium">Gender</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="4" class="text-center p-8 text-neutral-500">Loading...</td></tr></tbody></table></div>
+                        <div class="p-6 border-b border-white/5 flex items-center gap-3">
+                            <iconify-icon icon="lucide:users" width="20" class="text-brand-accent"></iconify-icon>
+                            <h3 class="font-semibold">Registered Users</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-brand-black/50 text-neutral-500 text-left">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">Name</th>
+                                        <th class="px-6 py-4 font-medium">Phone</th>
+                                        <th class="px-6 py-4 font-medium">DOB</th>
+                                        <th class="px-6 py-4 font-medium">Gender</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody"><tr><td colspan="4" class="text-center p-8 text-neutral-500">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Products Section -->
                 <section id="products" class="section-content hidden">
                     <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
-                        <div class="p-6 border-b border-white/5 flex items-center justify-between"><h3 class="font-semibold">Product Inventory</h3><button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-brand-accent text-black font-semibold rounded-lg hover:bg-brand-yellow transition-colors text-sm"><iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add Product</button></div>
-                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-brand-black/50 text-neutral-500 text-left"><tr><th class="px-6 py-4 font-medium">Image</th><th class="px-6 py-4 font-medium">Product</th><th class="px-6 py-4 font-medium">Category</th><th class="px-6 py-4 font-medium">Price</th><th class="px-6 py-4 font-medium">Action</th></tr></thead><tbody id="productsTableBody"></tbody></table></div>
+                        <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <iconify-icon icon="lucide:package" width="20" class="text-brand-accent"></iconify-icon>
+                                <h3 class="font-semibold">Product Inventory</h3>
+                            </div>
+                            <button onclick="openModal()" class="flex items-center gap-2 px-4 py-2 bg-brand-accent text-black font-semibold rounded-lg hover:bg-brand-yellow transition-colors text-sm">
+                                <iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add Product
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-brand-black/50 text-neutral-500 text-left">
+                                    <tr>
+                                        <th class="px-6 py-4 font-medium">Image</th>
+                                        <th class="px-6 py-4 font-medium">Product</th>
+                                        <th class="px-6 py-4 font-medium">Category</th>
+                                        <th class="px-6 py-4 font-medium">Price</th>
+                                        <th class="px-6 py-4 font-medium">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
                 <!-- Orders Section -->
                 <section id="orders" class="section-content hidden">
                     <div class="grid lg:grid-cols-2 gap-6">
+                        
+                        <!-- Pending Orders -->
                         <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
-                            <div class="p-6 border-b border-white/5 flex items-center justify-between bg-red-500/5"><h3 class="font-semibold text-red-400">Pending Orders</h3><span id="pendingCount" class="px-2 py-1 bg-red-500/10 text-red-400 text-xs font-bold rounded">0</span></div>
-                            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="pendingOrdersList"><p class="text-center text-neutral-500 text-sm py-8">No pending orders</p></div>
+                            <div class="p-6 border-b border-white/5 flex items-center gap-3 bg-red-500/5">
+                                <iconify-icon icon="lucide:clock" width="20" class="text-red-400"></iconify-icon>
+                                <h3 class="font-semibold text-red-400">Pending Orders</h3>
+                                <span id="pendingCount" class="ml-auto px-2 py-1 bg-red-500/10 text-red-400 text-xs font-bold rounded">0</span>
+                            </div>
+                            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="pendingOrdersList">
+                                <p class="text-center text-neutral-500 text-sm py-8">No pending orders</p>
+                            </div>
                         </div>
+
+                        <!-- Delivered Orders -->
                         <div class="bg-brand-gray rounded-2xl border border-white/5 overflow-hidden">
-                            <div class="p-6 border-b border-white/5 flex items-center justify-between bg-green-500/5"><h3 class="font-semibold text-green-400">Delivered Orders</h3><span id="deliveredCount" class="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded">0</span></div>
-                            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="deliveredOrdersList"><p class="text-center text-neutral-500 text-sm py-8">No delivered orders</p></div>
+                            <div class="p-6 border-b border-white/5 flex items-center gap-3 bg-green-500/5">
+                                <iconify-icon icon="lucide:check-circle" width="20" class="text-green-400"></iconify-icon>
+                                <h3 class="font-semibold text-green-400">Delivered Orders</h3>
+                                <span id="deliveredCount" class="ml-auto px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded">0</span>
+                            </div>
+                            <div class="p-4 space-y-3 max-h-[600px] overflow-y-auto" id="deliveredOrdersList">
+                                <p class="text-center text-neutral-500 text-sm py-8">No delivered orders</p>
+                            </div>
                         </div>
+
                     </div>
                 </section>
+
             </div>
         </main>
     </div>
@@ -151,7 +213,13 @@
     <!-- Add Product Modal -->
     <div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-2xl w-full max-w-lg border border-white/10 shadow-2xl">
-            <div class="p-6 border-b border-white/5 flex items-center justify-between"><h3 class="font-semibold text-lg">Add New Product</h3><button onclick="closeModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button></div>
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <iconify-icon icon="lucide:package-plus" width="20" class="text-brand-accent"></iconify-icon>
+                    <h3 class="font-semibold text-lg">Add New Product</h3>
+                </div>
+                <button onclick="closeModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
+            </div>
             <div class="p-6 space-y-4">
                 <div><label class="block text-xs text-neutral-500 mb-1 uppercase">Product Name</label><input type="text" id="newProdName" placeholder="e.g. Fresh Apples" class="w-full bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-brand-accent/50"></div>
                 <div><label class="block text-xs text-neutral-500 mb-1 uppercase">Image URL</label><div class="flex gap-2"><input type="text" id="newProdImage" placeholder="https://..." class="flex-1 bg-brand-black border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none"><button onclick="generateRandomImage()" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-xs whitespace-nowrap">Random</button></div></div>
@@ -191,28 +259,24 @@
         async function loadProducts() { 
             const t=document.getElementById('productsTableBody'); 
             try{ 
-                const r=await fetch(`${API_URL}/api/products`); 
-                const p=await r.json(); 
-                // Update Dashboard Card
+                const r=await fetch(`${API_URL}/api/products`); const p=await r.json(); 
                 document.getElementById('dashProducts').textContent=p.length; 
                 t.innerHTML=p.map(x=>`<tr class="border-b border-white/5 hover:bg-white/5"><td class="px-6 py-4"><img src="${x.image}" class="w-10 h-10 rounded-lg object-cover"></td><td class="px-6 py-4 font-medium">${x.name}</td><td class="px-6 py-4 text-neutral-400 capitalize">${x.category}</td><td class="px-6 py-4">₹${x.price}</td><td class="px-6 py-4"><button onclick="deleteProduct(${x.id})" class="p-2 hover:bg-red-500/10 rounded-lg"><iconify-icon icon="lucide:trash-2" width="16" class="text-red-500"></iconify-icon></button></td></tr>`).join(''); 
             }catch(e){} 
         }
-        
         function openModal() { document.getElementById('productModal').classList.remove('hidden'); document.getElementById('productModal').classList.add('modal-open'); }
         function closeModal() { document.getElementById('productModal').classList.add('hidden'); document.getElementById('productModal').classList.remove('modal-open'); }
         function generateRandomImage() { document.getElementById('newProdImage').value=`https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/300/300`; }
         async function saveProduct() { const pr=Number(document.getElementById('newProdPrice').value), op=Number(document.getElementById('newProdOriginalPrice').value); const prod={id:Date.now(),name:document.getElementById('newProdName').value,category:document.getElementById('newProdCat').value,weight:document.getElementById('newProdWeight').value,price:pr,originalPrice:op,image:document.getElementById('newProdImage').value||`https://picsum.photos/seed/${Date.now()}/300/300`,discount:op>pr?Math.round(((op-pr)/op)*100):0}; try{ await fetch(`${API_URL}/api/products`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(prod)}); closeModal(); loadProducts(); }catch(e){alert("Error");} }
         async function deleteProduct(id) { if(confirm("Delete?")){await fetch(`${API_URL}/api/products/${id}`,{method:'DELETE'});loadProducts();} }
         
-        // --- ORDERS (WITH REVENUE CALCULATION) ---
+        // --- ORDERS (WITH REVENUE) ---
         async function loadOrders() {
             try{ 
-                const r=await fetch(`${API_URL}/api/orders`); 
-                const o=await r.json(); 
+                const r=await fetch(`${API_URL}/api/orders`); const o=await r.json(); 
                 const p=o.filter(x=>x.status==='pending'), d=o.filter(x=>x.status==='delivered');
                 
-                // CALCULATE REVENUE (Sum of all orders)
+                // CALCULATE REVENUE
                 const totalRevenue = o.reduce((sum, order) => sum + order.totalAmount, 0);
                 document.getElementById('dashRevenue').textContent = `₹${totalRevenue}`;
 
@@ -227,7 +291,6 @@
                 if(d.length>0){ dL.innerHTML=d.map(x=>`<div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 opacity-70"><div class="flex justify-between items-center mb-3"><div><p class="font-mono text-xs text-neutral-500">${x.orderId}</p><p class="font-semibold">${x.userName}</p></div><p class="font-bold">₹${x.totalAmount}</p></div><div class="border-t border-white/5 pt-2"><div class="space-y-1">${x.items.map(i=>`<div class="flex justify-between text-xs text-neutral-400"><span>• ${i.name}</span><span>x${i.quantity}</span></div>`).join('')}</div></div></div>`).join(''); } else { dL.innerHTML='<p class="text-center text-neutral-500 text-sm py-8">No delivered orders</p>'; }
             }catch(e){}
         }
-        
         async function markDelivered(id) { try{ await fetch(`${API_URL}/api/orders/${id}/deliver`,{method:'PUT'}); loadOrders(); }catch(e){alert("Error");} }
     </script>
 </body>
