@@ -293,6 +293,50 @@ app.post('/api/check-location', async (req, res) => {
   }
 });
 
+// --- ADDRESS MODEL ---
+const Address = mongoose.model('Address', new mongoose.Schema({
+  phone: String, // Link address to user phone
+  label: String, // e.g., "Home", "Office"
+  address: String, // Full text address
+  lat: Number,
+  lng: Number,
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// --- ADDRESS ROUTES ---
+
+// 1. Get Saved Addresses
+app.get('/api/addresses/:phone', async (req, res) => {
+  try {
+    const addresses = await Address.find({ phone: req.params.phone }).sort({ createdAt: -1 });
+    res.json(addresses);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 2. Save New Address
+app.post('/api/addresses', async (req, res) => {
+  try {
+    const { phone, label, address, lat, lng } = req.body;
+    const newAddress = new Address({ phone, label, address, lat, lng });
+    await newAddress.save();
+    res.json({ success: true, address: newAddress });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 3. Delete Address
+app.delete('/api/addresses/:id', async (req, res) => {
+  try {
+    await Address.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+}); 
+
 // 5. START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
