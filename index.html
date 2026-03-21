@@ -30,9 +30,13 @@
         ::selection { background: white; color: black; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-scale-in { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+        
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
         .product-card:hover .product-image { transform: scale(1.05); }
@@ -55,6 +59,23 @@
     <div id="cursor-ring"></div>
     <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
     
+    <!-- ERROR POPUP (Server Down) -->
+    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center animate-scale-in">
+            <div class="p-10">
+                <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20 animate-shake">
+                    <iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon>
+                </div>
+                <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
+                <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
+                <p class="text-xs text-neutral-500 mb-8">Check Render Logs or wait 30 seconds and retry.</p>
+                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
@@ -93,11 +114,11 @@
             </div>
         </div>
         
-        <!-- Mobile Search Input -->
+        <!-- Mobile Search -->
         <div class="md:hidden px-6 pb-4">
             <div class="relative w-full">
                 <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
-                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
             </div>
         </div>
     </nav>
@@ -211,22 +232,32 @@
             setupCursor();
         });
 
+        // --- POPUP LOGIC ---
+        function showErrorModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeErrorModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         // --- 1. DATABASE CONNECTION ---
         async function loadProductsFromDB() {
             try {
                 const response = await fetch(`${API_URL}/api/products`);
-                if (!response.ok) throw new Error("Server not responding");
+                if (!response.ok) throw new Error("Server error");
                 
                 allProducts = await response.json(); 
                 renderProducts(allProducts);
             } catch (error) {
                 console.error('Error loading products:', error);
-                document.getElementById('productsGrid').innerHTML = `
-                    <div class="col-span-full text-center py-12 text-red-400">
-                        <p>Server is starting up...</p>
-                        <p class="text-xs text-neutral-500 mt-2">Please wait 30 seconds and refresh.</p>
-                    </div>
-                `;
+                // SHOW ERROR POPUP INSTEAD OF JUST TEXT
+                showErrorModal();
+                document.getElementById('productsGrid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400">Could not load products.</div>';
             }
         }
 
@@ -264,16 +295,13 @@
 
         // --- 3. FILTER LOGIC (UPDATED FOR MOBILE/DESKTOP) ---
         function filterProducts() {
-            // Get values from both inputs
             const desktopInput = document.getElementById('searchInputDesktop');
             const mobileInput = document.getElementById('searchInputMobile');
             
-            // Determine which value to use (whichever has text or is active)
             let searchTerm = '';
             if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
             else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
 
-            // Filter
             const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
             renderProducts(filtered);
         }
