@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart - Night Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
+                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { cursor: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::selection { background: white; color: black; }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
+        .profile-dropdown.open { display: block; }
+    </style>
+</head>
+<body class="bg-brand-black text-white font-sans antialiased">
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16 md:h-20">
+                <a href="index.html" class="flex items-center gap-2 group">
+                    <div class="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:zap" width="18" class="text-black"></iconify-icon>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">Night Cart</span>
+                </a>
+                
+                <div class="flex items-center gap-3">
+                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                        <iconify-icon icon="lucide:user" width="18"></iconify-icon>
+                        <span class="hidden sm:inline">Login</span>
+                    </a>
+                    
+                    <div id="userProfile" class="hidden relative">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors">
+                            <iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon>
+                            <span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span>
+                        </button>
+                        <div id="profileDropdown" class="profile-dropdown">
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center">
+                                    <iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon>
+                                </div>
+                                <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
+                            </div>
+                            <button onclick="logoutUser()" class="w-full mt-2 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
+                        </div>
+                    </div>
+
+                    <!-- Active Cart Link -->
+                    <a href="cart.html" class="relative flex items-center gap-2 px-4 py-2 bg-brand-accent text-black rounded-full font-medium text-sm hover:bg-brand-yellow transition-colors">
+                        <iconify-icon icon="lucide:shopping-cart" width="16"></iconify-icon>
+                        <span class="hidden sm:inline">Cart</span>
+                        <span id="navCartCount" class="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 md:pt-32 pb-16 min-h-screen">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center gap-4 mb-8">
+                <a href="index.html" class="text-neutral-500 hover:text-white transition-colors">
+                    <iconify-icon icon="lucide:arrow-left" width="24"></iconify-icon>
+                </a>
+                <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">My Cart</h1>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Cart Items List -->
+                <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
+                    <!-- Items loaded by JS -->
+                </div>
+
+                <!-- Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky top-28">
+                        <h3 class="text-lg font-semibold mb-6">Order Summary</h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between text-neutral-400">
+                                <span>Subtotal</span>
+                                <span id="subtotal">₹0</span>
+                            </div>
+                            <div class="flex justify-between text-neutral-400">
+                                <span>Delivery Fee</span>
+                                <span id="deliveryFee">₹0</span>
+                            </div>
+                            <div class="flex justify-between text-neutral-400">
+                                <span>Discount</span>
+                                <span id="discount" class="text-green-500">- ₹0</span>
+                            </div>
+                            <div class="border-t border-white/10 pt-4 flex justify-between font-semibold text-lg">
+                                <span>Total</span>
+                                <span id="totalAmount">₹0</span>
+                            </div>
+                        </div>
+
+                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2">
+                            <iconify-icon icon="lucide:check-circle" width="18"></iconify-icon>
+                            Place Order
+                        </button>
+                        
+                        <p class="text-center text-xs text-neutral-500 mt-4">Estimated delivery in 10-15 minutes</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyCart" class="hidden text-center py-16">
+                <div class="w-24 h-24 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6">
+                    <iconify-icon icon="lucide:shopping-cart" width="40" class="text-neutral-500"></iconify-icon>
+                </div>
+                <h2 class="text-2xl font-semibold mb-2">Your cart is empty</h2>
+                <p class="text-neutral-500 mb-6">Add items to your cart to see them here.</p>
+                <a href="index.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-neutral-200 transition-colors">
+                    <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let cart = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCart();
+            checkLoginStatus();
+            setupCursor();
+        });
+
+        // --- 1. LOAD & RENDER ---
+        function loadCart() {
+            const savedCart = localStorage.getItem('nc_cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+            }
+            renderCartPage();
+            updateNavCount();
+        }
+
+        function renderCartPage() {
+            const container = document.getElementById('cartItemsContainer');
+            const emptyState = document.getElementById('emptyCart');
+            const summarySection = document.querySelector('.lg\\:col-span-1'); // Summary column
+
+            if (cart.length === 0) {
+                container.classList.add('hidden');
+                summarySection.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            summarySection.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = cart.map(item => `
+                <div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center">
+                    <img src="${item.image}" alt="${item.name}" class="w-24 h-24 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <h3 class="font-medium">${item.name}</h3>
+                        <p class="text-sm text-neutral-500">${item.weight}</p>
+                        <p class="font-semibold mt-1 text-brand-accent">₹${item.price}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3">
+                        <button onclick="removeItem(${item.id})" class="text-neutral-500 hover:text-red-500 transition-colors">
+                            <iconify-icon icon="lucide:trash-2" width="18"></iconify-icon>
+                        </button>
+                        <div class="flex items-center gap-2 bg-white/5 rounded-lg">
+                            <button onclick="updateQuantity(${item.id}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-l-lg transition-colors">
+                                <iconify-icon icon="lucide:minus" width="14"></iconify-icon>
+                            </button>
+                            <span class="text-sm font-medium w-8 text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-r-lg transition-colors">
+                                <iconify-icon icon="lucide:plus" width="14"></iconify-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const deliveryFee = subtotal > 200 ? 0 : 20;
+            const discount = subtotal > 500 ? Math.round(subtotal * 0.05) : 0;
+            const total = subtotal + deliveryFee - discount;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal}`;
+            document.getElementById('deliveryFee').textContent = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            document.getElementById('discount').textContent = `- ₹${discount}`;
+            document.getElementById('totalAmount').textContent = `₹${total}`;
+        }
+
+        function updateNavCount() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const navCount = document.getElementById('navCartCount');
+            if(totalItems > 0) {
+                navCount.textContent = totalItems;
+                navCount.classList.remove('hidden');
+            } else {
+                navCount.classList.add('hidden');
+            }
+        }
+
+        // --- 2. ACTIONS ---
+        function updateQuantity(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeItem(id);
+                } else {
+                    saveCart();
+                    renderCartPage();
+                    updateNavCount();
+                }
+            }
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(item => item.id !== id);
+            saveCart();
+            renderCartPage();
+            updateNavCount();
+            showNotification("Item removed");
+        }
+
+        function saveCart() {
+            localStorage.setItem('nc_cart', JSON.stringify(cart));
+        }
+
+        function placeOrder() {
+            if(cart.length === 0) return;
+            
+            alert("🎉 Order Placed Successfully!");
+            cart = [];
+            saveCart();
+            window.location.href = 'index.html';
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50';
+            notification.textContent = message; 
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        // --- 3. AUTH & GLOBAL ---
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
+            if (isLoggedIn === 'true') {
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('userProfile').classList.remove('hidden');
+                document.getElementById('navUserName').textContent = localStorage.getItem('nc_userName') || 'User';
+                document.getElementById('dropName').textContent = localStorage.getItem('nc_userName') || 'User';
+            } else {
+                document.getElementById('loginBtn').classList.remove('hidden');
+                document.getElementById('userProfile').classList.add('hidden');
+            }
+        }
+        
+        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
+        function logoutUser() { localStorage.clear(); location.reload(); }
+        function setupCursor() {
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            document.addEventListener('mousemove', (e) => {
+                cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
+                cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
+            });
+        }
+    </script>
+</body>
+</html>
