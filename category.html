@@ -28,37 +28,30 @@
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
         ::selection { background: white; color: black; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+        
+        .product-card:hover .product-image { transform: scale(1.05); }
+        
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
-        .cart-sidebar { transform: translateX(100%); transition: transform 0.3s ease-out; }
-        .cart-sidebar.open { transform: translateX(0); }
-        .overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
-        .overlay.open { opacity: 1; visibility: visible; }
+        
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
+
+        .widget-container { transition: all 0.3s ease; }
+        .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+        .widget-items.open { max-height: 300px; opacity: 1; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
     <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
-    <div id="overlay" class="overlay fixed inset-0 bg-black/60 backdrop-blur-sm z-40" onclick="toggleCart()"></div>
-    
-    <!-- Cart Sidebar -->
-    <div id="cartSidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full md:w-[400px] bg-brand-dark border-l border-white/10 z-50 flex flex-col">
-        <div class="p-6 border-b border-white/10 flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Your Cart</h2>
-            <button onclick="toggleCart()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-                <iconify-icon icon="lucide:x" width="20"></iconify-icon>
-            </button>
-        </div>
-        <div id="cartItems" class="flex-1 overflow-y-auto p-6"><div class="text-center text-neutral-400 py-12"><p>Your cart is empty</p></div></div>
-        <div id="cartFooter" class="p-6 border-t border-white/10 hidden">
-            <div class="flex justify-between mb-4"><span class="text-neutral-400">Subtotal</span><span id="cartSubtotal" class="font-semibold">₹0</span></div>
-            <button class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Checkout • <span id="cartTotal">₹0</span></button>
-        </div>
-    </div>
     
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
@@ -70,8 +63,11 @@
                     </div>
                     <span class="text-xl font-bold tracking-tight">Night Cart</span>
                 </a>
+                <div class="hidden md:flex flex-1 max-w-md mx-8">
+                    <!-- Desktop Search -->
+                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                </div>
                 
-                <!-- Auth Section -->
                 <div class="flex items-center gap-3">
                     <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:user" width="18"></iconify-icon>
@@ -84,23 +80,28 @@
                             <span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span>
                         </button>
                         <div id="profileDropdown" class="profile-dropdown">
-                            <div class="mb-4 pb-4 border-b border-white/10"><p id="dropName" class="font-semibold">User Name</p></div>
-                            <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div>
+                                <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
+                            </div>
+                            <button onclick="logoutUser()" class="w-full mt-2 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
                         </div>
                     </div>
-
-                    <button onclick="toggleCart()" class="relative flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full font-medium text-sm hover:bg-neutral-200 transition-colors">
-                        <iconify-icon icon="lucide:shopping-cart" width="16"></iconify-icon>
-                        <span class="hidden sm:inline">Cart</span>
-                        <span id="cartCount" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
-                    </button>
                 </div>
             </div>
         </div>
+        
+        <!-- Mobile Search -->
+        <div class="md:hidden px-6 pb-4">
+            <div class="relative w-full">
+                <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
+                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
+            </div>
+        </div>
     </nav>
-    
-    <!-- Category Content -->
-    <section class="pt-32 md:pt-40 pb-16 md:py-24">
+
+    <!-- Main Content -->
+    <main class="pt-28 md:pt-32 pb-16 min-h-screen">
         <div class="max-w-7xl mx-auto px-6">
             <!-- Breadcrumb -->
             <div class="flex items-center gap-2 text-sm text-neutral-500 mb-6">
@@ -115,48 +116,75 @@
                 <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
             </div>
         </div>
-    </section>
+    </main>
     
     <footer class="py-16 border-t border-white/5">
         <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
     </footer>
 
+    <!-- FLOATING CART WIDGET (Matches index.html) -->
+    <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
+        <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10">
+                    <span id="widgetBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                </div>
+                <div class="text-left">
+                    <div class="flex items-center gap-2">
+                        <span id="widgetCount" class="font-bold text-white">0 Items</span>
+                        <iconify-icon id="widgetArrow" icon="lucide:chevron-up" width="16" class="text-neutral-400 transition-transform duration-300"></iconify-icon>
+                    </div>
+                    <p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p>
+                </div>
+            </div>
+            <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
+                Checkout
+                <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
+            </a>
+        </div>
+        <div id="widgetItems" class="widget-items border-t border-white/5">
+            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList"></div>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'https://night-cart.onrender.com';
         let allProducts = []; 
-        let cart = [];
+        let cart = []; 
+        let currentCategory = 'all'; // Store current category
 
         document.addEventListener('DOMContentLoaded', () => {
+            currentCategory = getCategoryFromURL();
+            loadCart(); 
             checkLoginStatus();
-            loadProductsForCategory(); // Load specific category
+            loadProductsForCategory(); 
             setupCursor();
         });
 
         // --- 1. GET CATEGORY FROM URL ---
         function getCategoryFromURL() {
             const params = new URLSearchParams(window.location.search);
-            return params.get('cat') || 'all'; // Default to 'all' if missing
+            return params.get('cat') || 'all';
         }
 
         // --- 2. LOAD PRODUCTS ---
         async function loadProductsForCategory() {
-            const category = getCategoryFromURL();
-            
-            // Update Text
-            document.getElementById('categoryTitle').textContent = category.charAt(0).toUpperCase() + category.slice(1);
-            document.getElementById('categoryBreadcrumb').textContent = category;
-            document.title = `${category.charAt(0).toUpperCase() + category.slice(1)} - Night Cart`;
-
             try {
                 const response = await fetch(`${API_URL}/api/products`);
                 allProducts = await response.json();
                 
-                // Filter
+                // Filter by Category on Load
                 let filtered = allProducts;
-                if (category !== 'all') {
-                    filtered = allProducts.filter(p => p.category.toLowerCase() === category.toLowerCase());
+                if (currentCategory !== 'all') {
+                    filtered = allProducts.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
                 }
                 
+                // Update UI Text
+                document.getElementById('categoryTitle').textContent = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
+                document.getElementById('categoryBreadcrumb').textContent = currentCategory;
+                document.title = `${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)} - Night Cart`;
+
                 renderProducts(filtered);
             } catch (error) {
                 document.getElementById('productsGrid').innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load products.</p>';
@@ -166,7 +194,6 @@
         // --- 3. RENDER PRODUCTS ---
         function renderProducts(productsToRender) {
             const grid = document.getElementById('productsGrid');
-            
             if (!productsToRender || productsToRender.length === 0) {
                 grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found in this category.</div>';
                 return;
@@ -195,58 +222,89 @@
             `).join('');
         }
 
-        // --- 4. CART LOGIC (Same as index) ---
+        // --- 4. FILTER LOGIC (Search) ---
+        function filterProducts() {
+            // Get search term from either input
+            const desktopInput = document.getElementById('searchInputDesktop');
+            const mobileInput = document.getElementById('searchInputMobile');
+            let searchTerm = '';
+            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
+            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
+
+            // Filter: First by Category, then by Search Term
+            let filtered = allProducts;
+            if (currentCategory !== 'all') {
+                filtered = allProducts.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
+            }
+            
+            if (searchTerm) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
+            }
+            
+            renderProducts(filtered);
+        }
+
+        // --- 5. CART LOGIC (Same as index.html) ---
+        function loadCart() {
+            const savedCart = localStorage.getItem('nc_cart');
+            if (savedCart) { cart = JSON.parse(savedCart); }
+            updateFloatingWidget(); 
+        }
+
+        function updateFloatingWidget() {
+            const widget = document.getElementById('floatingCartWidget');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                const savings = cart.reduce((sum, item) => sum + ((item.originalPrice - item.price) * item.quantity), 0);
+                document.getElementById('widgetCount').textContent = `${totalItems} Item${totalItems > 1 ? 's' : ''}`;
+                document.getElementById('widgetSavings').textContent = `₹${savings} saved`;
+                document.getElementById('widgetBadge').textContent = totalItems;
+                
+                const lastItem = cart[cart.length - 1];
+                if(lastItem) document.getElementById('widgetImg').src = lastItem.image;
+
+                const listContainer = document.getElementById('widgetItemsList');
+                listContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg">
+                        <img src="${item.image}" class="w-10 h-10 rounded object-cover">
+                        <div class="flex-1"><p class="text-xs font-medium truncate">${item.name}</p><p class="text-xs text-neutral-500">Qty: ${item.quantity}</p></div>
+                        <span class="text-xs font-bold">₹${item.price * item.quantity}</span>
+                    </div>
+                `).join('');
+                widget.classList.remove('hidden');
+            } else { widget.classList.add('hidden'); }
+        }
+
+        window.toggleWidgetItems = () => {
+            const itemsDiv = document.getElementById('widgetItems');
+            const arrow = document.getElementById('widgetArrow');
+            itemsDiv.classList.toggle('open');
+            arrow.style.transform = itemsDiv.classList.contains('open') ? 'rotate(0deg)' : 'rotate(180deg)';
+        };
+
         window.addToCart = (productId) => {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
             
             const existingItem = cart.find(item => item.id === productId);
             if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
-            updateCart();
+            
+            saveCart();
+            updateFloatingWidget();
             showNotification(`${product.name} added!`);
         };
 
-        window.toggleCart = () => {
-            document.getElementById('cartSidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
-        };
-
-        function updateCart() {
-            const cartItems = document.getElementById('cartItems');
-            const cartCount = document.getElementById('cartCount');
-            const cartSubtotal = document.getElementById('cartSubtotal');
-            const cartTotal = document.getElementById('cartTotal');
-            const cartFooter = document.getElementById('cartFooter');
-            
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            if (totalItems > 0) {
-                cartCount.textContent = totalItems; cartCount.classList.remove('hidden'); cartFooter.classList.remove('hidden');
-                cartItems.innerHTML = cart.map(item => `
-                    <div class="flex gap-4 mb-4 pb-4 border-b border-white/5">
-                        <img src="${item.image}" alt="${item.name}" class="w-20 h-20 rounded-lg object-cover">
-                        <div class="flex-1">
-                            <h4 class="font-medium text-sm">${item.name}</h4>
-                            <p class="text-xs text-neutral-500">${item.weight}</p>
-                            <p class="font-semibold mt-1">₹${item.price}</p>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                cartCount.classList.add('hidden'); cartFooter.classList.add('hidden');
-                cartItems.innerHTML = `<div class="text-center text-neutral-400 py-12"><p>Your cart is empty</p></div>`;
-            }
-            cartSubtotal.textContent = `₹${subtotal}`; cartTotal.textContent = `₹${subtotal}`;
-        }
+        function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
 
         function showNotification(message) {
             const notification = document.createElement('div');
-            notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50';
+            notification.className = 'fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg';
             notification.textContent = message; document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
+            setTimeout(() => notification.remove(), 1500);
         }
 
+        // --- 6. AUTH LOGIC ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             if (isLoggedIn === 'true') {
@@ -262,6 +320,8 @@
         
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
+
+        // --- 7. CURSOR LOGIC ---
         function setupCursor() {
             const cursorDot = document.getElementById('cursor-dot');
             const cursorRing = document.getElementById('cursor-ring');
