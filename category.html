@@ -12,12 +12,7 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
-                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
-                        }
-                    }
+                    colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } }
                 }
             }
         }
@@ -28,9 +23,6 @@
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
         ::selection { background: white; color: black; }
-        
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
         
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
@@ -57,14 +49,23 @@
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <a href="index.html" class="flex items-center gap-2 group">
-                    <div class="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:zap" width="18" class="text-black"></iconify-icon>
-                    </div>
-                    <span class="text-xl font-bold tracking-tight">Night Cart</span>
+                <!-- LOGO SVG (30% BIGGER) -->
+                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
+                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
+                        <g transform="translate(12, 18) scale(0.8)" fill="#8CFF00">
+                            <path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" />
+                            <circle cx="10" cy="22" r="4" />
+                            <circle cx="26" cy="22" r="4" />
+                        </g>
+                        <line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
+                        <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32">
+                            <tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan>
+                        </text>
+                    </svg>
                 </a>
                 <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <!-- Desktop Search -->
                     <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
                 
@@ -91,7 +92,6 @@
             </div>
         </div>
         
-        <!-- Mobile Search -->
         <div class="md:hidden px-6 pb-4">
             <div class="relative w-full">
                 <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
@@ -103,7 +103,6 @@
     <!-- Main Content -->
     <main class="pt-28 md:pt-32 pb-16 min-h-screen">
         <div class="max-w-7xl mx-auto px-6">
-            <!-- Breadcrumb -->
             <div class="flex items-center gap-2 text-sm text-neutral-500 mb-6">
                 <a href="index.html" class="hover:text-white">Home</a>
                 <iconify-icon icon="lucide:chevron-right" width="14"></iconify-icon>
@@ -122,7 +121,7 @@
         <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
     </footer>
 
-    <!-- FLOATING CART WIDGET (Matches index.html) -->
+    <!-- FLOATING CART WIDGET -->
     <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
         <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
             <div class="flex items-center gap-3">
@@ -139,8 +138,7 @@
                 </div>
             </div>
             <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
-                Checkout
-                <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
+                Checkout <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
             </a>
         </div>
         <div id="widgetItems" class="widget-items border-t border-white/5">
@@ -152,7 +150,7 @@
         const API_URL = 'https://night-cart.onrender.com';
         let allProducts = []; 
         let cart = []; 
-        let currentCategory = 'all'; // Store current category
+        let currentCategory = 'all';
 
         document.addEventListener('DOMContentLoaded', () => {
             currentCategory = getCategoryFromURL();
@@ -162,36 +160,28 @@
             setupCursor();
         });
 
-        // --- 1. GET CATEGORY FROM URL ---
         function getCategoryFromURL() {
             const params = new URLSearchParams(window.location.search);
             return params.get('cat') || 'all';
         }
 
-        // --- 2. LOAD PRODUCTS ---
         async function loadProductsForCategory() {
             try {
                 const response = await fetch(`${API_URL}/api/products`);
                 allProducts = await response.json();
                 
-                // Filter by Category on Load
                 let filtered = allProducts;
                 if (currentCategory !== 'all') {
                     filtered = allProducts.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
                 }
                 
-                // Update UI Text
                 document.getElementById('categoryTitle').textContent = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
                 document.getElementById('categoryBreadcrumb').textContent = currentCategory;
                 document.title = `${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)} - Night Cart`;
-
                 renderProducts(filtered);
-            } catch (error) {
-                document.getElementById('productsGrid').innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load products.</p>';
-            }
+            } catch (error) { console.error("Error loading products", error); }
         }
 
-        // --- 3. RENDER PRODUCTS ---
         function renderProducts(productsToRender) {
             const grid = document.getElementById('productsGrid');
             if (!productsToRender || productsToRender.length === 0) {
@@ -222,29 +212,21 @@
             `).join('');
         }
 
-        // --- 4. FILTER LOGIC (Search) ---
         function filterProducts() {
-            // Get search term from either input
             const desktopInput = document.getElementById('searchInputDesktop');
             const mobileInput = document.getElementById('searchInputMobile');
             let searchTerm = '';
             if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
             else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
 
-            // Filter: First by Category, then by Search Term
             let filtered = allProducts;
             if (currentCategory !== 'all') {
                 filtered = allProducts.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
             }
-            
-            if (searchTerm) {
-                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
-            }
-            
+            if (searchTerm) { filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm)); }
             renderProducts(filtered);
         }
 
-        // --- 5. CART LOGIC (Same as index.html) ---
         function loadCart() {
             const savedCart = localStorage.getItem('nc_cart');
             if (savedCart) { cart = JSON.parse(savedCart); }
@@ -254,82 +236,27 @@
         function updateFloatingWidget() {
             const widget = document.getElementById('floatingCartWidget');
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
             if (totalItems > 0) {
                 const savings = cart.reduce((sum, item) => sum + ((item.originalPrice - item.price) * item.quantity), 0);
                 document.getElementById('widgetCount').textContent = `${totalItems} Item${totalItems > 1 ? 's' : ''}`;
                 document.getElementById('widgetSavings').textContent = `₹${savings} saved`;
                 document.getElementById('widgetBadge').textContent = totalItems;
-                
                 const lastItem = cart[cart.length - 1];
                 if(lastItem) document.getElementById('widgetImg').src = lastItem.image;
-
                 const listContainer = document.getElementById('widgetItemsList');
-                listContainer.innerHTML = cart.map(item => `
-                    <div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg">
-                        <img src="${item.image}" class="w-10 h-10 rounded object-cover">
-                        <div class="flex-1"><p class="text-xs font-medium truncate">${item.name}</p><p class="text-xs text-neutral-500">Qty: ${item.quantity}</p></div>
-                        <span class="text-xs font-bold">₹${item.price * item.quantity}</span>
-                    </div>
-                `).join('');
+                listContainer.innerHTML = cart.map(item => `<div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg"><img src="${item.image}" class="w-10 h-10 rounded object-cover"><div class="flex-1"><p class="text-xs font-medium truncate">${item.name}</p><p class="text-xs text-neutral-500">Qty: ${item.quantity}</p></div><span class="text-xs font-bold">₹${item.price * item.quantity}</span></div>`).join('');
                 widget.classList.remove('hidden');
             } else { widget.classList.add('hidden'); }
         }
 
-        window.toggleWidgetItems = () => {
-            const itemsDiv = document.getElementById('widgetItems');
-            const arrow = document.getElementById('widgetArrow');
-            itemsDiv.classList.toggle('open');
-            arrow.style.transform = itemsDiv.classList.contains('open') ? 'rotate(0deg)' : 'rotate(180deg)';
-        };
-
-        window.addToCart = (productId) => {
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
-            
-            const existingItem = cart.find(item => item.id === productId);
-            if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
-            
-            saveCart();
-            updateFloatingWidget();
-            showNotification(`${product.name} added!`);
-        };
-
+        window.toggleWidgetItems = () => { const itemsDiv = document.getElementById('widgetItems'); const arrow = document.getElementById('widgetArrow'); itemsDiv.classList.toggle('open'); arrow.style.transform = itemsDiv.classList.contains('open') ? 'rotate(0deg)' : 'rotate(180deg)'; };
+        window.addToCart = (productId) => { const product = allProducts.find(p => p.id === productId); if (!product) return; const existingItem = cart.find(item => item.id === productId); if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); } saveCart(); updateFloatingWidget(); showNotification(`${product.name} added!`); };
         function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg';
-            notification.textContent = message; document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 1500);
-        }
-
-        // --- 6. AUTH LOGIC ---
-        function checkLoginStatus() {
-            const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
-            if (isLoggedIn === 'true') {
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('userProfile').classList.remove('hidden');
-                document.getElementById('navUserName').textContent = localStorage.getItem('nc_userName') || 'User';
-                document.getElementById('dropName').textContent = localStorage.getItem('nc_userName') || 'User';
-            } else {
-                document.getElementById('loginBtn').classList.remove('hidden');
-                document.getElementById('userProfile').classList.add('hidden');
-            }
-        }
-        
+        function showNotification(message) { const notification = document.createElement('div'); notification.className = 'fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 1500); }
+        function checkLoginStatus() { const isLoggedIn = localStorage.getItem('nc_isLoggedIn'); if (isLoggedIn === 'true') { document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('userProfile').classList.remove('hidden'); document.getElementById('navUserName').textContent = localStorage.getItem('nc_userName') || 'User'; document.getElementById('dropName').textContent = localStorage.getItem('nc_userName') || 'User'; } else { document.getElementById('loginBtn').classList.remove('hidden'); document.getElementById('userProfile').classList.add('hidden'); } }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
-
-        // --- 7. CURSOR LOGIC ---
-        function setupCursor() {
-            const cursorDot = document.getElementById('cursor-dot');
-            const cursorRing = document.getElementById('cursor-ring');
-            document.addEventListener('mousemove', (e) => {
-                cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
-                cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
-            });
-        }
+        function setupCursor() { const cursorDot = document.getElementById('cursor-dot'); const cursorRing = document.getElementById('cursor-ring'); document.addEventListener('mousemove', (e) => { cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px'; cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px'; }); }
     </script>
 </body>
 </html>
