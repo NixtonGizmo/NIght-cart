@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    
+    <!-- Leaflet CSS & JS (Required for Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -49,6 +54,13 @@
         .widget-container { transition: all 0.3s ease; }
         .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
         .widget-items.open { max-height: 300px; opacity: 1; }
+
+        /* Leaflet Overrides for Dark Mode */
+        .leaflet-container { background: #050505; z-index: 10; }
+        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+        .leaflet-control-zoom a:hover { background-color: #333 !important; }
+        .leaflet-popup-content-wrapper { background: #171717; color: white; border-radius: 12px; }
+        .leaflet-popup-tip { background: #171717; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -75,7 +87,6 @@
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <!-- LOGO SVG -->
                 <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
                     <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
@@ -109,10 +120,7 @@
                                 <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div>
                                 <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
                             </div>
-                            <!-- NEW: Link to Profile Page -->
-                            <a href="profile.html" class="w-full flex items-center gap-2 text-white py-2 rounded-lg hover:bg-white/5 transition-colors text-sm mb-2">
-                                <iconify-icon icon="lucide:settings" width="16"></iconify-icon> My Profile
-                            </a>
+                            <a href="profile.html" class="w-full flex items-center gap-2 text-white py-2 rounded-lg hover:bg-white/5 transition-colors text-sm mb-2"><iconify-icon icon="lucide:settings" width="16"></iconify-icon> My Profile</a>
                             <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm">Logout</button>
                         </div>
                     </div>
@@ -128,8 +136,53 @@
         </div>
     </nav>
 
+    <!-- LOCATION BAR (NEW) -->
+    <div class="fixed top-16 md:top-20 left-0 right-0 z-20 bg-brand-dark/80 backdrop-blur-lg border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+            <button onclick="openLocationModal()" class="flex items-center gap-2 text-sm group">
+                <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
+                <span class="text-neutral-400 group-hover:text-white transition-colors">Deliver to</span>
+                <span id="currentLocationText" class="font-semibold text-white">Select Location</span>
+                <iconify-icon icon="lucide:chevron-down" width="16" class="text-neutral-400 group-hover:text-white transition-colors"></iconify-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOCATION PICKER MODAL -->
+    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <h3 class="font-semibold text-lg">Select Delivery Location</h3>
+                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="p-4 bg-brand-black/50">
+                <div class="relative">
+                    <input type="text" id="locationSearchInput" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
+                    <button onclick="searchLocation()" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
+                        <iconify-icon icon="lucide:search" width="18"></iconify-icon>
+                    </button>
+                </div>
+                <!-- Search Results -->
+                <div id="searchResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
+            </div>
+
+            <!-- Map Container -->
+            <div id="locationMap" class="w-full h-64 bg-brand-black"></div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/5 flex items-center justify-between bg-brand-dark">
+                <div class="text-xs text-neutral-500">
+                    <p id="selectedAddressText">Click on map to select location</p>
+                </div>
+                <button onclick="confirmLocation()" class="px-6 py-2.5 bg-brand-accent text-black font-semibold rounded-xl hover:bg-brand-yellow transition-colors text-sm">Confirm Location</button>
+            </div>
+        </div>
+    </div>
+
     <!-- HERO SECTION -->
-    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-32 md:pt-24">
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-36 md:pt-40">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
             <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
@@ -227,15 +280,18 @@
     <script>
         const API_URL = 'https://night-cart.onrender.com';
         let allProducts = []; 
-        let cart = []; 
+        let cart = [];
+        let locationMap;
+        let locationMarker;
+        let tempSelectedLat = null;
+        let tempSelectedLng = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadCart(); 
             checkLoginStatus();
             loadProductsFromDB(); 
             setupCursor();
-            // Location Check
-            checkUserLocation();
+            loadSavedLocation();
         });
 
         // --- POPUP LOGIC ---
@@ -295,7 +351,6 @@
             let searchTerm = '';
             if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
             else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
-
             const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
             renderProducts(filtered);
         }
@@ -346,48 +401,180 @@
         // --- 6. CURSOR LOGIC ---
         function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove',e=>{d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';}); }
 
-        // --- 7. LOCATION CHECK (NEW) ---
-        async function checkUserLocation() {
-            if (localStorage.getItem('nc_location_ok') === 'true') return;
-            if (localStorage.getItem('nc_location_denied') === 'true') { showLocationModal(); return; }
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        try {
-                            const res = await fetch(`${API_URL}/api/check-location`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userLat: position.coords.latitude, userLng: position.coords.longitude })
-                            });
-                            const data = await res.json();
-                            if (!data.serviceable) showLocationModal();
-                            else localStorage.setItem('nc_location_ok', 'true');
-                        } catch (e) { console.error("Location check failed"); }
-                    },
-                    (error) => {
-                        localStorage.setItem('nc_location_denied', 'true');
-                        showLocationModal();
-                    }
-                );
-            } else { showLocationModal(); }
+        // --- 7. LOCATION LOGIC (NEW) ---
+        function loadSavedLocation() {
+            const savedText = localStorage.getItem('nc_location_text');
+            if (savedText) {
+                document.getElementById('currentLocationText').textContent = savedText;
+            } else {
+                // Try to get automatic location if no manual location set
+                checkAutoLocation();
+            }
         }
 
-        function showLocationModal() {
-            const m = document.createElement('div');
-            m.id = 'locationModal';
-            m.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black';
-            m.innerHTML = `
-                <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center p-10 animate-scale-in">
-                    <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
-                        <iconify-icon icon="lucide:map-pin-off" width="40" class="text-red-500"></iconify-icon>
+        async function checkAutoLocation() {
+             if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        // Check if serviceable
+                        await checkServiceable(lat, lng, "Current Location");
+                    },
+                    (error) => {
+                        console.log("Auto location denied");
+                        document.getElementById('currentLocationText').textContent = "Select Location";
+                    }
+                );
+            }
+        }
+
+        async function checkServiceable(lat, lng, text) {
+            try {
+                const res = await fetch(`${API_URL}/api/check-location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userLat: lat, userLng: lng })
+                });
+                const data = await res.json();
+                
+                if (data.serviceable) {
+                    localStorage.setItem('nc_location_ok', 'true');
+                    localStorage.setItem('nc_location_lat', lat);
+                    localStorage.setItem('nc_location_lng', lng);
+                    localStorage.setItem('nc_location_text', text);
+                    document.getElementById('currentLocationText').textContent = text;
+                } else {
+                    showLocationModal();
+                    showNotification("We are not available at this location yet.");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function openLocationModal() {
+            const modal = document.getElementById('locationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                if (!locationMap) {
+                    initLocationMap();
+                } else {
+                    locationMap.invalidateSize();
+                }
+            }, 100);
+        }
+
+        function closeLocationModal() {
+            const modal = document.getElementById('locationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function initLocationMap() {
+            // Initialize map centered on India or saved location
+            const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
+            const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
+
+            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(locationMap);
+
+            // Add marker
+            locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+
+            // Map Click Event
+            locationMap.on('click', async (e) => {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // Update marker
+                locationMarker.setLatLng(e.latlng);
+                
+                // Reverse Geocode to get name
+                tempSelectedLat = lat;
+                tempSelectedLng = lng;
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                    const data = await res.json();
+                    const name = data.display_name.split(',').slice(0, 2).join(', ');
+                    document.getElementById('selectedAddressText').textContent = name;
+                } catch (err) {
+                    document.getElementById('selectedAddressText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                }
+            });
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('locationSearchInput').value;
+            if(query.length < 3) return;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${query}&limit=5`);
+                const data = await res.json();
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.innerHTML = data.map(r => `
+                    <div onclick="selectSearchResult(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')" class="p-2 hover:bg-brand-accent/10 cursor-pointer rounded-lg text-xs border-b border-white/5">
+                        <p class="font-medium truncate">${r.display_name.split(',')[0]}</p>
+                        <p class="text-neutral-500 truncate">${r.display_name}</p>
                     </div>
-                    <h2 class="text-2xl font-bold mb-2 text-white">Not Available</h2>
-                    <p class="text-neutral-400 text-sm mb-6">We are not available in your location yet. We will be there soon!</p>
-                    <button onclick="this.parentElement.parentElement.remove()" class="w-full bg-white/5 border border-white/10 text-white font-semibold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Dismiss</button>
-                </div>
-            `;
-            document.body.appendChild(m);
+                `).join('');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function selectSearchResult(lat, lng, name) {
+            const shortName = name.split(',').slice(0, 2).join(', ');
+            document.getElementById('selectedAddressText').textContent = shortName;
+            
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+            tempSelectedLat = lat;
+            tempSelectedLng = lng;
+            
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('locationSearchInput').value = '';
+        }
+
+        async function confirmLocation() {
+            if(!tempSelectedLat || !tempSelectedLng) {
+                alert("Please select a location on the map or search for an address.");
+                return;
+            }
+
+            // Check if serviceable
+            try {
+                const res = await fetch(`${API_URL}/api/check-location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userLat: tempSelectedLat, userLng: tempSelectedLng })
+                });
+                const data = await res.json();
+
+                if (data.serviceable) {
+                    const text = document.getElementById('selectedAddressText').textContent;
+                    localStorage.setItem('nc_location_ok', 'true');
+                    localStorage.setItem('nc_location_lat', tempSelectedLat);
+                    localStorage.setItem('nc_location_lng', tempSelectedLng);
+                    localStorage.setItem('nc_location_text', text);
+                    document.getElementById('currentLocationText').textContent = text;
+                    closeLocationModal();
+                    showNotification("Location updated!");
+                } else {
+                    showNotification("We are not available at this location yet.");
+                }
+            } catch(e) {
+                alert("Error checking location.");
+            }
         }
     </script>
 </body>
