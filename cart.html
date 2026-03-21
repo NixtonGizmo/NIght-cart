@@ -11,13 +11,13 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } }
     </script>
     <style>
-        /* FIX: Cursor Styles - Increased Z-index and ensured visibility */
+        /* Custom Cursor Styles */
         * { cursor: none; }
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s, height 0.15s, background 0.15s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-color: white; }
 
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; } ::selection { background: white; color: black; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
         
@@ -53,91 +53,103 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="pt-28 md:pt-32 pb-16 min-h-screen">
-        <div class="max-w-7xl mx-auto px-6">
+    <main class="pt-28 md:pt-32 pb-64 min-h-screen">
+        <div class="max-w-2xl mx-auto px-6">
+            
+            <!-- PAGE TITLE -->
             <div class="flex items-center gap-4 mb-8"><a href="index.html" class="text-neutral-500 hover:text-white transition-colors"><iconify-icon icon="lucide:arrow-left" width="24"></iconify-icon></a><h1 class="text-3xl md:text-4xl font-semibold tracking-tight">My Cart</h1></div>
 
-            <div class="grid lg:grid-cols-3 gap-8">
-                
-                <!-- LEFT/MIDDLE: Cart Items Column -->
-                <div class="lg:col-span-2 space-y-4" id="cartItemsContainer"></div>
-                
-                <!-- RIGHT: Sidebar (Top Address, Bottom Summary/Button) -->
-                <div class="lg:col-span-1 flex flex-col gap-6">
-                    
-                    <!-- 1. ADDRESS SECTION (Top) -->
-                    <div class="bg-brand-gray rounded-2xl p-5 border border-white/5 order-1">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-semibold flex items-center gap-2 text-lg"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
+            <!-- 1. ADDRESS SECTION (Top) -->
+            <div class="bg-brand-gray rounded-2xl p-5 border border-white/5 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold flex items-center gap-2 text-lg"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-neutral-500 block mb-1">Nickname</label>
+                            <select id="inputLabel" class="address-input text-center">
+                                <option value="Home">Home</option>
+                                <option value="Work">Work</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
-                        <div class="space-y-3">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="text-xs text-neutral-500 block mb-1">Nickname</label>
-                                    <select id="inputLabel" class="address-input text-center">
-                                        <option value="Home">Home</option>
-                                        <option value="Work">Work</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-neutral-500 block mb-1">Full Name</label>
-                                    <input type="text" id="inputName" placeholder="Name" class="address-input text-center">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Phone Number</label>
-                                <input type="text" id="inputPhone" placeholder="+91 9876543210" class="address-input text-center">
-                            </div>
-                            <div>
-                                <label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label>
-                                <input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input text-center">
-                            </div>
-                            <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Sector / Building</label>
-                                <input type="text" id="inputBuilding" placeholder="Building Name" class="address-input text-center">
-                            </div>
-                            <div class="bg-brand-black/50 p-3 rounded-lg border border-white/5 mt-2">
-                                <div class="flex justify-between items-center">
-                                    <p class="text-xs text-neutral-400">Area (Map):</p>
-                                    <a href="index.html" class="text-xs text-brand-accent hover:underline">Change</a>
-                                </div>
-                                <p id="displayArea" class="text-sm font-medium text-white mt-1 text-center truncate">Select on map first</p>
-                            </div>
-                            <button onclick="saveAddressLocally()" class="w-full mt-2 border border-brand-accent/30 text-brand-accent font-medium py-2 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
-                                Save Address
-                            </button>
+                        <div>
+                            <label class="text-xs text-neutral-500 block mb-1">Full Name</label>
+                            <input type="text" id="inputName" placeholder="Name" class="address-input text-center">
                         </div>
                     </div>
-
-                    <!-- 2. ORDER SUMMARY & CHECKOUT (Bottom) -->
-                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky bottom-6 order-2 mt-auto">
-                        <h3 class="text-lg font-semibold mb-4">Order Summary</h3>
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between text-neutral-400"><span>Subtotal</span><span id="subtotal">₹0</span></div>
-                            <div class="flex justify-between text-neutral-400"><span>Delivery Fee</span><span id="deliveryFee">₹0</span></div>
-                            <div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div>
-                            <div class="border-t border-white/10 pt-3 flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmount">₹0</span></div>
-                        </div>
-                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20 mt-6">
-                            <iconify-icon icon="lucide:check-circle" width="20"></iconify-icon>
-                            Place Order
-                        </button>
-                        <p class="text-center text-xs text-neutral-500 mt-3">Estimated delivery in 10-15 minutes</p>
+                    <div>
+                        <label class="text-xs text-neutral-500 block mb-1">Phone Number</label>
+                        <input type="text" id="inputPhone" placeholder="+91 9876543210" class="address-input text-center">
                     </div>
-
+                    <div>
+                        <label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label>
+                        <input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input text-center">
+                    </div>
+                    <div>
+                        <label class="text-xs text-neutral-500 block mb-1">Sector / Building</label>
+                        <input type="text" id="inputBuilding" placeholder="Building Name" class="address-input text-center">
+                    </div>
+                    <div class="bg-brand-black/50 p-3 rounded-lg border border-white/5 mt-2">
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs text-neutral-400">Area (Map):</p>
+                            <a href="index.html" class="text-xs text-brand-accent hover:underline">Change</a>
+                        </div>
+                        <p id="displayArea" class="text-sm font-medium text-white mt-1 text-center truncate">Select on map first</p>
+                    </div>
+                    <button onclick="saveAddressLocally()" class="w-full mt-2 border border-brand-accent/30 text-brand-accent font-medium py-2 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
+                        Save Address
+                    </button>
                 </div>
             </div>
-            
+
+            <!-- 2. CART ITEMS (Middle) -->
+            <div id="cartItemsContainer" class="space-y-4 mb-6"></div>
+
+            <!-- EMPTY CART STATE -->
             <div id="emptyCart" class="hidden text-center py-16"><div class="w-24 h-24 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6"><iconify-icon icon="lucide:shopping-cart" width="40" class="text-neutral-500"></iconify-icon></div><h2 class="text-2xl font-semibold mb-2">Your cart is empty</h2><p class="text-neutral-500 mb-6">Add items to your cart to see them here.</p><a href="index.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-neutral-200 transition-colors"><iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>Continue Shopping</a></div>
+
         </div>
     </main>
+
+    <!-- 3. SUMMARY & CHECKOUT (Fixed Bottom) -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 bg-brand-dark/95 backdrop-blur-xl border-t border-white/5 p-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex items-center justify-between mb-3 text-sm">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2 text-neutral-400">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹0</span>
+                        <span class="mx-2">|</span>
+                        <span>Delivery</span>
+                        <span id="deliveryFee">₹0</span>
+                    </div>
+                    <div class="text-green-500 text-xs">
+                        You save <span id="discount">₹0</span> on this order
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-neutral-500">Total Amount</p>
+                    <p class="text-2xl font-bold" id="totalAmount">₹0</p>
+                </div>
+            </div>
+            <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20">
+                <iconify-icon icon="lucide:check-circle" width="20"></iconify-icon>
+                Place Order
+            </button>
+        </div>
+    </div>
 
     <script>
         const API_URL = 'https://night-cart.onrender.com';
         let cart = [];
 
-        document.addEventListener('DOMContentLoaded', () => { loadCart(); checkLoginStatus(); setupCursor(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            loadCart(); 
+            checkLoginStatus(); 
+            setupCursor(); 
+        });
 
         function showOrderSuccessModal(orderId) { const modal = document.getElementById('orderSuccessModal'); document.getElementById('modalOrderId').textContent = orderId; modal.classList.remove('hidden'); modal.classList.add('flex'); const container = document.getElementById('confettiContainer'); container.innerHTML = ''; for(let i=0; i<20; i++) { const c = document.createElement('div'); c.className='confetti'; c.style.left=Math.random()*100+'%'; c.style.top=Math.random()*100+'%'; c.style.background=['#8CFF00','#FFD700','#22C55E','#ffffff'][Math.floor(Math.random()*4)]; c.style.animationDelay=Math.random()*0.5+'s'; container.appendChild(c); } }
         function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -145,30 +157,37 @@
         function goToHome() { window.location.href = 'index.html'; }
 
         function loadCart() { 
-            const s=localStorage.getItem('nc_cart'); 
-            if(s){cart=JSON.parse(s);} 
+            try {
+                const s=localStorage.getItem('nc_cart'); 
+                if(s){ cart=JSON.parse(s); } 
+            } catch(e) { 
+                cart = []; 
+            }
             renderCartPage(); 
-            updateNavCount(); 
             populateAddressFields(); 
         }
         
         // --- POPULATE ADDRESS FIELDS ---
         function populateAddressFields() {
-            const savedName = localStorage.getItem('nc_userName') || '';
-            const savedPhone = localStorage.getItem('nc_userPhone') || '';
-            const savedAddress = localStorage.getItem('nc_selected_address');
+            try {
+                const savedName = localStorage.getItem('nc_userName') || '';
+                const savedPhone = localStorage.getItem('nc_userPhone') || '';
+                const savedAddress = localStorage.getItem('nc_selected_address');
 
-            document.getElementById('inputName').value = savedName;
-            document.getElementById('inputPhone').value = savedPhone;
+                document.getElementById('inputName').value = savedName;
+                document.getElementById('inputPhone').value = savedPhone;
 
-            if (savedAddress) {
-                const addr = JSON.parse(savedAddress);
-                document.getElementById('inputLabel').value = addr.label || 'Home';
-                document.getElementById('inputHouse').value = addr.houseNo || '';
-                document.getElementById('inputBuilding').value = addr.building || '';
-                document.getElementById('displayArea').textContent = addr.area || 'Not set';
-            } else {
-                document.getElementById('displayArea').textContent = "Select on map";
+                if (savedAddress) {
+                    const addr = JSON.parse(savedAddress);
+                    document.getElementById('inputLabel').value = addr.label || 'Home';
+                    document.getElementById('inputHouse').value = addr.houseNo || '';
+                    document.getElementById('inputBuilding').value = addr.building || '';
+                    document.getElementById('displayArea').textContent = addr.area || 'Not set';
+                } else {
+                    document.getElementById('displayArea').textContent = "Select on map";
+                }
+            } catch(e) {
+                console.error("Error loading address", e);
             }
         }
 
@@ -207,10 +226,22 @@
         }
 
         function renderCartPage() { 
-            const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), s=document.querySelector('.lg\\:col-span-1'); 
-            if(cart.length===0){c.classList.add('hidden');s.classList.add('hidden');e.classList.remove('hidden');return;} 
-            c.classList.remove('hidden');s.classList.remove('hidden');e.classList.add('hidden'); 
-            c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-24 h-24 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium">${i.name}</h3><p class="text-sm text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent">₹${i.price}</p></div><div class="flex flex-col items-end gap-3"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="18"></iconify-icon></button><div class="flex items-center gap-2 bg-white/5 rounded-lg"><button onclick="updateQuantity(${i.id},-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-l-lg"><iconify-icon icon="lucide:minus" width="14"></iconify-icon></button><span class="text-sm font-medium w-8 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-r-lg"><iconify-icon icon="lucide:plus" width="14"></iconify-icon></button></div></div></div>`).join(''); 
+            const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'); 
+            const main = document.querySelector('main');
+            
+            if(cart.length===0){
+                c.classList.add('hidden');
+                e.classList.remove('hidden');
+                main.classList.add('pb-16');
+                main.classList.remove('pb-64');
+            } else { 
+                c.classList.remove('hidden');
+                e.classList.add('hidden');
+                main.classList.remove('pb-16');
+                main.classList.add('pb-64');
+            }
+            
+            c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-20 h-20 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium text-sm">${i.name}</h3><p class="text-xs text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent text-sm">₹${i.price}</p></div><div class="flex flex-col items-end gap-2"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="16"></iconify-icon></button><div class="flex items-center gap-1 bg-white/5 rounded-lg p-1"><button onclick="updateQuantity(${i.id},-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:minus" width="12"></iconify-icon></button><span class="text-xs font-medium w-6 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:plus" width="12"></iconify-icon></button></div></div></div>`).join(''); 
             updateTotals(); 
         }
         
@@ -222,13 +253,12 @@
             document.getElementById('subtotal').textContent=`₹${sub}`; 
             const dEl=document.getElementById('deliveryFee'); 
             if(del===0 && sub>0){dEl.textContent='FREE';dEl.classList.add('text-green-500');}else{dEl.textContent=`₹${del}`;dEl.classList.remove('text-green-500');} 
-            document.getElementById('discount').textContent=`- ₹${dis}`; 
+            document.getElementById('discount').textContent=`₹${dis}`; 
             document.getElementById('totalAmount').textContent=`₹${tot}`; 
         }
         
-        function updateNavCount() { const t=cart.reduce((s,i)=>s+i.quantity,0); const n=document.getElementById('navCartCount'); if(t>0){n.textContent=t;n.classList.remove('hidden');}else{n.classList.add('hidden');} }
-        function updateQuantity(id,ch) { const i=cart.find(x=>x.id===id); if(i){i.quantity+=ch; if(i.quantity<=0)removeItem(id); else{saveCart();renderCartPage();updateNavCount();}} }
-        function removeItem(id) { cart=cart.filter(i=>i.id!==id); saveCart(); renderCartPage(); updateNavCount(); showNotification("Item removed"); }
+        function updateQuantity(id,ch) { const i=cart.find(x=>x.id===id); if(i){i.quantity+=ch; if(i.quantity<=0)removeItem(id); else{saveCart();renderCartPage();}} }
+        function removeItem(id) { cart=cart.filter(i=>i.id!==id); saveCart(); renderCartPage(); showNotification("Item removed"); }
         function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
         
         async function placeOrder() {
@@ -261,7 +291,7 @@
             } catch(e){console.error(e);showErrorModal();}
         }
         
-        function showNotification(m) { const n=document.createElement('div'); n.className='fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
+        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
         function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
@@ -269,24 +299,14 @@
         // --- CURSOR LOGIC (FIXED) ---
         function setupCursor() { 
             const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); 
-            if(!d || !r) return;
+            if(!d || !r) return; // Safety check
             
-            // Move function
-            const moveCursor = (e) => {
+            document.addEventListener('mousemove', e => {
                 d.style.left = e.clientX - 4 + 'px';
                 d.style.top = e.clientY - 4 + 'px';
                 r.style.left = e.clientX - 20 + 'px';
                 r.style.top = e.clientY - 20 + 'px';
-            };
-
-            document.addEventListener('mousemove', moveCursor);
-            
-            // Hover effect listeners
-            const hoverElements = document.querySelectorAll('button, a, input, select');
-            hoverElements.forEach(el => {
-                el.addEventListener('mouseenter', () => r.classList.add('hover'));
-                el.addEventListener('mouseleave', () => r.classList.remove('hover'));
-            });
+            }); 
         }
     </script>
 </body>
