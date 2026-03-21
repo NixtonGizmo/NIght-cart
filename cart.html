@@ -33,11 +33,37 @@
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
+        
+        /* Popup Animation */
+        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
+        .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .confetti { position: absolute; width: 10px; height: 10px; background: #8CFF00; animation: confetti 1s ease-out forwards; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
+
+    <!-- ORDER SUCCESS POPUP -->
+    <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden">
+        <!-- Confetti elements -->
+        <div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div>
+        
+        <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10">
+            <div class="p-10">
+                <div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20">
+                    <iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">Order Placed!</h2>
+                <p class="text-neutral-400 mb-2">Your order has been placed successfully.</p>
+                <p class="text-xs text-neutral-500 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono">#ORD-123</span></p>
+                <button onclick="goToHome()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">
+                    Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
@@ -72,7 +98,6 @@
                         </div>
                     </div>
 
-                    <!-- Active Cart Link -->
                     <a href="cart.html" class="relative flex items-center gap-2 px-4 py-2 bg-brand-accent text-black rounded-full font-medium text-sm hover:bg-brand-yellow transition-colors">
                         <iconify-icon icon="lucide:shopping-cart" width="16"></iconify-icon>
                         <span class="hidden sm:inline">Cart</span>
@@ -94,12 +119,8 @@
             </div>
 
             <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Cart Items List -->
-                <div class="lg:col-span-2 space-y-4" id="cartItemsContainer">
-                    <!-- Items loaded by JS -->
-                </div>
+                <div class="lg:col-span-2 space-y-4" id="cartItemsContainer"></div>
 
-                <!-- Order Summary -->
                 <div class="lg:col-span-1">
                     <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky top-28">
                         <h3 class="text-lg font-semibold mb-6">Order Summary</h3>
@@ -111,7 +132,7 @@
                             </div>
                             <div class="flex justify-between text-neutral-400">
                                 <span>Delivery Fee</span>
-                                <span id="deliveryFee">₹0</span>
+                                <span id="deliveryFee" class="font-medium">₹0</span>
                             </div>
                             <div class="flex justify-between text-neutral-400">
                                 <span>Discount</span>
@@ -133,7 +154,6 @@
                 </div>
             </div>
             
-            <!-- Empty State -->
             <div id="emptyCart" class="hidden text-center py-16">
                 <div class="w-24 h-24 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6">
                     <iconify-icon icon="lucide:shopping-cart" width="40" class="text-neutral-500"></iconify-icon>
@@ -149,6 +169,7 @@
     </main>
 
     <script>
+        const API_URL = 'https://night-cart.onrender.com';
         let cart = [];
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -157,12 +178,34 @@
             setupCursor();
         });
 
-        // --- 1. LOAD & RENDER ---
+        // --- POPUP LOGIC ---
+        function showOrderSuccessModal(orderId) {
+            const modal = document.getElementById('orderSuccessModal');
+            document.getElementById('modalOrderId').textContent = orderId;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Add simple confetti effect
+            const container = document.getElementById('confettiContainer');
+            for(let i=0; i<20; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + '%';
+                conf.style.top = Math.random() * 100 + '%';
+                conf.style.background = ['#8CFF00', '#FFD700', '#22C55E', '#ffffff'][Math.floor(Math.random()*4)];
+                conf.style.animationDelay = Math.random() * 0.5 + 's';
+                container.appendChild(conf);
+            }
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        // --- LOAD & RENDER ---
         function loadCart() {
             const savedCart = localStorage.getItem('nc_cart');
-            if (savedCart) {
-                cart = JSON.parse(savedCart);
-            }
+            if (savedCart) { cart = JSON.parse(savedCart); }
             renderCartPage();
             updateNavCount();
         }
@@ -170,7 +213,7 @@
         function renderCartPage() {
             const container = document.getElementById('cartItemsContainer');
             const emptyState = document.getElementById('emptyCart');
-            const summarySection = document.querySelector('.lg\\:col-span-1'); // Summary column
+            const summarySection = document.querySelector('.lg\\:col-span-1');
 
             if (cart.length === 0) {
                 container.classList.add('hidden');
@@ -213,12 +256,28 @@
 
         function updateTotals() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const deliveryFee = subtotal > 200 ? 0 : 20;
+            
+            // UPDATED DELIVERY FEE LOGIC
+            let deliveryFee = 0;
+            if (subtotal > 0 && subtotal < 99) {
+                deliveryFee = 30;
+            }
+
             const discount = subtotal > 500 ? Math.round(subtotal * 0.05) : 0;
             const total = subtotal + deliveryFee - discount;
 
             document.getElementById('subtotal').textContent = `₹${subtotal}`;
-            document.getElementById('deliveryFee').textContent = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+            
+            // Show Free delivery text if applicable
+            const delFeeEl = document.getElementById('deliveryFee');
+            if(deliveryFee === 0 && subtotal > 0) {
+                delFeeEl.textContent = 'FREE';
+                delFeeEl.classList.add('text-green-500');
+            } else {
+                delFeeEl.textContent = `₹${deliveryFee}`;
+                delFeeEl.classList.remove('text-green-500');
+            }
+
             document.getElementById('discount').textContent = `- ₹${discount}`;
             document.getElementById('totalAmount').textContent = `₹${total}`;
         }
@@ -227,25 +286,17 @@
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             const navCount = document.getElementById('navCartCount');
             if(totalItems > 0) {
-                navCount.textContent = totalItems;
-                navCount.classList.remove('hidden');
-            } else {
-                navCount.classList.add('hidden');
-            }
+                navCount.textContent = totalItems; navCount.classList.remove('hidden');
+            } else { navCount.classList.add('hidden'); }
         }
 
-        // --- 2. ACTIONS ---
+        // --- ACTIONS ---
         function updateQuantity(id, change) {
             const item = cart.find(i => i.id === id);
             if (item) {
                 item.quantity += change;
-                if (item.quantity <= 0) {
-                    removeItem(id);
-                } else {
-                    saveCart();
-                    renderCartPage();
-                    updateNavCount();
-                }
+                if (item.quantity <= 0) { removeItem(id); } 
+                else { saveCart(); renderCartPage(); updateNavCount(); }
             }
         }
 
@@ -254,31 +305,40 @@
             saveCart();
             renderCartPage();
             updateNavCount();
-            showNotification("Item removed");
         }
 
-        function saveCart() {
-            localStorage.setItem('nc_cart', JSON.stringify(cart));
+        function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
+
+        // --- PLACE ORDER ---
+        async function placeOrder() {
+            if (cart.length === 0) return;
+
+            const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
+            const userName = localStorage.getItem('nc_userName') || 'Guest';
+            const userPhone = localStorage.getItem('nc_userPhone');
+
+            if (!isLoggedIn) { alert("Please login to place order."); window.location.href = 'login.html'; return; }
+
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            try {
+                const response = await fetch(`${API_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userName, userPhone: userPhone || 'N/A', items: cart, totalAmount })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    cart = [];
+                    saveCart();
+                    // SHOW UNIQUE POPUP
+                    showOrderSuccessModal(data.orderId);
+                } else { alert("Failed to place order."); }
+            } catch (error) { console.error(error); alert("Server error."); }
         }
 
-        function placeOrder() {
-            if(cart.length === 0) return;
-            
-            alert("🎉 Order Placed Successfully!");
-            cart = [];
-            saveCart();
-            window.location.href = 'index.html';
-        }
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50';
-            notification.textContent = message; 
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
-        }
-
-        // --- 3. AUTH & GLOBAL ---
+        // --- AUTH & GLOBAL ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             if (isLoggedIn === 'true') {
@@ -295,8 +355,7 @@
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
         function setupCursor() {
-            const cursorDot = document.getElementById('cursor-dot');
-            const cursorRing = document.getElementById('cursor-ring');
+            const cursorDot = document.getElementById('cursor-dot'); const cursorRing = document.getElementById('cursor-ring');
             document.addEventListener('mousemove', (e) => {
                 cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
                 cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
