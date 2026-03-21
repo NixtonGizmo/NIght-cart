@@ -3,31 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Night Cart</title>
+    <title>Night Cart - Grocery Delivery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    
+    <!-- Leaflet CSS & JS (Required for Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
         tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00' } } } }
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
+                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
+                        }
+                    }
+                }
+            }
         }
     </script>
     <style>
         * { cursor: none; }
-        /* ... (Keep existing styles: scrollbar, selection, animations, inputs, popup) ... */
-        .otp-input { width: 60px; height: 60px; text-align: center; font-size: 24px; font-weight: 600; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; outline: none; color: white; transition: all 0.2s; }
-        .otp-input:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .popup-animate { animation: scaleIn 0.3s ease-out forwards; }
-        /* Add other styles from previous login.html */
-         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
-         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
-         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
-         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
-         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::selection { background: white; color: black; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+        
+        .product-card:hover .product-image { transform: scale(1.05); }
+        .category-card:hover { transform: translateY(-5px); }
+        
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        
+        .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
+        .profile-dropdown.open { display: block; }
+
+        .widget-container { transition: all 0.3s ease; }
+        .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+        .widget-items.open { max-height: 300px; opacity: 1; }
+
+        /* Leaflet Overrides for Dark Mode */
+        .leaflet-container { background: #050505; z-index: 10; }
+        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+        .leaflet-control-zoom a:hover { background-color: #333 !important; }
+        .leaflet-popup-content-wrapper { background: #171717; color: white; border-radius: 12px; }
+        .leaflet-popup-tip { background: #171717; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -35,14 +68,17 @@
     <div id="cursor-ring"></div>
     <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
     
-    <!-- SUCCESS POPUP -->
-    <div id="successModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl text-center popup-animate">
-            <div class="p-8">
-                <div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><iconify-icon icon="lucide:check-circle" width="40" class="text-green-500"></iconify-icon></div>
-                <h2 class="text-2xl font-bold mb-2">Login Successful!</h2>
-                <p class="text-neutral-400 text-sm mb-6">Welcome back to Night Cart.</p>
-                <div class="flex items-center justify-center gap-2 text-brand-accent text-sm"><iconify-icon icon="lucide:loader-2" width="16" class="animate-spin"></iconify-icon>Redirecting...</div>
+    <!-- ERROR POPUP -->
+    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center animate-scale-in">
+            <div class="p-10">
+                <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
+                    <iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon>
+                </div>
+                <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
+                <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
+                <p class="text-xs text-neutral-500 mb-8">Check Render Logs or wait 30 seconds.</p>
+                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button>
             </div>
         </div>
     </div>
@@ -51,7 +87,6 @@
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <!-- LOGO SVG (30% BIGGER) -->
                 <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
                     <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
@@ -64,79 +99,483 @@
                         <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text>
                     </svg>
                 </a>
-                <a href="index.html" class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors">
-                    <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon> Back to Home
-                </a>
+
+                <div class="hidden md:flex flex-1 max-w-md mx-8">
+                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                        <iconify-icon icon="lucide:user" width="18"></iconify-icon>
+                        <span class="hidden sm:inline">Login</span>
+                    </a>
+                    
+                    <div id="userProfile" class="hidden relative">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors">
+                            <iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon>
+                            <span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span>
+                        </button>
+                        <div id="profileDropdown" class="profile-dropdown">
+                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div>
+                                <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
+                            </div>
+                            <a href="profile.html" class="w-full flex items-center gap-2 text-white py-2 rounded-lg hover:bg-white/5 transition-colors text-sm mb-2"><iconify-icon icon="lucide:settings" width="16"></iconify-icon> My Profile</a>
+                            <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="md:hidden px-6 pb-4">
+            <div class="relative w-full">
+                <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
+                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
             </div>
         </div>
     </nav>
-    
-    <!-- Main Content -->
-    <main class="min-h-screen flex items-center justify-center pt-20 px-6">
-        <div class="w-full max-w-md">
-            <!-- STEP 1: Phone -->
-            <div id="phoneStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 animate-fade-in">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4"><iconify-icon icon="lucide:smartphone" width="28" class="text-brand-accent"></iconify-icon></div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Login with OTP</h1>
-                    <p class="text-neutral-500 mt-1 text-sm">Enter your phone number to receive a code</p>
+
+    <!-- LOCATION BAR (NEW) -->
+    <div class="fixed top-16 md:top-20 left-0 right-0 z-20 bg-brand-dark/80 backdrop-blur-lg border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+            <button onclick="openLocationModal()" class="flex items-center gap-2 text-sm group">
+                <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
+                <span class="text-neutral-400 group-hover:text-white transition-colors">Deliver to</span>
+                <span id="currentLocationText" class="font-semibold text-white">Select Location</span>
+                <iconify-icon icon="lucide:chevron-down" width="16" class="text-neutral-400 group-hover:text-white transition-colors"></iconify-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- LOCATION PICKER MODAL -->
+    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                <h3 class="font-semibold text-lg">Select Delivery Location</h3>
+                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="p-4 bg-brand-black/50">
+                <div class="relative">
+                    <input type="text" id="locationSearchInput" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
+                    <button onclick="searchLocation()" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
+                        <iconify-icon icon="lucide:search" width="18"></iconify-icon>
+                    </button>
                 </div>
-                <form onsubmit="showOTPStep(event)" class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Phone Number</label>
-                        <div class="flex gap-2">
-                            <div class="flex items-center justify-center px-4 py-3.5 bg-brand-black border border-white/10 rounded-xl text-neutral-400">+91</div>
-                            <input type="tel" id="phoneNumber" placeholder="Enter 10 digit number" maxlength="10" required class="flex-1 bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all tracking-wide">
-                        </div>
-                    </div>
-                    <button id="getOtpBtn" type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Get OTP</button>
-                </form>
+                <!-- Search Results -->
+                <div id="searchResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
             </div>
 
-            <!-- STEP 2: OTP -->
-            <div id="otpStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 hidden">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4"><iconify-icon icon="lucide:lock" width="28" class="text-brand-accent"></iconify-icon></div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Verify OTP</h1>
-                    <p class="text-neutral-500 mt-1 text-sm">Enter the 4-digit code sent to <span id="displayPhone" class="text-white">+91 XXXXXXXXXX</span></p>
-                </div>
-                <div class="flex justify-center gap-3 mb-8">
-                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 1)">
-                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 2)">
-                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 3)">
-                    <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 4)">
-                </div>
-                <button id="verifyBtn" type="button" onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
-                <div class="text-center mt-6"><button onclick="goBack(1)" class="text-xs text-neutral-600 hover:text-white mt-3 block mx-auto">Change Phone Number</button></div>
-            </div>
+            <!-- Map Container -->
+            <div id="locationMap" class="w-full h-64 bg-brand-black"></div>
 
-            <!-- STEP 3: Complete Profile -->
-            <div id="profileStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 hidden">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4"><iconify-icon icon="lucide:user-plus" width="28" class="text-brand-accent"></iconify-icon></div>
-                    <h1 class="text-2xl font-semibold tracking-tight">Complete Profile</h1>
-                    <p class="text-neutral-500 mt-1 text-sm">Just a few more details to get started</p>
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/5 flex items-center justify-between bg-brand-dark">
+                <div class="text-xs text-neutral-500">
+                    <p id="selectedAddressText">Click on map to select location</p>
                 </div>
-                <form onsubmit="saveProfile(event)" class="space-y-5">
-                    <div><label class="block text-xs text-neutral-500 mb-1 uppercase">Full Name</label><input type="text" id="profileName" placeholder="Enter your name" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none"></div>
-                    <div><label class="block text-xs text-neutral-500 mb-1 uppercase">Date of Birth</label><input type="date" id="profileDob" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none"></div>
-                    <div><label class="block text-xs text-neutral-500 mb-1 uppercase">Gender</label><div class="flex gap-4"><label class="flex-1 flex items-center gap-2 p-3 bg-brand-black border border-white/10 rounded-xl cursor-pointer hover:border-brand-accent/50"><input type="radio" name="gender" value="male" required class="accent-brand-accent"><span class="text-sm">Male</span></label><label class="flex-1 flex items-center gap-2 p-3 bg-brand-black border border-white/10 rounded-xl cursor-pointer hover:border-brand-accent/50"><input type="radio" name="gender" value="female" class="accent-brand-accent"><span class="text-sm">Female</span></label></div></div>
-                    <button id="saveProfileBtn" type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Save & Continue</button>
-                </form>
+                <button onclick="confirmLocation()" class="px-6 py-2.5 bg-brand-accent text-black font-semibold rounded-xl hover:bg-brand-yellow transition-colors text-sm">Confirm Location</button>
             </div>
         </div>
-    </main>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-36 md:pt-40">
+        <div class="absolute inset-0 z-0">
+            <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
+        </div>
+        <div class="relative z-10 max-w-7xl mx-auto px-6 w-full">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-6 animate-fade-in">
+                        <div class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
+                        <span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100">
+                        <span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span>
+                    </h1>
+                    <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
+                </div>
+                <div class="hidden md:block relative animate-fade-in delay-300">
+                    <div class="relative">
+                        <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
+                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold">10 MIN</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="py-16 md:py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Fruits</h3>
+                </a>
+                <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Snacks</h3>
+                </a>
+                <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Beverages</h3>
+                </a>
+            </div>
+        </div>
+    </section>
     
+    <!-- Products Section -->
+    <section class="py-16 md:py-24 bg-brand-dark">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between mb-10">
+                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">All Products</h2></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
+                <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="py-16 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
+    </footer>
+
+    <!-- FLOATING CART WIDGET -->
+    <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
+        <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10">
+                    <span id="widgetBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+                </div>
+                <div class="text-left">
+                    <div class="flex items-center gap-2">
+                        <span id="widgetCount" class="font-bold text-white">0 Items</span>
+                        <iconify-icon id="widgetArrow" icon="lucide:chevron-up" width="16" class="text-neutral-400 transition-transform duration-300"></iconify-icon>
+                    </div>
+                    <p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p>
+                </div>
+            </div>
+            <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
+                Checkout <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
+            </a>
+        </div>
+        <div id="widgetItems" class="widget-items border-t border-white/5">
+            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList"></div>
+        </div>
+    </div>
+
     <script>
-        const API_URL = 'https://night-cart.onrender.com'; let currentPhone = '';
-        document.addEventListener('DOMContentLoaded', () => { setupCursor(); });
-        function setupCursor() { const d=document.getElementById('cursor-dot'); const r=document.getElementById('cursor-ring'); document.addEventListener('mousemove', (e) => { d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; }); }
-        function showSuccessModal() { const m=document.getElementById('successModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
-        async function showOTPStep(e) { e.preventDefault(); const p=document.getElementById('phoneNumber').value; if(p.length!==10){alert("Valid 10-digit number required");return;} currentPhone="+91"+p; const b=document.getElementById('getOtpBtn'); b.innerText="Sending..."; b.disabled=true; try{ const res=await fetch(`${API_URL}/api/send-otp`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:currentPhone})}); const d=await res.json(); if(d.success){ document.getElementById('displayPhone').innerText=currentPhone; document.getElementById('phoneStep').classList.add('hidden'); document.getElementById('otpStep').classList.remove('hidden'); }else{alert("Error")} }catch(e){alert("Server Error")} finally{b.innerText="Get OTP";b.disabled=false;} }
-        async function verifyOTP() { const i=document.querySelectorAll('.otp-input'); let o=''; i.forEach(x=>o+=x.value); if(o.length!==4){alert("Enter 4-digit code");return;} const b=document.getElementById('verifyBtn'); b.innerText="Verifying..."; b.disabled=true; try{ const r=await fetch(`${API_URL}/api/verify-otp`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:currentPhone,otp:o})}); const d=await r.json(); if(d.success){ localStorage.setItem('nc_userPhone',currentPhone); if(d.isNew){ document.getElementById('otpStep').classList.add('hidden'); document.getElementById('profileStep').classList.remove('hidden'); }else{ localStorage.setItem('nc_isLoggedIn','true'); localStorage.setItem('nc_userName',d.user.name||'User'); showSuccessModal(); setTimeout(()=>window.location.href='index.html',2000); } }else{alert("Invalid OTP")} }catch(e){alert("Error")} finally{b.innerText="Verify & Login";b.disabled=false;} }
-        async function saveProfile(e) { e.preventDefault(); const n=document.getElementById('profileName').value; const d=document.getElementById('profileDob').value; const g=document.querySelector('input[name="gender"]:checked').value; const b=document.getElementById('saveProfileBtn'); b.innerText="Saving..."; b.disabled=true; try{ await fetch(`${API_URL}/api/update-profile`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:currentPhone,name:n,dob:d,gender:g})}); localStorage.setItem('nc_isLoggedIn','true'); localStorage.setItem('nc_userName',n); localStorage.setItem('nc_userPhone',currentPhone); localStorage.setItem('nc_userDob',d); localStorage.setItem('nc_userGender',g); showSuccessModal(); setTimeout(()=>window.location.href='index.html',2000); }catch(e){alert("Error")} finally{b.innerText="Save & Continue";b.disabled=false;} }
-        function goBack(s){ if(s===1){document.getElementById('otpStep').classList.add('hidden');document.getElementById('phoneStep').classList.remove('hidden');} }
-        function moveToNext(c,i){if(c.value.length===1&&i<=4){const x=document.querySelectorAll('.otp-input');if(x[i])x[i].focus();}}
+        const API_URL = 'https://night-cart.onrender.com';
+        let allProducts = []; 
+        let cart = [];
+        let locationMap;
+        let locationMarker;
+        let tempSelectedLat = null;
+        let tempSelectedLng = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCart(); 
+            checkLoginStatus();
+            loadProductsFromDB(); 
+            setupCursor();
+            loadSavedLocation();
+        });
+
+        // --- POPUP LOGIC ---
+        function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
+        function closeErrorModal() { const m=document.getElementById('errorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+        // --- 1. DATABASE CONNECTION ---
+        async function loadProductsFromDB() {
+            try {
+                const response = await fetch(`${API_URL}/api/products`);
+                if (!response.ok) throw new Error("Server error");
+                allProducts = await response.json(); 
+                renderProducts(allProducts);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showErrorModal();
+                document.getElementById('productsGrid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400">Could not load products.</div>';
+            }
+        }
+
+        // --- 2. RENDER LOGIC ---
+        function renderProducts(productsToRender) {
+            const grid = document.getElementById('productsGrid');
+            if (!productsToRender || productsToRender.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
+                return;
+            }
+
+            grid.innerHTML = productsToRender.map(product => `
+                <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
+                    <div class="relative overflow-hidden">
+                        <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105">
+                        ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
+                        <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
+                            <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${product.category}</p>
+                        <h3 class="font-medium text-sm mb-1 line-clamp-1">${product.name}</h3>
+                        <p class="text-xs text-neutral-500 mb-3">${product.weight}</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-lg font-semibold">₹${product.price}</span>
+                                <span class="text-sm text-neutral-500 line-through ml-2">₹${product.originalPrice}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- 3. FILTER LOGIC ---
+        function filterProducts() {
+            const desktopInput = document.getElementById('searchInputDesktop');
+            const mobileInput = document.getElementById('searchInputMobile');
+            let searchTerm = '';
+            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
+            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+            renderProducts(filtered);
+        }
+
+        // --- 4. CART LOGIC ---
+        function loadCart() { const s=localStorage.getItem('nc_cart'); if(s){cart=JSON.parse(s);} updateFloatingWidget(); }
+        function updateFloatingWidget() {
+            const w=document.getElementById('floatingCartWidget');
+            const t=cart.reduce((s,i)=>s+i.quantity,0);
+            if(t>0){
+                const sav=cart.reduce((s,i)=>s+((i.originalPrice-i.price)*i.quantity),0);
+                document.getElementById('widgetCount').textContent=`${t} Item${t>1?'s':''}`;
+                document.getElementById('widgetSavings').textContent=`₹${sav} saved`;
+                document.getElementById('widgetBadge').textContent=t;
+                const l=cart[cart.length-1]; if(l)document.getElementById('widgetImg').src=l.image;
+                const c=document.getElementById('widgetItemsList');
+                c.innerHTML=cart.map(i=>`<div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg"><img src="${i.image}" class="w-10 h-10 rounded object-cover"><div class="flex-1"><p class="text-xs font-medium truncate">${i.name}</p><p class="text-xs text-neutral-500">Qty: ${i.quantity}</p></div><span class="text-xs font-bold">₹${i.price*i.quantity}</span></div>`).join('');
+                w.classList.remove('hidden');
+            }else{w.classList.add('hidden');}
+        }
+        window.toggleWidgetItems = () => { const i=document.getElementById('widgetItems'), a=document.getElementById('widgetArrow'); i.classList.toggle('open'); a.style.transform=i.classList.contains('open')?'rotate(0deg)':'rotate(180deg)'; };
+        window.addToCart = (productId) => { const p=allProducts.find(x=>x.id===productId); if(!p)return; const e=cart.find(x=>x.id===productId); if(e){e.quantity+=1;}else{cart.push({...p,quantity:1});} saveCart(); updateFloatingWidget(); showNotification(`${p.name} added!`); };
+        function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
+        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),1500); }
+
+        // --- 5. AUTH LOGIC ---
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
+            const heroSection = document.getElementById('heroSection');
+            const userName = localStorage.getItem('nc_userName') || 'User';
+            
+            if (isLoggedIn === 'true') {
+                if (heroSection) heroSection.style.display = 'none';
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('userProfile').classList.remove('hidden');
+                document.getElementById('navUserName').textContent = userName;
+                document.getElementById('dropName').textContent = userName;
+            } else {
+                if (heroSection) heroSection.style.display = 'flex';
+                document.getElementById('loginBtn').classList.remove('hidden');
+                document.getElementById('userProfile').classList.add('hidden');
+            }
+        }
+        
+        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
+        function logoutUser() { localStorage.clear(); location.reload(); }
+
+        // --- 6. CURSOR LOGIC ---
+        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove',e=>{d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';}); }
+
+        // --- 7. LOCATION LOGIC (NEW) ---
+        function loadSavedLocation() {
+            const savedText = localStorage.getItem('nc_location_text');
+            if (savedText) {
+                document.getElementById('currentLocationText').textContent = savedText;
+            } else {
+                // Try to get automatic location if no manual location set
+                checkAutoLocation();
+            }
+        }
+
+        async function checkAutoLocation() {
+             if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        // Check if serviceable
+                        await checkServiceable(lat, lng, "Current Location");
+                    },
+                    (error) => {
+                        console.log("Auto location denied");
+                        document.getElementById('currentLocationText').textContent = "Select Location";
+                    }
+                );
+            }
+        }
+
+        async function checkServiceable(lat, lng, text) {
+            try {
+                const res = await fetch(`${API_URL}/api/check-location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userLat: lat, userLng: lng })
+                });
+                const data = await res.json();
+                
+                if (data.serviceable) {
+                    localStorage.setItem('nc_location_ok', 'true');
+                    localStorage.setItem('nc_location_lat', lat);
+                    localStorage.setItem('nc_location_lng', lng);
+                    localStorage.setItem('nc_location_text', text);
+                    document.getElementById('currentLocationText').textContent = text;
+                } else {
+                    showLocationModal();
+                    showNotification("We are not available at this location yet.");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function openLocationModal() {
+            const modal = document.getElementById('locationModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                if (!locationMap) {
+                    initLocationMap();
+                } else {
+                    locationMap.invalidateSize();
+                }
+            }, 100);
+        }
+
+        function closeLocationModal() {
+            const modal = document.getElementById('locationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function initLocationMap() {
+            // Initialize map centered on India or saved location
+            const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
+            const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
+
+            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(locationMap);
+
+            // Add marker
+            locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+
+            // Map Click Event
+            locationMap.on('click', async (e) => {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                // Update marker
+                locationMarker.setLatLng(e.latlng);
+                
+                // Reverse Geocode to get name
+                tempSelectedLat = lat;
+                tempSelectedLng = lng;
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+                    const data = await res.json();
+                    const name = data.display_name.split(',').slice(0, 2).join(', ');
+                    document.getElementById('selectedAddressText').textContent = name;
+                } catch (err) {
+                    document.getElementById('selectedAddressText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                }
+            });
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('locationSearchInput').value;
+            if(query.length < 3) return;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${query}&limit=5`);
+                const data = await res.json();
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.innerHTML = data.map(r => `
+                    <div onclick="selectSearchResult(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')" class="p-2 hover:bg-brand-accent/10 cursor-pointer rounded-lg text-xs border-b border-white/5">
+                        <p class="font-medium truncate">${r.display_name.split(',')[0]}</p>
+                        <p class="text-neutral-500 truncate">${r.display_name}</p>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function selectSearchResult(lat, lng, name) {
+            const shortName = name.split(',').slice(0, 2).join(', ');
+            document.getElementById('selectedAddressText').textContent = shortName;
+            
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+            tempSelectedLat = lat;
+            tempSelectedLng = lng;
+            
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('locationSearchInput').value = '';
+        }
+
+        async function confirmLocation() {
+            if(!tempSelectedLat || !tempSelectedLng) {
+                alert("Please select a location on the map or search for an address.");
+                return;
+            }
+
+            // Check if serviceable
+            try {
+                const res = await fetch(`${API_URL}/api/check-location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userLat: tempSelectedLat, userLng: tempSelectedLng })
+                });
+                const data = await res.json();
+
+                if (data.serviceable) {
+                    const text = document.getElementById('selectedAddressText').textContent;
+                    localStorage.setItem('nc_location_ok', 'true');
+                    localStorage.setItem('nc_location_lat', tempSelectedLat);
+                    localStorage.setItem('nc_location_lng', tempSelectedLng);
+                    localStorage.setItem('nc_location_text', text);
+                    document.getElementById('currentLocationText').textContent = text;
+                    closeLocationModal();
+                    showNotification("Location updated!");
+                } else {
+                    showNotification("We are not available at this location yet.");
+                }
+            } catch(e) {
+                alert("Error checking location.");
+            }
+        }
     </script>
 </body>
 </html>
