@@ -28,20 +28,24 @@
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
         ::selection { background: white; color: black; }
-        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes deliveryBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-pulse-custom { animation: pulse 2s ease-in-out infinite; }
+        .animate-bounce-custom { animation: deliveryBounce 1s ease-in-out infinite; }
+        .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; } .delay-400 { animation-delay: 400ms; }
+        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         .product-card:hover .product-image { transform: scale(1.05); }
         .category-card:hover { transform: translateY(-5px); }
-        
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
-        
         .cart-sidebar { transform: translateX(100%); transition: transform 0.3s ease-out; }
         .cart-sidebar.open { transform: translateX(0); }
         .overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
         .overlay.open { opacity: 1; visibility: visible; }
-        
-        .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
     </style>
 </head>
@@ -82,7 +86,7 @@
                 
                 <!-- Auth Section -->
                 <div class="flex items-center gap-3">
-                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                    <a id="loginBtn" href="login.html" class="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:user" width="18"></iconify-icon>
                         <span class="hidden sm:inline">Login</span>
                     </a>
@@ -117,56 +121,72 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTENT STARTS HERE (No Hero) -->
-    <main class="pt-24">
-        
-        <!-- Categories Section -->
-        <section class="py-16 md:py-20">
-            <div class="max-w-7xl mx-auto px-6">
-                <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                    
-                    <!-- Fruits Link -->
-                    <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                        <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                            <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
-                        </div>
-                        <h3 class="font-medium text-sm">Fruits</h3>
-                    </a>
-                    
-                    <!-- Snacks Link -->
-                    <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                        <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                            <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
-                        </div>
-                        <h3 class="font-medium text-sm">Snacks</h3>
-                    </a>
-                    
-                    <!-- Beverages Link -->
-                    <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                        <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                            <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
-                        </div>
-                        <h3 class="font-medium text-sm">Beverages</h3>
-                    </a>
-                    
+    <!-- HERO SECTION (Conditionally Hidden) -->
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-32 md:pt-24">
+        <div class="absolute inset-0 z-0">
+            <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
+        </div>
+        <div class="relative z-10 max-w-7xl mx-auto px-6 w-full">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-6 animate-fade-in">
+                        <div class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
+                        <span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span>
+                    </div>
+                    <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100">
+                        <span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span>
+                    </h1>
+                    <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
+                </div>
+                <div class="hidden md:block relative">
+                    <div class="relative animate-bounce-custom">
+                        <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
+                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold animate-pulse-custom">10 MIN</div>
+                    </div>
                 </div>
             </div>
-        </section>
-        
-        <!-- Products Section -->
-        <section class="py-16 md:py-20 bg-brand-dark">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="flex items-center justify-between mb-10">
-                    <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight" id="sectionTitle">All Products</h2></div>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
-                    <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
-                </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
-    </main>
+    <!-- Categories Section -->
+    <section class="py-16 md:py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Fruits</h3>
+                </a>
+                <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Snacks</h3>
+                </a>
+                <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Beverages</h3>
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Products Section -->
+    <section class="py-16 md:py-24 bg-brand-dark">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between mb-10">
+                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight" id="sectionTitle">All Products</h2></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
+                <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
+            </div>
+        </div>
+    </section>
     
     <footer class="py-16 border-t border-white/5">
         <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
@@ -178,8 +198,8 @@
         let cart = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkLoginStatus();
-            loadProductsFromDB();
+            checkLoginStatus(); // This will handle the Hero Section visibility
+            loadProductsFromDB(); 
             setupCursor();
         });
 
@@ -286,11 +306,17 @@
             setTimeout(() => notification.remove(), 2000);
         }
 
-        // --- 5. AUTH LOGIC ---
+        // --- 5. AUTH LOGIC (MODIFIED TO HIDE HERO) ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
+            const heroSection = document.getElementById('heroSection');
             const userName = localStorage.getItem('nc_userName') || 'User';
+            
             if (isLoggedIn === 'true') {
+                // User IS logged in -> HIDE HERO SECTION
+                if (heroSection) heroSection.style.display = 'none';
+                
+                // Update UI
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('navUserName').textContent = userName;
@@ -298,6 +324,10 @@
                 document.getElementById('dropDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
                 document.getElementById('dropGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
             } else {
+                // User NOT logged in -> SHOW HERO SECTION
+                if (heroSection) heroSection.style.display = 'block';
+                
+                // Update UI
                 document.getElementById('loginBtn').classList.remove('hidden');
                 document.getElementById('userProfile').classList.add('hidden');
             }
