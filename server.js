@@ -293,13 +293,33 @@ app.post('/api/check-location', async (req, res) => {
   }
 });
 
-// --- ADDRESS MODEL ---
+// --- ADDRESS MODEL (Updated) ---
 const Address = mongoose.model('Address', new mongoose.Schema({
-  phone: String, // Link address to user phone
-  label: String, // e.g., "Home", "Office"
-  address: String, // Full text address
+  phone: String,
+  label: String, // Home, Work, etc.
+  houseNo: String,
+  building: String,
+  landmark: String,
+  area: String, // Main address text
   lat: Number,
   lng: Number,
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// --- ORDER MODEL (Updated for Address) ---
+const Order = mongoose.model('Order', new mongoose.Schema({
+  orderId: String, 
+  userName: String, 
+  userPhone: String, 
+  userAddress: { 
+    houseNo: String,
+    building: String,
+    landmark: String,
+    area: String
+  }, 
+  items: Array, 
+  totalAmount: Number, 
+  status: { type: String, default: 'pending' },
   createdAt: { type: Date, default: Date.now }
 }));
 
@@ -318,8 +338,9 @@ app.get('/api/addresses/:phone', async (req, res) => {
 // 2. Save New Address
 app.post('/api/addresses', async (req, res) => {
   try {
-    const { phone, label, address, lat, lng } = req.body;
-    const newAddress = new Address({ phone, label, address, lat, lng });
+    // Destructure new fields
+    const { phone, label, houseNo, building, landmark, area, lat, lng } = req.body;
+    const newAddress = new Address({ phone, label, houseNo, building, landmark, area, lat, lng });
     await newAddress.save();
     res.json({ success: true, address: newAddress });
   } catch (error) {
@@ -335,8 +356,23 @@ app.delete('/api/addresses/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false });
   }
-}); 
+});
 
+// --- ORDER ROUTES (Updated) ---
+
+// Create Order
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { userName, userPhone, userAddress, items, totalAmount } = req.body; // Added userAddress
+    const orderId = `ORD-${Date.now()}`;
+    const newOrder = new Order({ orderId, userName, userPhone, userAddress, items, totalAmount });
+    await newOrder.save();
+    res.json({ success: true, orderId });
+  } catch (error) {
+    console.error("Order Error:", error);
+    res.status(500).json({ success: false });
+  }
+});
 // 5. START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
