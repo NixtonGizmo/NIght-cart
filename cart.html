@@ -15,12 +15,21 @@
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .error-animate { animation: scaleIn 0.3s ease-out forwards, shake 0.5s ease-in-out 0.3s; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
-        .address-input { background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
+        
+        /* Custom Cursor Styles */
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s, height 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+
+        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
+        .address-input::placeholder { color: #525252; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
-    <div id="cursor-dot"></div><div id="cursor-ring"></div>
+    <!-- CURSOR ELEMENTS -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
 
     <!-- SUCCESS POPUP -->
     <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden"><div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10"><div class="p-10"><div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20"><iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon></div><h2 class="text-3xl font-bold mb-2">Order Placed!</h2><p class="text-neutral-400 mb-2">Your order has been placed successfully.</p><p class="text-xs text-neutral-500 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono">#ORD-123</span></p><button onclick="goToHome()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Continue Shopping</button></div></div></div>
@@ -37,7 +46,7 @@
                     <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors"><iconify-icon icon="lucide:user" width="18"></iconify-icon><span class="hidden sm:inline">Login</span></a>
                     <div id="userProfile" class="hidden relative">
                         <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors"><iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon><span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span></button>
-                        <div id="profileDropdown" class="profile-dropdown"><div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10"><div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div><div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div></div><button onclick="logoutUser()" class="w-full mt-2 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm">Logout</button></div>
+                        <div id="profileDropdown" class="absolute top-full right-0 mt-2 w-48 bg-brand-gray border border-white/10 rounded-xl shadow-xl p-2 hidden"><button onclick="logoutUser()" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-white/5 rounded-lg">Logout</button></div>
                     </div>
                 </div>
             </div>
@@ -56,16 +65,15 @@
                 <!-- Sidebar Column -->
                 <div class="lg:col-span-1 space-y-6">
                     
-                    <!-- DELIVERY ADDRESS SECTION (NEW) -->
+                    <!-- 1. DELIVERY ADDRESS (Top Position) -->
                     <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-semibold flex items-center gap-2"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
-                            <a href="index.html" class="text-xs text-brand-accent hover:underline">Change Map</a>
                         </div>
                         <div class="space-y-3">
                             <!-- Nickname -->
                             <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Address Nickname</label>
+                                <label class="text-xs text-neutral-500 block mb-1">Nickname</label>
                                 <select id="inputLabel" class="address-input">
                                     <option value="Home">Home</option>
                                     <option value="Work">Work</option>
@@ -89,18 +97,26 @@
                             </div>
                             <!-- Building / Sector -->
                             <div>
-                                <label class="text-xs text-neutral-500 block mb-1">Sector / Building Name</label>
+                                <label class="text-xs text-neutral-500 block mb-1">Sector / Building</label>
                                 <input type="text" id="inputBuilding" placeholder="Sunflower Apartments" class="address-input">
                             </div>
-                            <!-- Area (Read Only / Reference) -->
-                            <div class="pt-2 border-t border-white/5">
-                                <p class="text-xs text-neutral-500">Area/Locality (from Map):</p>
-                                <p id="displayArea" class="text-sm text-neutral-300 mt-1">Select on map first</p>
+                            <!-- Area (Read Only) -->
+                            <div class="bg-brand-black/50 p-3 rounded-lg border border-white/5 mt-2">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-xs text-neutral-400">Area (from Map):</p>
+                                    <a href="index.html" class="text-xs text-brand-accent hover:underline">Change</a>
+                                </div>
+                                <p id="displayArea" class="text-sm font-medium text-white mt-1 truncate">Select on map first</p>
                             </div>
+
+                            <!-- Save Address Button -->
+                            <button onclick="saveAddressLocally()" class="w-full mt-2 border border-brand-accent/30 text-brand-accent font-medium py-2.5 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
+                                Save Address
+                            </button>
                         </div>
                     </div>
 
-                    <!-- ORDER SUMMARY SECTION -->
+                    <!-- 2. ORDER SUMMARY -->
                     <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky top-28">
                         <h3 class="text-lg font-semibold mb-6">Order Summary</h3>
                         <div class="space-y-4 mb-6">
@@ -136,17 +152,15 @@
             if(s){cart=JSON.parse(s);} 
             renderCartPage(); 
             updateNavCount(); 
-            populateAddressFields(); // New
+            populateAddressFields(); 
         }
         
-        // --- POPULATE ADDRESS FIELDS (NEW) ---
+        // --- POPULATE ADDRESS FIELDS ---
         function populateAddressFields() {
-            // Get data from LocalStorage
             const savedName = localStorage.getItem('nc_userName') || '';
             const savedPhone = localStorage.getItem('nc_userPhone') || '';
             const savedAddress = localStorage.getItem('nc_selected_address');
 
-            // Fill Inputs
             document.getElementById('inputName').value = savedName;
             document.getElementById('inputPhone').value = savedPhone;
 
@@ -157,8 +171,59 @@
                 document.getElementById('inputBuilding').value = addr.building || '';
                 document.getElementById('displayArea').textContent = addr.area || 'Not set';
             } else {
-                document.getElementById('displayArea').textContent = "Please select location on map first";
+                document.getElementById('displayArea').textContent = "Please select on map";
             }
+        }
+
+        // --- SAVE ADDRESS (NEW) ---
+        async function saveAddressLocally() {
+            const name = document.getElementById('inputName').value;
+            const phone = document.getElementById('inputPhone').value;
+            const label = document.getElementById('inputLabel').value;
+            const house = document.getElementById('inputHouse').value;
+            const building = document.getElementById('inputBuilding').value;
+            const area = document.getElementById('displayArea').textContent;
+
+            if(!name || !phone || !house) {
+                showNotification("Fill Name, Phone & House No.");
+                return;
+            }
+
+            // 1. Save to LocalStorage
+            localStorage.setItem('nc_userName', name);
+            localStorage.setItem('nc_userPhone', phone);
+            
+            const addressObj = { label, houseNo: house, building: building, area: area };
+            localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
+
+            // 2. Save to Database (if logged in)
+            const userPhone = localStorage.getItem('nc_userPhone');
+            if(userPhone) {
+                try {
+                    // We need lat/lng if we want to save properly to DB, try to get from localstorage
+                    const lat = localStorage.getItem('nc_location_lat');
+                    const lng = localStorage.getItem('nc_location_lng');
+                    
+                    if(lat && lng) {
+                        await fetch(`${API_URL}/api/addresses`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                phone: userPhone,
+                                label: label,
+                                houseNo: house,
+                                building: building,
+                                landmark: '', // optional
+                                area: area,
+                                lat: parseFloat(lat),
+                                lng: parseFloat(lng)
+                            })
+                        });
+                    }
+                } catch(e) { console.error("DB save failed", e); }
+            }
+            
+            showNotification("Address Saved!");
         }
 
         function renderCartPage() { const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), s=document.querySelector('.lg\\:col-span-1'); if(cart.length===0){c.classList.add('hidden');document.querySelectorAll('.lg\\:col-span-1 > div').forEach(el=>el.classList.add('hidden'));e.classList.remove('hidden');return;} c.classList.remove('hidden');document.querySelectorAll('.lg\\:col-span-1 > div').forEach(el=>el.classList.remove('hidden'));e.classList.add('hidden'); c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-24 h-24 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium">${i.name}</h3><p class="text-sm text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent">₹${i.price}</p></div><div class="flex flex-col items-end gap-3"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="18"></iconify-icon></button><div class="flex items-center gap-2 bg-white/5 rounded-lg"><button onclick="updateQuantity(${i.id},-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-l-lg"><iconify-icon icon="lucide:minus" width="14"></iconify-icon></button><span class="text-sm font-medium w-8 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-r-lg"><iconify-icon icon="lucide:plus" width="14"></iconify-icon></button></div></div></div>`).join(''); updateTotals(); }
@@ -173,7 +238,6 @@
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             if (!isLoggedIn) { alert("Please login to place order."); window.location.href = 'login.html'; return; }
 
-            // Collect Address Data from Inputs
             const userName = document.getElementById('inputName').value;
             const userPhone = document.getElementById('inputPhone').value;
             const label = document.getElementById('inputLabel').value;
@@ -181,37 +245,23 @@
             const building = document.getElementById('inputBuilding').value;
             const areaText = document.getElementById('displayArea').textContent;
 
-            // Validation
             if(!userName || !userPhone || !houseNo) {
-                alert("Please fill in Name, Phone, and House No.");
+                showNotification("Fill all address details");
                 return;
             }
-            if(areaText === "Please select location on map first" || areaText === "Not set"){
+            if(areaText === "Select on map first" || areaText === "Not set"){
                 alert("Please select a location on the map first.");
                 return;
             }
 
-            const userAddress = { 
-                label: label, 
-                houseNo: houseNo, 
-                building: building, 
-                area: areaText, 
-                landmark: '' 
-            };
-
+            const userAddress = { label, houseNo, building, area: areaText, landmark: '' };
             const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
             try {
                 const response = await fetch(`${API_URL}/api/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userName, 
-                        userPhone, 
-                        userAddress, // Send structured object
-                        items: cart, 
-                        totalAmount 
-                    })
+                    body: JSON.stringify({ userName, userPhone, userAddress, items: cart, totalAmount })
                 });
                 if (!response.ok) throw new Error('HTTP error');
                 const data = await response.json();
@@ -220,10 +270,18 @@
         }
         
         function showNotification(m) { const n=document.createElement('div'); n.className='fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
-        function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';document.getElementById('dropName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
-        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
+        function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
+        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
-        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove',e=>{d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';}); }
+        
+        // --- CURSOR LOGIC ---
+        function setupCursor() { 
+            const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); 
+            document.addEventListener('mousemove',e=>{
+                d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';
+                r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';
+            }); 
+        }
     </script>
 </body>
 </html>
