@@ -30,11 +30,9 @@ const Product = mongoose.model('Product', new mongoose.Schema({
 // --- Home ---
 app.get('/', (req, res) => res.send('<h1>🚀 Night Cart Server is Running!</h1>'));
 
-// --- Admin Login (Updated) ---
+// --- Admin Login ---
 app.post('/api/admin/login', (req, res) => {
   const { email, password } = req.body;
-  
-  // Specific Credentials Check
   const ADMIN_EMAIL = 'nixton2007@nightcart.com';
   const ADMIN_PASSWORD = 'Gulu@2006';
   
@@ -45,7 +43,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// --- Get All Users (Admin Only) ---
+// --- Get All Users ---
 app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find({}, { otp: 0 }).sort({ createdAt: -1 });
@@ -55,7 +53,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// --- Send OTpp ---
+// --- Send OTP ---
 app.post('/api/send-otp', async (req, res) => {
   const { phone } = req.body;
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -99,19 +97,11 @@ app.post('/api/update-profile', async (req, res) => {
   }
 });
 
-// --- Get Products ---
+// --- Get Products (NO DEFAULTS) ---
 app.get('/api/products', async (req, res) => {
   try {
-    let products = await Product.find();
-    if (products.length === 0) {
-       const defaults = [
-         { id: 1, name: "Fresh Bananas", weight: "1 kg", price: 49, originalPrice: 65, discount: 25, image: "https://picsum.photos/seed/banana/300/300", category: "fruits" },
-         { id: 2, name: "Organic Apples", weight: "500 g", price: 89, originalPrice: 120, discount: 26, image: "https://picsum.photos/seed/apple/300/300", category: "fruits" },
-         { id: 3, name: "Spicy Chips", weight: "150 g", price: 35, originalPrice: 45, discount: 22, image: "https://picsum.photos/seed/chips/300/300", category: "snacks" },
-       ];
-       await Product.insertMany(defaults);
-       products = defaults;
-    }
+    // Simply find all products, do not add defaults if empty
+    const products = await Product.find();
     res.json(products);
   } catch (error) {
     res.status(500).json({ success: false });
