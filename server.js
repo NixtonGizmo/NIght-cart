@@ -10,8 +10,6 @@ app.use(cors()); // Allows your GitHub frontend to talk to this server
 app.use(express.json()); // Allows server to read JSON data
 
 // 2. DATABASE CONNECTION
-// This tries to get the URL from Environment Variables (Render), 
-// or falls back to the string below if testing locally.
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:BgK18x5FvZYftNWi@cluster0.3demhgn.mongodb.net/nightcart?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
@@ -20,14 +18,17 @@ mongoose.connect(MONGO_URI)
 
 // 3. DATA MODELS (Database Structure)
 
-// User Model (for OTP login)
+// User Model - Updated with Name, DOB, Gender
 const User = mongoose.model('User', new mongoose.Schema({
   phone: String,
   otp: String,
+  name: String,
+  dob: String,
+  gender: String,
   createdAt: { type: Date, default: Date.now }
 }));
 
-// Product Model (for Admin Panel)
+// Product Model
 const Product = mongoose.model('Product', new mongoose.Schema({
   id: Number,
   name: String,
@@ -41,9 +42,9 @@ const Product = mongoose.model('Product', new mongoose.Schema({
 
 // 4. ROUTES
 
-// --- A. HOME ROUTE (Fixes "Cannot GET /" error) ---
+// --- A. HOME ROUTE ---
 app.get('/', (req, res) => {
-  res.send('<h1>🚀 Night Cart Server is Running!</h1><p>Your backend is connected successfully.</p>');
+  res.send('<h1>🚀 Night Cart Server is Running!</h1><p>Backend connected successfully.</p>');
 });
 
 // --- B. LOGIN SYSTEM ---
@@ -68,7 +69,6 @@ app.post('/api/send-otp', async (req, res) => {
     );
 
     // IN REAL PRODUCTION: Use Twilio/MSG91 to send SMS here.
-    // For now, we just log it to the console.
     console.log(`--------------------------------------------------`);
     console.log(`📱 OTP for ${phone} is: ${otp}`);
     console.log(`--------------------------------------------------`);
@@ -92,9 +92,46 @@ app.post('/api/verify-otp', async (req, res) => {
       // Delete OTP after successful use (security best practice)
       await User.updateOne({ _id: user._id }, { $unset: { otp: "" } });
       
-      return res.json({ success: true, message: "Login Successful" });
+      // Check if user is new (has no name) or existing
+      if (!user.name) {
+        // NEW USER: Ask frontend to show profile form
+        return res.json({ success: true, isNew: true });
+      } else {
+        // EXISTING USER: Send back user data
+        return res.json({ 
+          success: true, 
+          isNew: false,
+          user: {
+            name: user.name,
+            dob: user.dob,
+            gender: user.gender
+          }
+        });
+      }
     } else {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Route to Update Profile (Step 3)
+app.post('/api/update-profile', async (req, res) => {
+  const { phone, name, dob, gender } = req.body;
+
+  try {
+    // Find user by phone and update their profile
+    const updatedUser = await User.findOneAndUpdate(
+      { phone: phone },
+      { name: name, dob: dob, gender: gender },
+      { new: true }
+    );
+
+    if (updatedUser) {
+      res.json({ success: true, message: "Profile updated" });
+    } else {
+      res.status(404).json({ success: false, message: "User not found" });
     }
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
@@ -107,7 +144,22 @@ app.post('/api/verify-otp', async (req, res) => {
 // Route to Get All Products (For Main Page)
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await Product.find();
+    let products = await Product.find();
+    
+    // If database is empty, add default products (for first time setup)
+    if (products.length === 0) {
+      const defaultProducts = [
+        { id: 1, name: "Fresh Bananas", weight: "1 kg", price: 49, originalPrice: 65, discount: 25, image: "https://picsum.photos/seed/banana/300/300", category: "fruits" },
+        { id: 2, name: "Organic Apples", weight: "500 g", price: 89, originalPrice: 120, discount: 26, image: "https://picsum.photos/seed/apple/300/300", category: "fruits" },
+        { id: 3, name: "Spicy Chips", weight: "150 g", price: 35, originalPrice: 45, discount: 22, image: "https://picsum.photos/seed/chips/300/300", category: "snacks" },
+        { id: 4, name: "Orange Juice", weight: "1 L", price: 85, originalPrice: 99, discount: 14, image: "https://picsum.photos/seed/juice/300/300", category: "beverages" },
+        { id: 5, name: "Chocolate Cookies", weight: "200 g", price: 60, originalPrice: 80, discount: 25, image: "https://picsum.photos/seed/cookies/300/300", category: "snacks" },
+      ];
+      
+      await Product.insertMany(defaultProducts);
+      products = defaultProducts;
+    }
+
     res.json(products);
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching products" });
