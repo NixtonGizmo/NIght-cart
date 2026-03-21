@@ -55,7 +55,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// --- Send OTP ---
+// --- Send OTpp ---
 app.post('/api/send-otp', async (req, res) => {
   const { phone } = req.body;
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
