@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    <!-- Leaflet CSS & JS (Required for Map) -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -55,7 +55,7 @@
         .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
         .widget-items.open { max-height: 300px; opacity: 1; }
 
-        /* Leaflet Overrides for Dark Mode */
+        /* Leaflet Overrides */
         .leaflet-container { background: #050505; z-index: 10; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
         .leaflet-control-zoom a:hover { background-color: #333 !important; }
@@ -77,7 +77,6 @@
                 </div>
                 <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
                 <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
-                <p class="text-xs text-neutral-500 mb-8">Check Render Logs or wait 30 seconds.</p>
                 <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button>
             </div>
         </div>
@@ -136,7 +135,7 @@
         </div>
     </nav>
 
-    <!-- LOCATION BAR (NEW) -->
+    <!-- LOCATION BAR -->
     <div class="fixed top-16 md:top-20 left-0 right-0 z-20 bg-brand-dark/80 backdrop-blur-lg border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
             <button onclick="openLocationModal()" class="flex items-center gap-2 text-sm group">
@@ -156,7 +155,6 @@
                 <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
             
-            <!-- Search Input -->
             <div class="p-4 bg-brand-black/50">
                 <div class="relative">
                     <input type="text" id="locationSearchInput" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
@@ -164,14 +162,11 @@
                         <iconify-icon icon="lucide:search" width="18"></iconify-icon>
                     </button>
                 </div>
-                <!-- Search Results -->
                 <div id="searchResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
             </div>
 
-            <!-- Map Container -->
             <div id="locationMap" class="w-full h-64 bg-brand-black"></div>
 
-            <!-- Footer -->
             <div class="p-4 border-t border-white/5 flex items-center justify-between bg-brand-dark">
                 <div class="text-xs text-neutral-500">
                     <p id="selectedAddressText">Click on map to select location</p>
@@ -181,8 +176,8 @@
         </div>
     </div>
 
-    <!-- HERO SECTION -->
-    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-36 md:pt-40">
+    <!-- HERO SECTION (Added pt-44 md:pt-36 for spacing) -->
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-44 md:pt-36">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
             <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
@@ -401,13 +396,22 @@
         // --- 6. CURSOR LOGIC ---
         function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove',e=>{d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';}); }
 
-        // --- 7. LOCATION LOGIC (NEW) ---
+        // --- 7. LOCATION LOGIC ---
         function loadSavedLocation() {
             const savedText = localStorage.getItem('nc_location_text');
+            const isOk = localStorage.getItem('nc_location_ok');
+
             if (savedText) {
                 document.getElementById('currentLocationText').textContent = savedText;
+            } 
+
+            // If explicitly marked as not ok, show blocking overlay
+            if(isOk === 'false') {
+                showNotServiceableOverlay();
+            } else if (isOk === 'true') {
+                // All good
             } else {
-                // Try to get automatic location if no manual location set
+                // No location set, try auto
                 checkAutoLocation();
             }
         }
@@ -418,7 +422,6 @@
                     async (position) => {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
-                        // Check if serviceable
                         await checkServiceable(lat, lng, "Current Location");
                     },
                     (error) => {
@@ -445,8 +448,10 @@
                     localStorage.setItem('nc_location_text', text);
                     document.getElementById('currentLocationText').textContent = text;
                 } else {
-                    showLocationModal();
-                    showNotification("We are not available at this location yet.");
+                    // Save as false and block UI
+                    localStorage.setItem('nc_location_ok', 'false');
+                    localStorage.setItem('nc_location_text', text);
+                    showNotServiceableOverlay();
                 }
             } catch (e) {
                 console.error(e);
@@ -474,7 +479,6 @@
         }
 
         function initLocationMap() {
-            // Initialize map centered on India or saved location
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
@@ -484,18 +488,13 @@
                 attribution: '© OpenStreetMap'
             }).addTo(locationMap);
 
-            // Add marker
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
 
-            // Map Click Event
             locationMap.on('click', async (e) => {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
                 
-                // Update marker
                 locationMarker.setLatLng(e.latlng);
-                
-                // Reverse Geocode to get name
                 tempSelectedLat = lat;
                 tempSelectedLng = lng;
                 
@@ -551,7 +550,6 @@
                 return;
             }
 
-            // Check if serviceable
             try {
                 const res = await fetch(`${API_URL}/api/check-location`, {
                     method: 'POST',
@@ -560,21 +558,55 @@
                 });
                 const data = await res.json();
 
+                const text = document.getElementById('selectedAddressText').textContent;
+                // Save location details regardless
+                localStorage.setItem('nc_location_lat', tempSelectedLat);
+                localStorage.setItem('nc_location_lng', tempSelectedLng);
+                localStorage.setItem('nc_location_text', text);
+                
                 if (data.serviceable) {
-                    const text = document.getElementById('selectedAddressText').textContent;
                     localStorage.setItem('nc_location_ok', 'true');
-                    localStorage.setItem('nc_location_lat', tempSelectedLat);
-                    localStorage.setItem('nc_location_lng', tempSelectedLng);
-                    localStorage.setItem('nc_location_text', text);
                     document.getElementById('currentLocationText').textContent = text;
                     closeLocationModal();
                     showNotification("Location updated!");
+                    
+                    // Remove overlay if it was there
+                    const overlay = document.getElementById('notServiceableOverlay');
+                    if(overlay) overlay.remove();
                 } else {
-                    showNotification("We are not available at this location yet.");
+                    localStorage.setItem('nc_location_ok', 'false');
+                    closeLocationModal();
+                    showNotServiceableOverlay();
                 }
             } catch(e) {
                 alert("Error checking location.");
             }
+        }
+
+        function showNotServiceableOverlay() {
+            const existing = document.getElementById('notServiceableOverlay');
+            if(existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'notServiceableOverlay';
+            overlay.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black';
+            overlay.innerHTML = `
+                <div class="text-center max-w-sm">
+                    <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
+                        <iconify-icon icon="lucide:map-pin-off" width="40" class="text-red-500"></iconify-icon>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2 text-white">Not Available</h2>
+                    <p class="text-neutral-400 text-sm mb-6">We are not available in your location yet. We will be there soon!</p>
+                    <button onclick="changeLocation()" class="w-full bg-white/5 border border-white/10 text-white font-semibold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Change Location</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function changeLocation() {
+            const overlay = document.getElementById('notServiceableOverlay');
+            if(overlay) overlay.remove();
+            openLocationModal();
         }
     </script>
 </body>
