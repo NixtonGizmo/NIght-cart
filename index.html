@@ -29,38 +29,17 @@
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
         ::selection { background: white; color: black; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes deliveryBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
-        .animate-pulse-custom { animation: pulse 2s ease-in-out infinite; }
-        .animate-bounce-custom { animation: deliveryBounce 1s ease-in-out infinite; }
-        .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; } .delay-300 { animation-delay: 300ms; } .delay-400 { animation-delay: 400ms; }
-        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         .product-card:hover .product-image { transform: scale(1.05); }
         .category-card:hover { transform: translateY(-5px); }
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s, height 0.2s, background 0.2s; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .cart-sidebar { transform: translateX(100%); transition: transform 0.3s ease-out; }
         .cart-sidebar.open { transform: translateX(0); }
         .overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
         .overlay.open { opacity: 1; visibility: visible; }
-        
-        /* Profile Dropdown Styles */
-        .profile-dropdown { 
-            display: none; 
-            position: absolute; 
-            top: 100%; 
-            right: 0; 
-            margin-top: 10px; 
-            background: #171717; 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; 
-            padding: 16px; 
-            width: 250px; 
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
     </style>
 </head>
@@ -78,18 +57,10 @@
                 <iconify-icon icon="lucide:x" width="20"></iconify-icon>
             </button>
         </div>
-        <div id="cartItems" class="flex-1 overflow-y-auto p-6">
-            <div class="text-center text-neutral-400 py-12">
-                <iconify-icon icon="lucide:shopping-cart" width="48" class="mb-4 opacity-50"></iconify-icon>
-                <p>Your cart is empty</p>
-            </div>
-        </div>
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6"><div class="text-center text-neutral-400 py-12"><p>Your cart is empty</p></div></div>
         <div id="cartFooter" class="p-6 border-t border-white/10 hidden">
             <div class="flex justify-between mb-4"><span class="text-neutral-400">Subtotal</span><span id="cartSubtotal" class="font-semibold">₹0</span></div>
-            <div class="flex justify-between mb-6"><span class="text-neutral-400">Delivery</span><span class="text-brand-green">FREE</span></div>
-            <button class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">
-                Checkout • <span id="cartTotal">₹0</span>
-            </button>
+            <button class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Checkout • <span id="cartTotal">₹0</span></button>
         </div>
     </div>
     
@@ -103,61 +74,34 @@
                     </div>
                     <span class="text-xl font-bold tracking-tight">Night Cart</span>
                 </a>
-                
-                <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 hover:border-white/20 transition-colors cursor-pointer">
-                    <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
-                    <span class="text-sm">Mumbai, Maharashtra</span>
-                </div>
-                
                 <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <div class="relative w-full">
-                        <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
-                        <input type="text" placeholder="Search for groceries..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
-                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
                 
-                <!-- Actions -->
+                <!-- Auth Section -->
                 <div class="flex items-center gap-3">
-                    
-                    <!-- LOGIN BUTTON (Shown if NOT logged in) -->
-                    <a id="loginBtn" href="login.html" class="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
+                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:user" width="18"></iconify-icon>
                         <span class="hidden sm:inline">Login</span>
                     </a>
                     
-                    <!-- USER PROFILE (Shown if logged in) -->
                     <div id="userProfile" class="hidden relative">
                         <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors">
                             <iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon>
                             <span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span>
-                            <iconify-icon icon="lucide:chevron-down" width="16"></iconify-icon>
                         </button>
-                        
-                        <!-- Dropdown Menu -->
                         <div id="profileDropdown" class="profile-dropdown">
                             <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
                                 <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center">
                                     <iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon>
                                 </div>
-                                <div>
-                                    <p id="dropName" class="font-semibold">User Name</p>
-                                    <p class="text-xs text-neutral-500">Verified Account</p>
-                                </div>
+                                <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
                             </div>
                             <div class="space-y-3 text-sm">
-                                <div class="flex justify-between text-neutral-400">
-                                    <span>Date of Birth:</span>
-                                    <span id="dropDob" class="text-white">Not Set</span>
-                                </div>
-                                <div class="flex justify-between text-neutral-400">
-                                    <span>Gender:</span>
-                                    <span id="dropGender" class="text-white capitalize">Not Set</span>
-                                </div>
+                                <div class="flex justify-between text-neutral-400"><span>DOB:</span><span id="dropDob" class="text-white">Not Set</span></div>
+                                <div class="flex justify-between text-neutral-400"><span>Gender:</span><span id="dropGender" class="text-white capitalize">Not Set</span></div>
                             </div>
-                            <button onclick="logoutUser()" class="w-full mt-4 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">
-                                <iconify-icon icon="lucide:log-out" width="16"></iconify-icon>
-                                Logout
-                            </button>
+                            <button onclick="logoutUser()" class="w-full mt-4 flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors">Logout</button>
                         </div>
                     </div>
 
@@ -169,16 +113,10 @@
                 </div>
             </div>
         </div>
-        <div class="md:hidden px-6 pb-4">
-            <div class="relative w-full">
-                <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
-                <input type="text" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
-            </div>
-        </div>
     </nav>
     
     <!-- Hero Section -->
-    <section class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-32 md:pt-24">
+    <section class="relative min-h-[70vh] flex items-center pt-32 md:pt-24">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
             <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
@@ -191,31 +129,12 @@
                         <span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span>
                     </div>
                     <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100">
-                        <span class="text-white">Groceries</span><br>
-                        <span class="text-brand-accent">Delivered</span><br>
-                        <span class="text-neutral-400">Fast</span>
+                        <span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span>
                     </h1>
-                    <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials. Get them delivered to your doorstep in just 10 minutes.</p>
-                    <div class="flex flex-col sm:flex-row gap-4 animate-fade-in delay-300">
-                        <button class="px-8 py-4 bg-white text-black font-semibold rounded-full hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2">
-                            <iconify-icon icon="lucide:shopping-bag" width="18"></iconify-icon>
-                            Order Now
-                        </button>
-                    </div>
+                    <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
                 </div>
                 <div class="hidden md:block relative">
-                    <div class="relative animate-bounce-custom">
-                        <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
-                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold animate-pulse-custom">10 MIN</div>
-                        <div class="absolute -bottom-6 -left-6 bg-brand-gray p-4 rounded-2xl border border-white/10">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 bg-brand-accent/20 rounded-full flex items-center justify-center">
-                                    <iconify-icon icon="lucide:bike" width="24" class="text-brand-accent"></iconify-icon>
-                                </div>
-                                <div><p class="text-sm font-medium">On the way</p><p class="text-xs text-neutral-400">2 mins away</p></div>
-                            </div>
-                        </div>
-                    </div>
+                     <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
                 </div>
             </div>
         </div>
@@ -224,23 +143,21 @@
     <!-- Categories -->
     <section class="py-16 md:py-24">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-between mb-10">
-                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">Shop by Category</h2><p class="text-neutral-500 mt-2">Find everything you need</p></div>
-            </div>
+            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                <div class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
+                <div onclick="filterByCategory('fruits')" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
                     <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
                     </div>
                     <h3 class="font-medium text-sm">Fruits</h3>
                 </div>
-                <div class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
+                <div onclick="filterByCategory('snacks')" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
                     <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
                     </div>
                     <h3 class="font-medium text-sm">Snacks</h3>
                 </div>
-                <div class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
+                <div onclick="filterByCategory('beverages')" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center">
                     <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
                     </div>
@@ -254,9 +171,11 @@
     <section class="py-16 md:py-24 bg-brand-dark">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between mb-10">
-                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">Trending Now</h2><p class="text-neutral-500 mt-2">Most ordered products</p></div>
+                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight" id="sectionTitle">All Products</h2></div>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid"></div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
+                <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
+            </div>
         </div>
     </section>
     
@@ -265,153 +184,153 @@
     </footer>
 
     <script>
+        const API_URL = 'https://night-cart.onrender.com';
+        let allProducts = []; // Store all products from DB
+        let cart = [];
+
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 0. CHECK LOGIN STATUS ---
             checkLoginStatus();
+            loadProductsFromDB(); // Fetch from database immediately
+            setupCursor();
+        });
 
-            // --- 1. DATA LOGIC ---
-            const defaultProducts = [
-                { id: 1, name: "Fresh Bananas", weight: "1 kg", price: 49, originalPrice: 65, discount: 25, image: "https://picsum.photos/seed/banana/300/300", category: "fruits" },
-                { id: 2, name: "Organic Apples", weight: "500 g", price: 89, originalPrice: 120, discount: 26, image: "https://picsum.photos/seed/apple/300/300", category: "fruits" },
-                { id: 3, name: "Spicy Chips", weight: "150 g", price: 35, originalPrice: 45, discount: 22, image: "https://picsum.photos/seed/chips/300/300", category: "snacks" },
-                { id: 4, name: "Orange Juice", weight: "1 L", price: 85, originalPrice: 99, discount: 14, image: "https://picsum.photos/seed/juice/300/300", category: "beverages" },
-                { id: 5, name: "Chocolate Cookies", weight: "200 g", price: 60, originalPrice: 80, discount: 25, image: "https://picsum.photos/seed/cookies/300/300", category: "snacks" },
-            ];
+        // --- 1. DATABASE CONNECTION ---
+        async function loadProductsFromDB() {
+            try {
+                const response = await fetch(`${API_URL}/api/products`);
+                allProducts = await response.json(); // Save to global variable
+                renderProducts(allProducts);
+            } catch (error) {
+                document.getElementById('productsGrid').innerHTML = '<p class="col-span-full text-center text-red-500">Failed to load products. Check server.</p>';
+            }
+        }
 
-            let products = JSON.parse(localStorage.getItem('nc_products')) || defaultProducts;
-            let cart = [];
+        // --- 2. RENDER LOGIC ---
+        function renderProducts(productsToRender) {
             const grid = document.getElementById('productsGrid');
             
-            function renderProducts() {
-                grid.innerHTML = products.map(product => `
-                    <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
-                        <div class="relative overflow-hidden">
-                            <img src="${product.image}" alt="${product.name}" class="product-image w-full aspect-square object-cover transition-transform duration-500">
-                            ${product.discount > 15 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
-                            <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
-                                <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
-                            </button>
-                        </div>
-                        <div class="p-4">
-                            <p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${product.category}</p>
-                            <h3 class="font-medium text-sm mb-1 line-clamp-1">${product.name}</h3>
-                            <p class="text-xs text-neutral-500 mb-3">${product.weight}</p>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-semibold">₹${product.price}</span>
-                                    <span class="text-sm text-neutral-500 line-through ml-2">₹${product.originalPrice}</span>
-                                </div>
+            if (!productsToRender || productsToRender.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
+                return;
+            }
+
+            grid.innerHTML = productsToRender.map(product => `
+                <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
+                    <div class="relative overflow-hidden">
+                        <img src="${product.image}" alt="${product.name}" class="product-image w-full aspect-square object-cover transition-transform duration-500">
+                        ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
+                        <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
+                            <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${product.category}</p>
+                        <h3 class="font-medium text-sm mb-1 line-clamp-1">${product.name}</h3>
+                        <p class="text-xs text-neutral-500 mb-3">${product.weight}</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-lg font-semibold">₹${product.price}</span>
+                                <span class="text-sm text-neutral-500 line-through ml-2">₹${product.originalPrice}</span>
                             </div>
                         </div>
                     </div>
-                `).join('');
-            }
+                </div>
+            `).join('');
+        }
+
+        // --- 3. FILTER LOGIC ---
+        function filterByCategory(category) {
+            document.getElementById('sectionTitle').textContent = category.charAt(0).toUpperCase() + category.slice(1);
+            const filtered = allProducts.filter(p => p.category.toLowerCase() === category.toLowerCase());
+            renderProducts(filtered);
+        }
+
+        function filterProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
+            renderProducts(filtered);
+        }
+
+        // --- 4. CART LOGIC ---
+        window.addToCart = (productId) => {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
             
-            window.addToCart = (productId) => {
-                const product = products.find(p => p.id === productId);
-                const existingItem = cart.find(item => item.id === productId);
-                if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
-                updateCart();
-                showNotification(`${product.name} added to cart!`);
-            };
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) { existingItem.quantity += 1; } else { cart.push({ ...product, quantity: 1 }); }
+            updateCart();
+            showNotification(`${product.name} added to cart!`);
+        };
 
-            window.toggleCart = () => {
-                document.getElementById('cartSidebar').classList.toggle('open');
-                document.getElementById('overlay').classList.toggle('open');
-            };
+        window.toggleCart = () => {
+            document.getElementById('cartSidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        };
 
-            function updateCart() {
-                const cartItems = document.getElementById('cartItems');
-                const cartCount = document.getElementById('cartCount');
-                const cartSubtotal = document.getElementById('cartSubtotal');
-                const cartTotal = document.getElementById('cartTotal');
-                const cartFooter = document.getElementById('cartFooter');
-                
-                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                
-                if (totalItems > 0) {
-                    cartCount.textContent = totalItems; cartCount.classList.remove('hidden'); cartFooter.classList.remove('hidden');
-                    cartItems.innerHTML = cart.map(item => `
-                        <div class="flex gap-4 mb-4 pb-4 border-b border-white/5">
-                            <img src="${item.image}" alt="${item.name}" class="w-20 h-20 rounded-lg object-cover">
-                            <div class="flex-1">
-                                <h4 class="font-medium text-sm">${item.name}</h4>
-                                <p class="text-xs text-neutral-500">${item.weight}</p>
-                                <p class="font-semibold mt-1">₹${item.price}</p>
-                            </div>
+        function updateCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartCount = document.getElementById('cartCount');
+            const cartSubtotal = document.getElementById('cartSubtotal');
+            const cartTotal = document.getElementById('cartTotal');
+            const cartFooter = document.getElementById('cartFooter');
+            
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            if (totalItems > 0) {
+                cartCount.textContent = totalItems; cartCount.classList.remove('hidden'); cartFooter.classList.remove('hidden');
+                cartItems.innerHTML = cart.map(item => `
+                    <div class="flex gap-4 mb-4 pb-4 border-b border-white/5">
+                        <img src="${item.image}" alt="${item.name}" class="w-20 h-20 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <h4 class="font-medium text-sm">${item.name}</h4>
+                            <p class="text-xs text-neutral-500">${item.weight}</p>
+                            <p class="font-semibold mt-1">₹${item.price}</p>
                         </div>
-                    `).join('');
-                } else {
-                    cartCount.classList.add('hidden'); cartFooter.classList.add('hidden');
-                    cartItems.innerHTML = `<div class="text-center text-neutral-400 py-12"><iconify-icon icon="lucide:shopping-cart" width="48" class="mb-4 opacity-50"></iconify-icon><p>Your cart is empty</p></div>`;
-                }
-                cartSubtotal.textContent = `₹${subtotal}`; cartTotal.textContent = `₹${subtotal}`;
+                    </div>
+                `).join('');
+            } else {
+                cartCount.classList.add('hidden'); cartFooter.classList.add('hidden');
+                cartItems.innerHTML = `<div class="text-center text-neutral-400 py-12"><p>Your cart is empty</p></div>`;
             }
+            cartSubtotal.textContent = `₹${subtotal}`; cartTotal.textContent = `₹${subtotal}`;
+        }
 
-            function showNotification(message) {
-                const notification = document.createElement('div');
-                notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 animate-fade-in';
-                notification.textContent = message; document.body.appendChild(notification);
-                setTimeout(() => { notification.style.opacity = '0'; notification.remove(); }, 2000);
-            }
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50';
+            notification.textContent = message; document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
 
-            renderProducts();
-
-            // --- 2. CURSOR LOGIC ---
-            const cursorDot = document.getElementById('cursor-dot');
-            const cursorRing = document.getElementById('cursor-ring');
-            if (cursorDot && cursorRing) {
-                document.addEventListener('mousemove', (e) => {
-                    cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
-                    cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
-                });
-                document.querySelectorAll('a, button, input, .product-card').forEach(el => {
-                    el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
-                    el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
-                });
-            }
-        });
-
-        // --- GLOBAL FUNCTIONS ---
+        // --- 5. AUTH LOGIC ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             const userName = localStorage.getItem('nc_userName') || 'User';
-            const userDob = localStorage.getItem('nc_userDob') || 'Not Set';
-            const userGender = localStorage.getItem('nc_userGender') || 'Not Set';
-            
-            const loginBtn = document.getElementById('loginBtn');
-            const userProfile = document.getElementById('userProfile');
-            
             if (isLoggedIn === 'true') {
-                // User IS logged in
-                if(loginBtn) loginBtn.classList.add('hidden');
-                if(userProfile) userProfile.classList.remove('hidden');
-                
-                // Update Dropdown values
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('navUserName').textContent = userName;
                 document.getElementById('dropName').textContent = userName;
-                document.getElementById('dropDob').textContent = userDob;
-                document.getElementById('dropGender').textContent = userGender;
+                document.getElementById('dropDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
+                document.getElementById('dropGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
             } else {
-                // User NOT logged in
-                if(loginBtn) loginBtn.classList.remove('hidden');
-                if(userProfile) userProfile.classList.add('hidden');
+                document.getElementById('loginBtn').classList.remove('hidden');
+                document.getElementById('userProfile').classList.add('hidden');
             }
         }
+        
+        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
+        function logoutUser() { localStorage.clear(); location.reload(); }
 
-        function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('open');
-        }
-
-        function logoutUser() {
-            localStorage.removeItem('nc_isLoggedIn');
-            localStorage.removeItem('nc_userName');
-            localStorage.removeItem('nc_userDob');
-            localStorage.removeItem('nc_userGender');
-            alert("Logged out successfully!");
-            location.reload();
+        // --- 6. CURSOR LOGIC ---
+        function setupCursor() {
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorRing = document.getElementById('cursor-ring');
+            document.addEventListener('mousemove', (e) => {
+                cursorDot.style.left = e.clientX - 4 + 'px'; cursorDot.style.top = e.clientY - 4 + 'px';
+                cursorRing.style.left = e.clientX - 20 + 'px'; cursorRing.style.top = e.clientY - 20 + 'px';
+            });
         }
     </script>
 </body>
