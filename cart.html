@@ -11,11 +11,11 @@
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } }
     </script>
     <style>
-        /* Custom Cursor Styles - FIXED */
+        /* FIX: Cursor Styles - Increased Z-index and ensured visibility */
         * { cursor: none; }
-        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s, height 0.15s; }
-        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s, height 0.15s, background 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-color: white; }
 
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
@@ -23,7 +23,6 @@
         
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
-        .address-input::placeholder { color: #525252; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -63,11 +62,11 @@
                 <!-- LEFT/MIDDLE: Cart Items Column -->
                 <div class="lg:col-span-2 space-y-4" id="cartItemsContainer"></div>
                 
-                <!-- RIGHT: Sidebar (Address Top, Fees Middle, Checkout Bottom) -->
-                <div class="lg:col-span-1 space-y-6">
+                <!-- RIGHT: Sidebar (Top Address, Bottom Summary/Button) -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
                     
                     <!-- 1. ADDRESS SECTION (Top) -->
-                    <div class="bg-brand-gray rounded-2xl p-5 border border-white/5">
+                    <div class="bg-brand-gray rounded-2xl p-5 border border-white/5 order-1">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-semibold flex items-center gap-2 text-lg"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon> Delivery Address</h3>
                         </div>
@@ -111,8 +110,8 @@
                         </div>
                     </div>
 
-                    <!-- 2. ORDER SUMMARY (Middle) -->
-                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                    <!-- 2. ORDER SUMMARY & CHECKOUT (Bottom) -->
+                    <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 sticky bottom-6 order-2 mt-auto">
                         <h3 class="text-lg font-semibold mb-4">Order Summary</h3>
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between text-neutral-400"><span>Subtotal</span><span id="subtotal">₹0</span></div>
@@ -120,11 +119,7 @@
                             <div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div>
                             <div class="border-t border-white/10 pt-3 flex justify-between font-semibold text-lg"><span>Total</span><span id="totalAmount">₹0</span></div>
                         </div>
-                    </div>
-
-                    <!-- 3. CHECKOUT (Bottom) -->
-                    <div class="sticky bottom-6">
-                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20">
+                        <button onclick="placeOrder()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20 mt-6">
                             <iconify-icon icon="lucide:check-circle" width="20"></iconify-icon>
                             Place Order
                         </button>
@@ -266,7 +261,7 @@
             } catch(e){console.error(e);showErrorModal();}
         }
         
-        function showNotification(m) { const n=document.createElement('div'); n.className='fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
+        function showNotification(m) { const n=document.createElement('div'); n.className='fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
         function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
@@ -275,12 +270,20 @@
         function setupCursor() { 
             const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); 
             if(!d || !r) return;
-            document.addEventListener('mousemove',e=>{
-                d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';
-                r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';
-            }); 
-            // Add hover effect for buttons
-            document.querySelectorAll('button, a, input').forEach(el => {
+            
+            // Move function
+            const moveCursor = (e) => {
+                d.style.left = e.clientX - 4 + 'px';
+                d.style.top = e.clientY - 4 + 'px';
+                r.style.left = e.clientX - 20 + 'px';
+                r.style.top = e.clientY - 20 + 'px';
+            };
+
+            document.addEventListener('mousemove', moveCursor);
+            
+            // Hover effect listeners
+            const hoverElements = document.querySelectorAll('button, a, input, select');
+            hoverElements.forEach(el => {
                 el.addEventListener('mouseenter', () => r.classList.add('hover'));
                 el.addEventListener('mouseleave', () => r.classList.remove('hover'));
             });
