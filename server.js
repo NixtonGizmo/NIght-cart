@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 // 2. DATABASE CONNECTION
-// Use environment variable OR the hardcoded string as backup
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:BgK18x5FvZYftNWi@cluster0.3demhgn.mongodb.net/nightcart?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
@@ -41,16 +40,29 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   category: String
 }));
 
-// Order Model (CRITICAL FOR CHECKOUT)
+// Order Model
 const Order = mongoose.model('Order', new mongoose.Schema({
   orderId: String, 
   userName: String, 
   userPhone: String, 
   items: Array, 
   totalAmount: Number, 
-  status: { type: String, default: 'pending' }, 
+  status: { type: String, default: 'pending' }, // pending, delivered, cancelled
   createdAt: { type: Date, default: Date.now }
 }));
+
+// Location Model (GeoJSON Polygon)
+const Location = mongoose.model('Location', new mongoose.Schema({
+  name: String,
+  area: {
+    type: { type: String, enum: ['Polygon'], required: true },
+    coordinates: { type: [[[Number]]], required: true }
+  },
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Create Geospatial Index
+Location.collection.createIndex({ area: "2dsphere" });
 
 // 4. ROUTES
 
@@ -62,7 +74,6 @@ app.post('/api/admin/login', (req, res) => {
   const { email, password } = req.body;
   const ADMIN_EMAIL = 'nixton2007@nightcart.com';
   const ADMIN_PASSWORD = 'Gulu@2006';
-  
   if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
     res.json({ success: true });
   } else {
@@ -151,9 +162,9 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// --- Order Routes (CRITICAL FOR CHECKOUT) ---
+// --- ORDER ROUTES ---
 
-// 1. Create Order (Used by Cart.html)
+// 1. Create Order
 app.post('/api/orders', async (req, res) => {
   try {
     const { userName, userPhone, items, totalAmount } = req.body;
@@ -167,7 +178,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// 2. Get All Orders (Used by Admin.html)
+// 2. Get All Orders (Admin)
 app.get('/api/orders', async (req, res) => {
   try { 
     const orders = await Order.find().sort({ createdAt: -1 }); 
@@ -177,7 +188,18 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-// 3. Update Order Status (Used by Admin.html)
+// 3. Get User Orders (Profile)
+app.get('/api/orders/user/:phone', async (req, res) => {
+  try {
+    const phone = req.params.phone;
+    const orders = await Order.find({ userPhone: phone }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 4. Mark as Delivered
 app.put('/api/orders/:id/deliver', async (req, res) => {
   try {
     await Order.findByIdAndUpdate(req.params.id, { status: 'delivered' });
@@ -187,6 +209,90 @@ app.put('/api/orders/:id/deliver', async (req, res) => {
   }
 });
 
-// 5. START SERVER
+// 5. Cancel Order (NEW)
+app.put('/api/orders/:id/cancel', async (req, res) => {
+  try {
+    await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- LOCATION ROUTES (Map/Polygon) ---
+
+// 1. Add Location
+app.post('/api/locations', async (req, res) => {
+  try {
+    const { name, coordinates } = req.body; // coordinates: [[lng, lat], [lng, lat]...]
+    
+    // GeoJSON Polygon requires the ring to be closed (first point === last point)
+    let finalCoords = coordinates;
+    const first = coordinates[0];
+    const last = coordinates[coordinates.length - 1];
+    
+    // Check if loop is not closed
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      finalCoords.push(first); // Close the loop
+    }
+
+    const newLocation = new Location({
+      name,
+      area: { type: 'Polygon', coordinates: [finalCoords] } // Polygon expects array of linear rings
+    });
+    await newLocation.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// 2. Get All Locations
+app.get('/api/locations', async (req, res) => {
+  try {
+    const locations = await Location.find().sort({ createdAt: -1 });
+    res.json(locations);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 3. Delete Location
+app.delete('/api/locations/:id', async (req, res) => {
+  try {
+    await Location.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 4. Check User Location
+app.post('/api/check-location', async (req, res) => {
+  try {
+    const { userLat, userLng } = req.body;
+    
+    // Check if user point intersects with ANY saved polygon
+    const isServiceable = await Location.findOne({
+      area: {
+        $geoIntersects: {
+          $geometry: {
+            type: "Point",
+            coordinates: [userLng, userLat] // GeoJSON is [Longitude, Latitude]
+          }
+        }
+      }
+    });
+
+    res.json({ serviceable: !!isServiceable });
+  } catch (error) {
+    console.error(error);
+    // If error (or no locations), default to true so you don't block users by mistake during server error
+    res.json({ serviceable: true }); 
+  }
+});
+
+// 5. START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
