@@ -36,6 +36,7 @@
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .otp-input { width: 60px; height: 60px; text-align: center; font-size: 24px; font-weight: 600; background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; outline: none; color: white; transition: all 0.2s; }
         .otp-input:focus { border-color: rgba(140, 255, 0, 0.5); box-shadow: 0 0 0 2px rgba(140, 255, 0, 0.1); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -64,6 +65,7 @@
     <!-- Main Content -->
     <main class="min-h-screen flex items-center justify-center pt-20 px-6">
         <div class="w-full max-w-md">
+            
             <!-- STEP 1: Phone -->
             <div id="phoneStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 animate-fade-in">
                 <div class="text-center mb-8">
@@ -100,11 +102,47 @@
                     <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 3)">
                     <input type="text" maxlength="1" class="otp-input" oninput="moveToNext(this, 4)">
                 </div>
-                <button id="verifyBtn" onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
+                <button id="verifyBtn" type="button" onclick="verifyOTP()" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors">Verify & Login</button>
                 <div class="text-center mt-6">
-                    <button onclick="goBack()" class="text-xs text-neutral-600 hover:text-white mt-3 block mx-auto">Change Phone Number</button>
+                    <button onclick="goBack(1)" class="text-xs text-neutral-600 hover:text-white mt-3 block mx-auto">Change Phone Number</button>
                 </div>
             </div>
+
+            <!-- STEP 3: Complete Profile -->
+            <div id="profileStep" class="bg-brand-gray rounded-3xl border border-white/5 p-8 md:p-10 hidden">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-accent/10 rounded-2xl mb-4">
+                        <iconify-icon icon="lucide:user-plus" width="28" class="text-brand-accent"></iconify-icon>
+                    </div>
+                    <h1 class="text-2xl font-semibold tracking-tight">Complete Profile</h1>
+                    <p class="text-neutral-500 mt-1 text-sm">Just a few more details to get started</p>
+                </div>
+                <form onsubmit="saveProfile(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Full Name</label>
+                        <input type="text" id="profileName" placeholder="Enter your name" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Date of Birth</label>
+                        <input type="date" id="profileDob" required class="w-full bg-brand-black border border-white/10 rounded-xl py-3.5 px-4 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-400 uppercase tracking-wide mb-2">Gender</label>
+                        <div class="flex gap-4">
+                            <label class="flex-1 flex items-center gap-2 p-3 bg-brand-black border border-white/10 rounded-xl cursor-pointer hover:border-brand-accent/50 transition-all">
+                                <input type="radio" name="gender" value="male" required class="accent-brand-accent">
+                                <span class="text-sm">Male</span>
+                            </label>
+                            <label class="flex-1 flex items-center gap-2 p-3 bg-brand-black border border-white/10 rounded-xl cursor-pointer hover:border-brand-accent/50 transition-all">
+                                <input type="radio" name="gender" value="female" class="accent-brand-accent">
+                                <span class="text-sm">Female</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button id="saveProfileBtn" type="submit" class="w-full bg-brand-accent text-black font-semibold py-3.5 rounded-full hover:bg-brand-yellow transition-colors mt-6">Save & Continue</button>
+                </form>
+            </div>
+
         </div>
     </main>
     
@@ -128,6 +166,7 @@
 
         // --- API CONFIGURATION ---
         const API_URL = 'https://night-cart.onrender.com';
+        let currentPhone = ''; // Store phone for final step
 
         // --- STEP 1: SEND OTP ---
         async function showOTPStep(e) {
@@ -138,6 +177,8 @@
                 alert("Please enter a valid 10-digit number");
                 return;
             }
+            
+            currentPhone = "+91" + phone;
 
             const btn = document.getElementById('getOtpBtn');
             const originalText = btn.innerText;
@@ -145,30 +186,26 @@
             btn.disabled = true;
 
             try {
-                // Call Backend using the URL defined above
                 const response = await fetch(`${API_URL}/api/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: "+91" + phone })
+                    body: JSON.stringify({ phone: currentPhone })
                 });
                 
                 const data = await response.json();
 
                 if(data.success) {
-                    // Switch to OTP Screen
-                    document.getElementById('displayPhone').innerText = `+91 ${phone}`;
+                    document.getElementById('displayPhone').innerText = currentPhone;
                     document.getElementById('phoneStep').classList.add('hidden');
                     document.getElementById('otpStep').classList.remove('hidden');
                     document.getElementById('otpStep').classList.add('animate-fade-in');
-                    
-                    // Focus first input
                     document.querySelectorAll('.otp-input')[0].focus();
                 } else {
                     alert("Error: " + (data.message || "Could not send OTP"));
                 }
             } catch (error) {
                 console.error(error);
-                alert("Cannot connect to server. Check internet connection.");
+                alert("Cannot connect to server.");
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -180,8 +217,6 @@
             const inputs = document.querySelectorAll('.otp-input');
             let otp = '';
             inputs.forEach(input => otp += input.value);
-            
-            const phone = document.getElementById('phoneNumber').value;
 
             if(otp.length !== 4) {
                 alert("Please enter the full 4-digit code");
@@ -194,25 +229,33 @@
             btn.disabled = true;
 
             try {
-                // Call Backend
                 const response = await fetch(`${API_URL}/api/verify-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: "+91" + phone, otp: otp })
+                    body: JSON.stringify({ phone: currentPhone, otp: otp })
                 });
 
                 const data = await response.json();
 
                 if(data.success) {
-                    // Save login state
-                    localStorage.setItem('nc_isLoggedIn', 'true');
-                    localStorage.setItem('nc_userName', 'User');
-                    
-                    alert("Login Successful!");
-                    window.location.href = 'index.html';
+                    // Check if user is new or existing
+                    if(data.isNew) {
+                        // Go to Step 3: Complete Profile
+                        document.getElementById('otpStep').classList.add('hidden');
+                        document.getElementById('profileStep').classList.remove('hidden');
+                        document.getElementById('profileStep').classList.add('animate-fade-in');
+                    } else {
+                        // Existing user: Save to LocalStorage and Redirect
+                        localStorage.setItem('nc_isLoggedIn', 'true');
+                        localStorage.setItem('nc_userName', data.user.name || 'User');
+                        localStorage.setItem('nc_userDob', data.user.dob || 'Not Set');
+                        localStorage.setItem('nc_userGender', data.user.gender || 'Not Set');
+                        
+                        alert("Login Successful!");
+                        window.location.href = 'index.html';
+                    }
                 } else {
                     alert("Invalid OTP. Please try again.");
-                    // Clear inputs
                     inputs.forEach(input => input.value = '');
                     inputs[0].focus();
                 }
@@ -225,10 +268,60 @@
             }
         }
 
+        // --- STEP 3: SAVE PROFILE ---
+        async function saveProfile(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('profileName').value;
+            const dob = document.getElementById('profileDob').value;
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+
+            const btn = document.getElementById('saveProfileBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/update-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        phone: currentPhone, 
+                        name: name, 
+                        dob: dob, 
+                        gender: gender 
+                    })
+                });
+
+                const data = await response.json();
+
+                if(data.success) {
+                    // Save to LocalStorage for UI display
+                    localStorage.setItem('nc_isLoggedIn', 'true');
+                    localStorage.setItem('nc_userName', name);
+                    localStorage.setItem('nc_userDob', dob);
+                    localStorage.setItem('nc_userGender', gender);
+
+                    alert("Profile Saved! Welcome aboard.");
+                    window.location.href = 'index.html';
+                } else {
+                    alert("Error saving profile.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Server connection error.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
         // --- HELPERS ---
-        function goBack() {
-            document.getElementById('otpStep').classList.add('hidden');
-            document.getElementById('phoneStep').classList.remove('hidden');
+        function goBack(step) {
+            if(step === 1) {
+                document.getElementById('otpStep').classList.add('hidden');
+                document.getElementById('phoneStep').classList.remove('hidden');
+            }
         }
 
         function moveToNext(current, nextIndex) {
