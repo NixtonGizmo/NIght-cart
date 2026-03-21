@@ -34,22 +34,23 @@
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
         
-        /* Popup Animation */
+        /* Animations */
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
+        
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        .confetti { position: absolute; width: 10px; height: 10px; background: #8CFF00; animation: confetti 1s ease-out forwards; }
+        .error-animate { animation: scaleIn 0.3s ease-out forwards, shake 0.5s ease-in-out 0.3s; }
+        .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
 
-    <!-- ORDER SUCCESS POPUP -->
+    <!-- SUCCESS POPUP -->
     <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden">
-        <!-- Confetti elements -->
         <div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div>
-        
         <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10">
             <div class="p-10">
                 <div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20">
@@ -60,6 +61,23 @@
                 <p class="text-xs text-neutral-500 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono">#ORD-123</span></p>
                 <button onclick="goToHome()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">
                     Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR POPUP (Server Down) -->
+    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center error-animate">
+            <div class="p-10">
+                <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
+                    <iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon>
+                </div>
+                <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
+                <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
+                <p class="text-xs text-neutral-500 mb-8">Please check your internet or try again later.</p>
+                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">
+                    Close
                 </button>
             </div>
         </div>
@@ -185,8 +203,8 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
-            // Add simple confetti effect
             const container = document.getElementById('confettiContainer');
+            container.innerHTML = ''; // Clear old
             for(let i=0; i<20; i++) {
                 const conf = document.createElement('div');
                 conf.className = 'confetti';
@@ -198,9 +216,19 @@
             }
         }
 
-        function goToHome() {
-            window.location.href = 'index.html';
+        function showErrorModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
+
+        function closeErrorModal() {
+            const modal = document.getElementById('errorModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function goToHome() { window.location.href = 'index.html'; }
 
         // --- LOAD & RENDER ---
         function loadCart() {
@@ -256,19 +284,14 @@
 
         function updateTotals() {
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            // UPDATED DELIVERY FEE LOGIC
             let deliveryFee = 0;
-            if (subtotal > 0 && subtotal < 99) {
-                deliveryFee = 30;
-            }
+            if (subtotal > 0 && subtotal < 99) { deliveryFee = 30; }
 
             const discount = subtotal > 500 ? Math.round(subtotal * 0.05) : 0;
             const total = subtotal + deliveryFee - discount;
 
             document.getElementById('subtotal').textContent = `₹${subtotal}`;
             
-            // Show Free delivery text if applicable
             const delFeeEl = document.getElementById('deliveryFee');
             if(deliveryFee === 0 && subtotal > 0) {
                 delFeeEl.textContent = 'FREE';
@@ -327,15 +350,27 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userName, userPhone: userPhone || 'N/A', items: cart, totalAmount })
                 });
+
+                // Check for HTTP errors (like 500, 404)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
                     cart = [];
                     saveCart();
-                    // SHOW UNIQUE POPUP
                     showOrderSuccessModal(data.orderId);
-                } else { alert("Failed to place order."); }
-            } catch (error) { console.error(error); alert("Server error."); }
+                } else {
+                    // API returned success: false
+                    showErrorModal();
+                }
+            } catch (error) {
+                console.error('Order Error:', error);
+                // This catches network errors OR the throw above
+                showErrorModal();
+            }
         }
 
         // --- AUTH & GLOBAL ---
