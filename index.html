@@ -29,9 +29,7 @@
     </script>
     <style>
         * { cursor: none; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0a0a; }
-        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::selection { background: white; color: black; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -149,35 +147,50 @@
 
     <!-- LOCATION PICKER MODAL -->
     <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden">
-            <div class="p-6 border-b border-white/5 flex items-center justify-between">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
                 <h3 class="font-semibold text-lg">Select Delivery Location</h3>
                 <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
             
-            <div class="p-4 bg-brand-black/50">
+            <div class="p-4 bg-brand-black/50 flex-shrink-0">
                 <div class="relative">
-                    <input type="text" id="locationSearchInput" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
-                    <button onclick="searchLocation()" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
+                    <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
                         <iconify-icon icon="lucide:search" width="18"></iconify-icon>
                     </button>
                 </div>
-                <div id="searchResults" class="mt-2 space-y-1 max-h-32 overflow-y-auto hidden"></div>
+                <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
             </div>
 
-            <div id="locationMap" class="w-full h-64 bg-brand-black"></div>
+            <!-- SAVED ADDRESSES (NEW) -->
+            <div id="savedAddressesContainer" class="p-4 border-b border-white/5 flex-shrink-0 hidden">
+                <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Saved Addresses</h4>
+                <div id="savedAddressesList" class="space-y-2"></div>
+            </div>
 
-            <div class="p-4 border-t border-white/5 flex items-center justify-between bg-brand-dark">
-                <div class="text-xs text-neutral-500">
-                    <p id="selectedAddressText">Click on map to select location</p>
+            <div id="locationMap" class="w-full h-48 bg-brand-black flex-shrink-0"></div>
+
+            <!-- Footer Actions -->
+            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="text-xs text-neutral-500 truncate pr-4" id="selectedAddressText">Click on map to select location</div>
                 </div>
-                <button onclick="confirmLocation()" class="px-6 py-2.5 bg-brand-accent text-black font-semibold rounded-xl hover:bg-brand-yellow transition-colors text-sm">Confirm Location</button>
+                
+                <!-- SAVE ADDRESS INPUT (NEW) -->
+                <div id="saveAddressUI" class="hidden mb-3 flex gap-2">
+                    <input type="text" id="addressLabelInput" placeholder="Label (e.g. Home, Office)" class="flex-1 bg-brand-black border border-white/10 rounded-lg py-2 px-3 text-xs focus:outline-none">
+                    <button onclick="saveCurrentAddress()" class="px-4 py-2 bg-white/5 text-white text-xs font-medium rounded-lg hover:bg-white/10 whitespace-nowrap">Save</button>
+                </div>
+
+                <button onclick="confirmLocation()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Confirm Location</button>
             </div>
         </div>
     </div>
 
-    <!-- HERO SECTION (Added pt-44 md:pt-36 for spacing) -->
-    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-44 md:pt-36">
+    <!-- HERO SECTION (Increased Padding Top) -->
+    <!-- Changed pt-44 to pt-56 for more gap -->
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-56 md:pt-52">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
             <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
@@ -314,7 +327,6 @@
                 grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
                 return;
             }
-
             grid.innerHTML = productsToRender.map(product => `
                 <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
                     <div class="relative overflow-hidden">
@@ -405,13 +417,11 @@
                 document.getElementById('currentLocationText').textContent = savedText;
             } 
 
-            // If explicitly marked as not ok, show blocking overlay
             if(isOk === 'false') {
                 showNotServiceableOverlay();
             } else if (isOk === 'true') {
                 // All good
             } else {
-                // No location set, try auto
                 checkAutoLocation();
             }
         }
@@ -448,7 +458,6 @@
                     localStorage.setItem('nc_location_text', text);
                     document.getElementById('currentLocationText').textContent = text;
                 } else {
-                    // Save as false and block UI
                     localStorage.setItem('nc_location_ok', 'false');
                     localStorage.setItem('nc_location_text', text);
                     showNotServiceableOverlay();
@@ -462,6 +471,8 @@
             const modal = document.getElementById('locationModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            
+            loadSavedAddresses(); // Load list
             
             setTimeout(() => {
                 if (!locationMap) {
@@ -503,6 +514,8 @@
                     const data = await res.json();
                     const name = data.display_name.split(',').slice(0, 2).join(', ');
                     document.getElementById('selectedAddressText').textContent = name;
+                    // Show Save UI
+                    document.getElementById('saveAddressUI').classList.remove('hidden');
                 } catch (err) {
                     document.getElementById('selectedAddressText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                 }
@@ -542,6 +555,7 @@
             
             document.getElementById('searchResults').classList.add('hidden');
             document.getElementById('locationSearchInput').value = '';
+            document.getElementById('saveAddressUI').classList.remove('hidden');
         }
 
         async function confirmLocation() {
@@ -559,7 +573,6 @@
                 const data = await res.json();
 
                 const text = document.getElementById('selectedAddressText').textContent;
-                // Save location details regardless
                 localStorage.setItem('nc_location_lat', tempSelectedLat);
                 localStorage.setItem('nc_location_lng', tempSelectedLng);
                 localStorage.setItem('nc_location_text', text);
@@ -570,7 +583,6 @@
                     closeLocationModal();
                     showNotification("Location updated!");
                     
-                    // Remove overlay if it was there
                     const overlay = document.getElementById('notServiceableOverlay');
                     if(overlay) overlay.remove();
                 } else {
@@ -580,6 +592,81 @@
                 }
             } catch(e) {
                 alert("Error checking location.");
+            }
+        }
+
+        // --- 8. SAVED ADDRESSES LOGIC (NEW) ---
+        async function loadSavedAddresses() {
+            const phone = localStorage.getItem('nc_userPhone');
+            if (!phone) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/addresses/${phone}`);
+                const addresses = await res.json();
+                
+                const container = document.getElementById('savedAddressesContainer');
+                const list = document.getElementById('savedAddressesList');
+
+                if(addresses.length > 0) {
+                    container.classList.remove('hidden');
+                    list.innerHTML = addresses.map(a => `
+                        <div onclick="useSavedAddress(${a.lat}, ${a.lng}, '${a.address.replace(/'/g, "\\'")}')" class="flex items-center justify-between p-3 bg-brand-black/50 rounded-lg cursor-pointer hover:bg-brand-accent/5 border border-white/5 hover:border-brand-accent/30 transition-all">
+                            <div class="flex items-center gap-2">
+                                <iconify-icon icon="lucide:bookmark" width="14" class="text-brand-accent"></iconify-icon>
+                                <div>
+                                    <p class="text-xs font-medium">${a.label}</p>
+                                    <p class="text-[10px] text-neutral-500 truncate max-w-[200px]">${a.address}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.classList.add('hidden');
+                }
+            } catch(e) {
+                console.error("Error loading addresses", e);
+            }
+        }
+
+        function useSavedAddress(lat, lng, address) {
+            tempSelectedLat = lat;
+            tempSelectedLng = lng;
+            document.getElementById('selectedAddressText').textContent = address;
+            
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+            // Hide save UI because it's already saved
+            document.getElementById('saveAddressUI').classList.add('hidden');
+        }
+
+        async function saveCurrentAddress() {
+            const label = document.getElementById('addressLabelInput').value;
+            const address = document.getElementById('selectedAddressText').textContent;
+            const phone = localStorage.getItem('nc_userPhone');
+
+            if(!label) { alert("Enter a label (e.g. Home)"); return; }
+            if(!phone) { alert("Please login to save address"); return; }
+
+            try {
+                await fetch(`${API_URL}/api/addresses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        label: label,
+                        address: address,
+                        lat: tempSelectedLat,
+                        lng: tempSelectedLng
+                    })
+                });
+                showNotification("Address Saved!");
+                document.getElementById('addressLabelInput').value = '';
+                document.getElementById('saveAddressUI').classList.add('hidden');
+                loadSavedAddresses(); // Refresh list
+            } catch(e) {
+                alert("Error saving address");
             }
         }
 
