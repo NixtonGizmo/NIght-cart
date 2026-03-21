@@ -40,11 +40,30 @@ const Product = mongoose.model('Product', new mongoose.Schema({
   category: String
 }));
 
-// Order Model
+// Address Model
+const Address = mongoose.model('Address', new mongoose.Schema({
+  phone: String,
+  label: String, // Home, Work, etc.
+  houseNo: String,
+  building: String,
+  landmark: String,
+  area: String, // Main address text
+  lat: Number,
+  lng: Number,
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Order Model (Updated with userAddress)
 const Order = mongoose.model('Order', new mongoose.Schema({
   orderId: String, 
   userName: String, 
   userPhone: String, 
+  userAddress: { 
+    houseNo: String,
+    building: String,
+    landmark: String,
+    area: String
+  }, 
   items: Array, 
   totalAmount: Number, 
   status: { type: String, default: 'pending' }, // pending, delivered, cancelled
@@ -167,9 +186,9 @@ app.delete('/api/products/:id', async (req, res) => {
 // 1. Create Order
 app.post('/api/orders', async (req, res) => {
   try {
-    const { userName, userPhone, items, totalAmount } = req.body;
+    const { userName, userPhone, userAddress, items, totalAmount } = req.body;
     const orderId = `ORD-${Date.now()}`;
-    const newOrder = new Order({ orderId, userName, userPhone, items, totalAmount });
+    const newOrder = new Order({ orderId, userName, userPhone, userAddress, items, totalAmount });
     await newOrder.save();
     res.json({ success: true, orderId });
   } catch (error) {
@@ -209,10 +228,44 @@ app.put('/api/orders/:id/deliver', async (req, res) => {
   }
 });
 
-// 5. Cancel Order (NEW)
+// 5. Cancel Order
 app.put('/api/orders/:id/cancel', async (req, res) => {
   try {
     await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- ADDRESS ROUTES ---
+
+// 1. Get Saved Addresses
+app.get('/api/addresses/:phone', async (req, res) => {
+  try {
+    const addresses = await Address.find({ phone: req.params.phone }).sort({ createdAt: -1 });
+    res.json(addresses);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 2. Save New Address
+app.post('/api/addresses', async (req, res) => {
+  try {
+    const { phone, label, houseNo, building, landmark, area, lat, lng } = req.body;
+    const newAddress = new Address({ phone, label, houseNo, building, landmark, area, lat, lng });
+    await newAddress.save();
+    res.json({ success: true, address: newAddress });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 3. Delete Address
+app.delete('/api/addresses/:id', async (req, res) => {
+  try {
+    await Address.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false });
@@ -293,86 +346,6 @@ app.post('/api/check-location', async (req, res) => {
   }
 });
 
-// --- ADDRESS MODEL (Updated) ---
-const Address = mongoose.model('Address', new mongoose.Schema({
-  phone: String,
-  label: String, // Home, Work, etc.
-  houseNo: String,
-  building: String,
-  landmark: String,
-  area: String, // Main address text
-  lat: Number,
-  lng: Number,
-  createdAt: { type: Date, default: Date.now }
-}));
-
-// --- ORDER MODEL (Updated for Address) ---
-const Order = mongoose.model('Order', new mongoose.Schema({
-  orderId: String, 
-  userName: String, 
-  userPhone: String, 
-  userAddress: { 
-    houseNo: String,
-    building: String,
-    landmark: String,
-    area: String
-  }, 
-  items: Array, 
-  totalAmount: Number, 
-  status: { type: String, default: 'pending' },
-  createdAt: { type: Date, default: Date.now }
-}));
-
-// --- ADDRESS ROUTES ---
-
-// 1. Get Saved Addresses
-app.get('/api/addresses/:phone', async (req, res) => {
-  try {
-    const addresses = await Address.find({ phone: req.params.phone }).sort({ createdAt: -1 });
-    res.json(addresses);
-  } catch (error) {
-    res.status(500).json({ success: false });
-  }
-});
-
-// 2. Save New Address
-app.post('/api/addresses', async (req, res) => {
-  try {
-    // Destructure new fields
-    const { phone, label, houseNo, building, landmark, area, lat, lng } = req.body;
-    const newAddress = new Address({ phone, label, houseNo, building, landmark, area, lat, lng });
-    await newAddress.save();
-    res.json({ success: true, address: newAddress });
-  } catch (error) {
-    res.status(500).json({ success: false });
-  }
-});
-
-// 3. Delete Address
-app.delete('/api/addresses/:id', async (req, res) => {
-  try {
-    await Address.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false });
-  }
-});
-
-// --- ORDER ROUTES (Updated) ---
-
-// Create Order
-app.post('/api/orders', async (req, res) => {
-  try {
-    const { userName, userPhone, userAddress, items, totalAmount } = req.body; // Added userAddress
-    const orderId = `ORD-${Date.now()}`;
-    const newOrder = new Order({ orderId, userName, userPhone, userAddress, items, totalAmount });
-    await newOrder.save();
-    res.json({ success: true, orderId });
-  } catch (error) {
-    console.error("Order Error:", error);
-    res.status(500).json({ success: false });
-  }
-});
 // 5. START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
