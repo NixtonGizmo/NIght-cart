@@ -55,7 +55,7 @@
         </div>
     </nav>
 
-    <!-- MAP MODAL (For Add/Edit Address) -->
+    <!-- MAP MODAL -->
     <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
             <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
@@ -91,7 +91,8 @@
 
     <!-- Main Content -->
     <main class="pt-28 md:pt-32 pb-16 min-h-screen">
-        <div class="max-w-2xl mx-auto px-6">
+        <!-- Changed to max-w-6xl for wider layout -->
+        <div class="max-w-6xl mx-auto px-6">
             
             <!-- User Info Card -->
             <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 mb-6">
@@ -116,17 +117,30 @@
                 </div>
             </div>
 
-            <!-- Saved Addresses Section -->
-            <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-lg">Saved Addresses</h3>
-                    <button onclick="openLocationModal()" class="text-brand-accent text-sm font-medium hover:underline flex items-center gap-1">
-                        <iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add New
-                    </button>
+            <!-- 50-50 Split Grid Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- LEFT COLUMN: Order History -->
+                <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 h-fit">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2"><iconify-icon icon="lucide:receipt" width="18" class="text-brand-accent"></iconify-icon> Order History</h3>
+                    <div id="orderHistoryList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <p class="text-neutral-500 text-sm text-center py-4">Loading orders...</p>
+                    </div>
                 </div>
-                <div id="addressList" class="space-y-3">
-                    <p class="text-neutral-500 text-sm text-center py-4">Loading addresses...</p>
+
+                <!-- RIGHT COLUMN: Saved Addresses -->
+                <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 h-fit">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-lg">Saved Addresses</h3>
+                        <button onclick="openLocationModal()" class="text-brand-accent text-sm font-medium hover:underline flex items-center gap-1">
+                            <iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add New
+                        </button>
+                    </div>
+                    <div id="addressList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <p class="text-neutral-500 text-sm text-center py-4">Loading addresses...</p>
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -154,15 +168,24 @@
                 window.location.href = 'login.html';
                 return;
             }
-            document.getElementById('userName').textContent = localStorage.getItem('nc_userName') || 'User';
-            document.getElementById('userPhone').textContent = localStorage.getItem('nc_userPhone') || 'N/A';
-            document.getElementById('userDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
-            document.getElementById('userGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
+            
+            // FIX: Correctly retrieve and display data
+            const name = localStorage.getItem('nc_userName') || 'User';
+            const phone = localStorage.getItem('nc_userPhone') || 'N/A';
+            const dob = localStorage.getItem('nc_userDob') || 'Not Set';
+            const gender = localStorage.getItem('nc_userGender') || 'Not Set';
+
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userPhone').textContent = phone;
+            document.getElementById('userDob').textContent = dob;
+            document.getElementById('userGender').textContent = gender.charAt(0).toUpperCase() + gender.slice(1); // Capitalize
             
             loadAddresses();
+            loadOrderHistory(phone); // Load orders
         }
 
         function logoutUser() { localStorage.clear(); window.location.href = 'index.html'; }
+        
         function loadCartCount() { 
             const s=localStorage.getItem('nc_cart'); 
             if(s){ 
@@ -171,6 +194,44 @@
                 const el=document.getElementById('navCartCount');
                 if(t>0){el.textContent=t;el.classList.remove('hidden');}else{el.classList.add('hidden');} 
             } 
+        }
+
+        // --- ORDER HISTORY ---
+        async function loadOrderHistory(phone) {
+            const container = document.getElementById('orderHistoryList');
+            if (!phone || phone === 'N/A') {
+                container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No orders found.</p>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/orders/user/${phone}`);
+                const orders = await res.json();
+
+                if (orders.length > 0) {
+                    container.innerHTML = orders.map(o => `
+                        <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-mono text-neutral-500">${o.orderId}</span>
+                                <span class="text-xs px-2 py-1 rounded ${
+                                    o.status === 'delivered' ? 'bg-green-500/10 text-green-500' : 
+                                    o.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 
+                                    'bg-yellow-500/10 text-yellow-500'
+                                } capitalize">${o.status}</span>
+                            </div>
+                            <p class="text-sm font-medium">${o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</p>
+                            <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-2">
+                                <span class="text-xs text-neutral-500">${new Date(o.createdAt).toLocaleDateString()}</span>
+                                <span class="font-bold">₹${o.totalAmount}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No past orders found.</p>';
+                }
+            } catch(e) {
+                container.innerHTML = '<p class="text-red-400 text-sm text-center py-4">Error loading history.</p>';
+            }
         }
 
         // --- ADDRESS LOGIC ---
@@ -221,9 +282,7 @@
 
         function editAddress(id, label, house, building, area, lat, lng) {
             document.getElementById('editAddressId').value = id;
-            openLocationModal(); // Open Modal
-            
-            // Fill Data
+            openLocationModal(); 
             document.getElementById('inputHouse').value = house;
             document.getElementById('inputBuilding').value = building;
             document.getElementById('selectedAreaText').textContent = area;
@@ -232,8 +291,6 @@
             tempSelectedLng = lng;
             setLabel(label);
             document.getElementById('modalTitle').textContent = "Edit Address";
-
-            // Set Marker
             if(locationMap && locationMarker) {
                 locationMap.setView([lat, lng], 15);
                 locationMarker.setLatLng([lat, lng]);
@@ -242,9 +299,8 @@
 
         // --- MAP MODAL LOGIC ---
         function openLocationModal() {
-            document.getElementById('editAddressId').value = ''; // Reset ID for new
+            document.getElementById('editAddressId').value = ''; 
             document.getElementById('modalTitle').textContent = "Add New Address";
-            // Clear inputs
             document.getElementById('inputHouse').value = '';
             document.getElementById('inputBuilding').value = '';
             document.getElementById('selectedAreaText').textContent = 'Select on Map';
