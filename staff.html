@@ -28,6 +28,9 @@
         /* Leaflet Overrides */
         .leaflet-container { background: #050505; z-index: 10; border-radius: 12px; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+
+        .item-processed { opacity: 0.6; }
+        .item-oos { text-decoration: line-through; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -86,14 +89,14 @@
             
             <!-- LIST CONTAINERS -->
             <div id="list-new" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
-            <div id="list-picking" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
+            <div id="list-picking" class="grid md:grid-cols-2 gap-4 hidden"></div>
             <div id="list-ready" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
             <div id="list-delivery" class="grid md:grid-cols-1 lg:grid-cols-2 gap-4 hidden"></div>
 
         </main>
     </div>
 
-    <!-- MAP MODAL (For Delivery Address) -->
+    <!-- MAP MODAL -->
     <div id="mapModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-2xl w-full max-w-lg border border-white/10 overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-4 border-b border-white/5 flex justify-between items-center">
@@ -119,7 +122,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             setupCursor();
-            // Check if already logged in
             if (localStorage.getItem('nc_staff_auth') === 'true') {
                 showDashboard();
             }
@@ -161,7 +163,6 @@
             document.getElementById('dashboardScreen').classList.remove('hidden');
             document.getElementById('staffName').textContent = localStorage.getItem('nc_staff_phone');
             loadData();
-            // Refresh data every 10 seconds
             setInterval(loadData, 10000);
         }
 
@@ -178,29 +179,23 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            // Hide all lists
             document.querySelectorAll('[id^="list-"]').forEach(el => el.classList.add('hidden'));
-            // Show active list
             document.getElementById(`list-${tab}`).classList.remove('hidden');
-            // Update tab styles
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
         }
 
         function renderLists() {
-            // Filter orders by status
             const newOrders = orders.filter(o => o.status === 'pending');
             const pickingOrders = orders.filter(o => o.status === 'picking');
             const readyOrders = orders.filter(o => o.status === 'ready');
             const deliveryOrders = orders.filter(o => o.status === 'out_for_delivery');
 
-            // Update counts
             document.getElementById('count-new').textContent = `(${newOrders.length})`;
             document.getElementById('count-picking').textContent = `(${pickingOrders.length})`;
             document.getElementById('count-ready').textContent = `(${readyOrders.length})`;
             document.getElementById('count-delivery').textContent = `(${deliveryOrders.length})`;
 
-            // Render HTML
             document.getElementById('list-new').innerHTML = newOrders.map(o => orderCard(o, 'Accept & Pick')).join('') || emptyState("No new orders");
             document.getElementById('list-picking').innerHTML = pickingOrders.map(o => pickingCard(o)).join('') || emptyState("No items being picked");
             document.getElementById('list-ready').innerHTML = readyOrders.map(o => orderCard(o, 'Start Delivery')).join('') || emptyState("No orders ready");
@@ -224,29 +219,75 @@
             </div>`;
         }
 
+        // --- NEW: PICKING CARD WITH ITEM LOGIC ---
         function pickingCard(o) {
             return `
-            <div class="bg-brand-gray rounded-2xl p-5 border border-brand-accent/30">
+            <div class="bg-brand-gray rounded-2xl p-5 border border-brand-accent/30 relative" id="order-container-${o._id}">
                 <div class="flex justify-between items-center mb-3">
                     <p class="font-mono text-xs text-neutral-500">${o.orderId}</p>
                     <span class="text-xs px-2 py-1 rounded bg-yellow-500/10 text-yellow-500">PICKING</span>
                 </div>
                 <h3 class="font-bold mb-3">Items to Pack:</h3>
-                <ul class="space-y-2 mb-4">
-                    ${o.items.map(i => `
-                        <li class="flex items-center justify-between text-sm bg-brand-black/30 p-2 rounded-lg">
-                            <span>${i.name}</span>
-                            <span class="font-bold">x${i.quantity}</span>
+                <ul class="space-y-2 mb-6" id="item-list-${o._id}">
+                    ${o.items.map((i, index) => `
+                        <li id="item-${o._id}-${index}" class="flex items-center justify-between text-sm bg-brand-black/30 p-2 rounded-lg transition-all">
+                            <div class="flex items-center gap-2">
+                                <span class="item-status-icon text-neutral-500">
+                                   <iconify-icon icon="lucide:circle" width="16"></iconify-icon>
+                                </span>
+                                <span class="item-name">${i.name} <span class="text-neutral-500">x${i.quantity}</span></span>
+                            </div>
+                            <div class="item-actions flex gap-1">
+                                <button onclick="markItem('${o._id}', ${index}, 'picked')" class="px-2 py-1 text-[10px] bg-green-500/10 text-green-500 rounded hover:bg-green-500/20 font-medium">Pick</button>
+                                <button onclick="markItem('${o._id}', ${index}, 'oos')" class="px-2 py-1 text-[10px] bg-red-500/10 text-red-500 rounded hover:bg-red-500/20 font-medium">OOS</button>
+                            </div>
                         </li>
                     `).join('')}
                 </ul>
-                <button onclick="updateStatus('${o._id}', 'ready')" class="w-full border border-brand-accent text-brand-accent font-semibold py-2 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
-                    Mark Ready for Delivery
+                
+                <button id="ready-btn-${o._id}" onclick="updateStatus('${o._id}', 'ready')" disabled class="w-full border border-brand-accent/30 text-brand-accent/30 font-semibold py-2 rounded-lg text-sm transition-colors cursor-not-allowed">
+                    Mark Ready for Delivery (Pack all items)
                 </button>
             </div>`;
         }
 
+        // --- NEW: ITEM STATUS HANDLING ---
+        function markItem(orderId, itemIndex, status) {
+            const itemEl = document.getElementById(`item-${orderId}-${itemIndex}`);
+            const iconEl = itemEl.querySelector('.item-status-icon');
+            const btns = itemEl.querySelector('.item-actions');
+            
+            // Disable buttons
+            btns.innerHTML = `<span class="text-[10px] text-neutral-500">${status === 'picked' ? 'Packed' : 'Removed'}</span>`;
+            
+            if (status === 'picked') {
+                iconEl.innerHTML = '<iconify-icon icon="lucide:check-circle" width="16" class="text-green-500"></iconify-icon>';
+                itemEl.classList.add('item-processed');
+            } else {
+                iconEl.innerHTML = '<iconify-icon icon="lucide:x-circle" width="16" class="text-red-500"></iconify-icon>';
+                itemEl.classList.add('item-processed', 'item-oos');
+            }
+
+            // Check if all items processed
+            const listEl = document.getElementById(`item-list-${orderId}`);
+            const totalItems = listEl.children.length;
+            const processedItems = listEl.querySelectorAll('.item-processed').length;
+
+            if (processedItems === totalItems) {
+                const readyBtn = document.getElementById(`ready-btn-${orderId}`);
+                readyBtn.disabled = false;
+                readyBtn.classList.remove('border-brand-accent/30', 'text-brand-accent/30', 'cursor-not-allowed');
+                readyBtn.classList.add('border-brand-accent', 'text-brand-accent', 'hover:bg-brand-accent/10');
+                readyBtn.textContent = "Mark Ready for Delivery";
+            }
+        }
+
+        // --- NEW: DELIVERY CARD WITH NAV OPTION ---
         function deliveryCard(o) {
+            const lat = o.userAddress?.lat || 0;
+            const lng = o.userAddress?.lng || 0;
+            const mapLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
             return `
             <div class="bg-brand-gray rounded-2xl overflow-hidden border border-white/5">
                 <div class="p-5">
@@ -263,13 +304,19 @@
                     <!-- Address Details -->
                     <div class="bg-brand-black/50 p-3 rounded-xl mt-3 text-sm">
                         <p class="text-neutral-400 text-xs mb-1">Deliver to:</p>
-                        <p class="font-medium">${o.userAddress?.houseNo}, ${o.userAddress?.building}</p>
-                        <p class="text-neutral-500">${o.userAddress?.area}</p>
+                        <p class="font-medium">${o.userAddress?.houseNo || 'N/A'}, ${o.userAddress?.building || ''}</p>
+                        <p class="text-neutral-500">${o.userAddress?.area || 'N/A'}</p>
                     </div>
 
-                    <button onclick="openMap(${o.userAddress?.lat || 0}, ${o.userAddress?.lng || 0}, '${o.userAddress?.area}', '${o.userName}')" class="mt-3 text-brand-accent text-xs font-medium flex items-center gap-1 hover:underline">
-                        <iconify-icon icon="lucide:map-pin" width="12"></iconify-icon> View on Map
-                    </button>
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="openMap(${lat}, ${lng}, '${o.userAddress?.area}', '${o.userName}')" class="flex-1 text-brand-accent text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-white/5 hover:bg-white/5">
+                            <iconify-icon icon="lucide:map-pin" width="12"></iconify-icon> View Map
+                        </button>
+                        <!-- NAVIGATE BUTTON -->
+                        <a href="${mapLink}" target="_blank" class="flex-1 text-blue-400 text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-blue-500/20 hover:bg-blue-500/10">
+                            <iconify-icon icon="lucide:navigation" width="12"></iconify-icon> Navigate
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="border-t border-white/5 p-3 bg-brand-dark/50">
@@ -297,9 +344,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status })
                 });
-                // Refresh data
                 loadData();
-                // Vibrate if supported
                 if(navigator.vibrate) navigator.vibrate(100);
             } catch(e) {
                 alert("Error updating status");
@@ -320,6 +365,8 @@
                 } else {
                     modalMap.setView([lat || 20.59, lng || 78.96], 15);
                 }
+                // Clear previous markers
+                modalMap.eachLayer((layer) => { if(layer instanceof L.Marker) modalMap.removeLayer(layer); });
                 L.marker([lat, lng]).addTo(modalMap);
                 modalMap.invalidateSize();
             }, 100);
