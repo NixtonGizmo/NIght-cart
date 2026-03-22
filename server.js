@@ -238,6 +238,17 @@ app.put('/api/orders/:id/cancel', async (req, res) => {
   }
 });
 
+// Update specific items in an order (e.g., mark out of stock)
+app.put('/api/orders/:id/items', async (req, res) => {
+  try {
+    const { items } = req.body; // Updated items array
+    const order = await Order.findByIdAndUpdate(req.params.id, { items }, { new: true });
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
 // --- STAFF ROUTES ---
 
 // 1. Staff Login (Simple hardcoded for prototype)
