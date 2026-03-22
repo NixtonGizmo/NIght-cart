@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    <!-- Leaflet CSS & JS (No Integrity Hashes for maximum compatibility) -->
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -19,14 +19,13 @@
         * { cursor: none; }
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
         #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
-        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
         
-        /* Leaflet Fixes */
+        /* Leaflet */
         .leaflet-container { background: #050505; z-index: 10; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
     </style>
@@ -56,7 +55,7 @@
                     </div>
                     <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
                 </div>
-                <!-- FIX: Explicit Height on Map Div -->
+                <!-- Map Container -->
                 <div id="locationMap" style="height: 200px; width: 100%; background: #050505;"></div>
                 <div class="p-6 space-y-4">
                     <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
@@ -151,13 +150,15 @@
 
         document.addEventListener('DOMContentLoaded', () => { loadCart(); checkLoginStatus(); loadSavedAddresses(); setupCursor(); });
 
+        // --- Helpers ---
         function showOrderSuccessModal(orderId) { const modal = document.getElementById('orderSuccessModal'); document.getElementById('modalOrderId').textContent = orderId; modal.classList.remove('hidden'); modal.classList.add('flex'); const container = document.getElementById('confettiContainer'); container.innerHTML = ''; for(let i=0; i<20; i++) { const c = document.createElement('div'); c.className='confetti'; c.style.left=Math.random()*100+'%'; c.style.top=Math.random()*100+'%'; c.style.background=['#8CFF00','#FFD700','#22C55E','#ffffff'][Math.floor(Math.random()*4)]; c.style.animationDelay=Math.random()*0.5+'s'; container.appendChild(c); } }
         function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
         function closeErrorModal() { const m=document.getElementById('errorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
         function goToHome() { window.location.href = 'index.html'; }
-
         function loadCart() { try { const s=localStorage.getItem('nc_cart'); if(s){ cart=JSON.parse(s); } } catch(e) { cart = []; } renderCartPage(); }
-
+        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
+        
+        // --- Addresses ---
         async function loadSavedAddresses() {
             const container = document.getElementById('addressListContainer');
             const phone = localStorage.getItem('nc_userPhone');
@@ -188,20 +189,19 @@
             loadSavedAddresses(); showNotification("Address Selected");
         }
 
+        // --- Cart Logic ---
         function renderCartPage() { 
             const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), b=document.getElementById('billDetailsCard'); const main = document.querySelector('main');
             if(cart.length===0){ c.classList.add('hidden'); e.classList.remove('hidden'); b.classList.add('hidden'); main.classList.remove('pb-40'); } else { c.classList.remove('hidden'); e.classList.add('hidden'); b.classList.remove('hidden'); main.classList.add('pb-40'); }
             c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-20 h-20 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium text-sm">${i.name}</h3><p class="text-xs text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent text-sm">₹${i.price}</p></div><div class="flex flex-col items-end gap-2"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="16"></iconify-icon></button><div class="flex items-center gap-1 bg-white/5 rounded-lg p-1"><button onclick="updateQuantity(${i.id},-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:minus" width="12"></iconify-icon></button><span class="text-xs font-medium w-6 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:plus" width="12"></iconify-icon></button></div></div></div>`).join(''); 
             updateTotals(); 
         }
-        
         function updateTotals() { 
             const sub=cart.reduce((s,i)=>s+(i.price*i.quantity),0); let del=0; if(sub>0 && sub<99)del=30; const dis=sub>500?Math.round(sub*0.05):0; const tot=sub+del-dis; 
             document.getElementById('subtotal').textContent=`₹${sub}`; const dEl=document.getElementById('deliveryFee'); 
             if(del===0 && sub>0){dEl.textContent='FREE';dEl.classList.add('text-green-500');}else{dEl.textContent=`₹${del}`;dEl.classList.remove('text-green-500');} 
             document.getElementById('discount').textContent=`- ₹${dis}`; document.getElementById('totalAmount').textContent=`₹${tot}`; document.getElementById('stickyTotal').textContent = `₹${tot}`;
         }
-        
         function updateQuantity(id,ch) { const i=cart.find(x=>x.id===id); if(i){i.quantity+=ch; if(i.quantity<=0)removeItem(id); else{saveCart();renderCartPage();}} }
         function removeItem(id) { cart=cart.filter(i=>i.id!==id); saveCart(); renderCartPage(); showNotification("Item removed"); }
         function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
@@ -233,27 +233,24 @@
             } catch(e){console.error(e);showErrorModal();}
         }
 
-        // --- MAP LOGIC (ROBUST) ---
+        // --- MAP LOGIC (ULTIMATE FIX) ---
         function openLocationModal() {
-            // 1. Reset everything for NEW address
+            // Reset UI Text fields
             document.getElementById('editAddressId').value = ''; 
             document.getElementById('modalTitle').textContent = "Add New Address";
             document.getElementById('inputHouse').value = ''; 
             document.getElementById('inputBuilding').value = ''; 
-            document.getElementById('selectedAreaText').textContent = 'Tap on map to select'; 
-            tempSelectedArea = "";
-            tempSelectedLat = null; 
-            tempSelectedLng = null;
             
-            // 2. Open Modal
+            // Show Modal
             document.getElementById('locationModal').classList.remove('hidden');
             document.getElementById('locationModal').classList.add('flex');
             
-            // 3. Init Map with delay to ensure container is visible
+            // Initialize Map with small delay
             setTimeout(() => {
                 if (!locationMap) {
                     initLocationMap();
                 } else {
+                    // If map exists, just invalidate size
                     locationMap.invalidateSize();
                 }
             }, 200);
@@ -268,29 +265,37 @@
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
-            // Initialize Map
+            // Create map
             locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
             
+            // Add marker
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
 
-            // Logic: If user has a valid location, sync it. Otherwise force them to click.
-            if (localStorage.getItem('nc_location_lat') && localStorage.getItem('nc_location_ok') === 'true') {
-                tempSelectedLat = savedLat; tempSelectedLng = savedLng;
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
-                .then(res => res.json())
-                .then(data => {
-                     const name = data.display_name.split(',').slice(0, 3).join(', ');
-                     document.getElementById('selectedAreaText').textContent = name;
-                     tempSelectedArea = name;
-                }).catch(() => {});
-            }
+            // *** CRITICAL FIX ***
+            // Always set the variables to the initial marker position immediately.
+            // This prevents 0,0 if the user doesn't click but just saves.
+            tempSelectedLat = savedLat;
+            tempSelectedLng = savedLng;
 
+            // Try to get name for initial position
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
+            .then(res => res.json())
+            .then(data => {
+                 const name = data.display_name.split(',').slice(0, 3).join(', ');
+                 document.getElementById('selectedAreaText').textContent = name;
+                 tempSelectedArea = name;
+            }).catch(() => {
+                 document.getElementById('selectedAreaText').textContent = "Move pin for accuracy";
+            });
+
+            // On Click -> Update variables
             locationMap.on('click', async (e) => {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
                 locationMarker.setLatLng(e.latlng);
-                tempSelectedLat = lat; tempSelectedLng = lng;
+                tempSelectedLat = lat;
+                tempSelectedLng = lng;
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
                     const data = await res.json();
@@ -314,9 +319,13 @@
         
         function selectSearchResult(lat, lng, name) {
             const shortName = name.split(',').slice(0, 3).join(', ');
-            document.getElementById('selectedAreaText').textContent = shortName; tempSelectedArea = shortName;
+            document.getElementById('selectedAreaText').textContent = shortName; 
+            tempSelectedArea = shortName;
+            
+            // Update Map & Vars
             if(locationMap && locationMarker) { locationMap.setView([lat, lng], 15); locationMarker.setLatLng([lat, lng]); }
             tempSelectedLat = lat; tempSelectedLng = lng;
+            
             document.getElementById('searchResults').classList.add('hidden'); document.getElementById('locationSearchInput').value = '';
         }
         
@@ -325,7 +334,11 @@
         async function saveNewAddress() {
             const house = document.getElementById('inputHouse').value;
             const building = document.getElementById('inputBuilding').value;
-            if(!house || tempSelectedLat === null) { alert("Please fill details and select location on map."); return; }
+            
+            // Final Check
+            if(!house) { alert("Please enter House/Flat No."); return; }
+            if(tempSelectedLat === null) { alert("Please select a location on the map."); return; }
+
             const phone = localStorage.getItem('nc_userPhone');
             if(!phone) { alert("Please login first."); return; }
 
@@ -341,10 +354,9 @@
             localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
             localStorage.setItem('nc_location_lat', tempSelectedLat); localStorage.setItem('nc_location_lng', tempSelectedLng);
             
-            closeLocationModal(); loadSavedAddresses(); showNotification("Address Added");
+            closeLocationModal(); loadSavedAddresses(); showNotification("Address Saved");
         }
         
-        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
         function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
         function logoutUser() { localStorage.clear(); window.location.href = 'index.html'; }
