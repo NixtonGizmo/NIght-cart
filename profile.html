@@ -7,50 +7,47 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00' } }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00' } } } } }
     </script>
     <style>
         * { cursor: none; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::selection { background: white; color: black; }
-        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s; }
+        
+        /* Custom Cursor */
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
-        .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
+
+        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
+        .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
+
+        /* Leaflet Overrides */
+        .leaflet-container { background: #050505; z-index: 10; }
+        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
-    <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
 
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
                 <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
-                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
-                        <g transform="translate(12, 18) scale(0.8)" fill="#8CFF00">
-                            <path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" />
-                            <circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" />
-                        </g>
-                        <line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
-                        <line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
-                        <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text>
-                    </svg>
+                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/><g transform="translate(12, 18) scale(0.8)" fill="#8CFF00"><path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" /><circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" /></g><line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/><line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/><text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text></svg>
                 </a>
-                <div class="flex items-center gap-4">
-                    <a href="index.html" class="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
-                        <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon> Back to Shop
+                <div class="flex items-center gap-3">
+                    <a href="cart.html" class="p-2 hover:bg-white/5 rounded-full transition-colors relative">
+                        <iconify-icon icon="lucide:shopping-bag" width="20" class="text-white"></iconify-icon>
+                        <span id="navCartCount" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
                     </a>
                     <button onclick="logoutUser()" class="text-sm text-red-500 hover:underline">Logout</button>
                 </div>
@@ -58,63 +55,77 @@
         </div>
     </nav>
 
+    <!-- MAP MODAL (For Add/Edit Address) -->
+    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                <h3 class="font-semibold text-lg" id="modalTitle">Add New Address</h3>
+                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-4 bg-brand-black/50">
+                    <div class="relative">
+                        <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search for area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none">
+                        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"><iconify-icon icon="lucide:search" width="18"></iconify-icon></button>
+                    </div>
+                    <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
+                </div>
+                <div id="locationMap" class="w-full h-40 bg-brand-black flex-shrink-0"></div>
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="editAddressId">
+                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
+                    <div class="grid grid-cols-3 gap-3">
+                         <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
+                         <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
+                         <button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button>
+                    </div>
+                    <div><label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label><input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input"></div>
+                    <div><label class="text-xs text-neutral-500 block mb-1">Sector / Building</label><input type="text" id="inputBuilding" placeholder="Building Name" class="address-input"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0">
+                <button onclick="saveAddress()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Save Address</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="pt-28 md:pt-32 pb-16 min-h-screen">
-        <div class="max-w-4xl mx-auto px-6">
+        <div class="max-w-2xl mx-auto px-6">
             
-            <!-- Profile Header -->
-            <div class="bg-brand-gray rounded-3xl border border-white/5 p-8 mb-8">
-                <div class="flex flex-col md:flex-row items-center gap-6">
-                    <div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center border-2 border-brand-accent/30">
-                        <iconify-icon icon="lucide:user" width="40" class="text-brand-accent"></iconify-icon>
+            <!-- User Info Card -->
+            <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 mb-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" width="32" class="text-brand-accent"></iconify-icon>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h1 id="profileName" class="text-3xl font-bold">User Name</h1>
-                        <p class="text-neutral-500 mt-1">Member since 2024</p>
+                    <div>
+                        <h2 class="text-xl font-semibold" id="userName">Loading...</h2>
+                        <p class="text-sm text-neutral-400" id="userPhone">+91 XXXXXXXXXX</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-brand-black/50 p-3 rounded-lg">
+                        <p class="text-neutral-500 text-xs mb-1">Date of Birth</p>
+                        <p id="userDob" class="font-medium">Not Set</p>
+                    </div>
+                    <div class="bg-brand-black/50 p-3 rounded-lg">
+                        <p class="text-neutral-500 text-xs mb-1">Gender</p>
+                        <p id="userGender" class="font-medium capitalize">Not Set</p>
                     </div>
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Account Details -->
-                <div class="bg-brand-gray rounded-2xl border border-white/5 p-6">
-                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
-                        <iconify-icon icon="lucide:settings-2" width="20" class="text-brand-accent"></iconify-icon>
-                        Account Details
-                    </h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-3 border-b border-white/5">
-                            <span class="text-neutral-500">Full Name</span>
-                            <span id="detName" class="font-medium">User</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-white/5">
-                            <span class="text-neutral-500">Phone Number</span>
-                            <span id="detPhone" class="font-medium">+91...</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-white/5">
-                            <span class="text-neutral-500">Email Address</span>
-                            <span id="detEmail" class="font-medium text-neutral-600">Not Added</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3 border-b border-white/5">
-                            <span class="text-neutral-500">Gender</span>
-                            <span id="detGender" class="font-medium capitalize">Not Set</span>
-                        </div>
-                        <div class="flex justify-between items-center py-3">
-                            <span class="text-neutral-500">Date of Birth</span>
-                            <span id="detDob" class="font-medium">Not Set</span>
-                        </div>
-                    </div>
+            <!-- Saved Addresses Section -->
+            <div class="bg-brand-gray rounded-2xl p-6 border border-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-lg">Saved Addresses</h3>
+                    <button onclick="openLocationModal()" class="text-brand-accent text-sm font-medium hover:underline flex items-center gap-1">
+                        <iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add New
+                    </button>
                 </div>
-
-                <!-- Order History -->
-                <div class="bg-brand-gray rounded-2xl border border-white/5 p-6">
-                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
-                        <iconify-icon icon="lucide:history" width="20" class="text-brand-accent"></iconify-icon>
-                        Order History
-                    </h3>
-                    <div id="orderHistory" class="space-y-3 max-h-80 overflow-y-auto pr-2">
-                        <p class="text-neutral-500 text-sm text-center py-4">Loading orders...</p>
-                    </div>
+                <div id="addressList" class="space-y-3">
+                    <p class="text-neutral-500 text-sm text-center py-4">Loading addresses...</p>
                 </div>
             </div>
 
@@ -123,70 +134,222 @@
 
     <script>
         const API_URL = 'https://night-cart.onrender.com';
+        let locationMap;
+        let locationMarker;
+        let tempSelectedLat = null;
+        let tempSelectedLng = null;
+        let tempSelectedArea = "";
+        let currentLabel = "Home";
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setupCursor();
-            loadProfile();
+        document.addEventListener('DOMContentLoaded', () => { 
+            checkAuth(); 
+            loadCartCount();
+            setupCursor(); 
         });
 
-        function setupCursor() {
-            const d = document.getElementById('cursor-dot');
-            const r = document.getElementById('cursor-ring');
-            document.addEventListener('mousemove', e => {
-                d.style.left = e.clientX - 4 + 'px'; d.style.top = e.clientY - 4 + 'px';
-                r.style.left = e.clientX - 20 + 'px'; r.style.top = e.clientY - 20 + 'px';
-            });
+        // --- Auth Check ---
+        function checkAuth() {
+            const loggedIn = localStorage.getItem('nc_isLoggedIn');
+            if (loggedIn !== 'true') {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('userName').textContent = localStorage.getItem('nc_userName') || 'User';
+            document.getElementById('userPhone').textContent = localStorage.getItem('nc_userPhone') || 'N/A';
+            document.getElementById('userDob').textContent = localStorage.getItem('nc_userDob') || 'Not Set';
+            document.getElementById('userGender').textContent = localStorage.getItem('nc_userGender') || 'Not Set';
+            
+            loadAddresses();
         }
 
-        function loadProfile() {
-            const name = localStorage.getItem('nc_userName') || 'User';
-            const phone = localStorage.getItem('nc_userPhone') || 'N/A';
-            const dob = localStorage.getItem('nc_userDob') || 'Not Set';
-            const gender = localStorage.getItem('nc_userGender') || 'Not Set';
-
-            document.getElementById('profileName').textContent = name;
-            document.getElementById('detName').textContent = name;
-            document.getElementById('detPhone').textContent = phone;
-            document.getElementById('detDob').textContent = dob;
-            document.getElementById('detGender').textContent = gender;
-
-            // Load Orders
-            loadOrders(phone);
+        function logoutUser() { localStorage.clear(); window.location.href = 'index.html'; }
+        function loadCartCount() { 
+            const s=localStorage.getItem('nc_cart'); 
+            if(s){ 
+                const c=JSON.parse(s); 
+                const t=c.reduce((a,i)=>a+i.quantity,0); 
+                const el=document.getElementById('navCartCount');
+                if(t>0){el.textContent=t;el.classList.remove('hidden');}else{el.classList.add('hidden');} 
+            } 
         }
 
-        async function loadOrders(phone) {
-            const container = document.getElementById('orderHistory');
+        // --- ADDRESS LOGIC ---
+        async function loadAddresses() {
+            const phone = localStorage.getItem('nc_userPhone');
+            if (!phone) return;
+
             try {
-                // Fetch orders from backend using phone number
-                const res = await fetch(`${API_URL}/api/orders/user/${phone}`);
-                const orders = await res.json();
-
-                if (orders.length === 0) {
-                    container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No orders found.</p>';
-                    return;
+                const res = await fetch(`${API_URL}/api/addresses/${phone}`);
+                const data = await res.json();
+                const list = document.getElementById('addressList');
+                
+                if (data.length > 0) {
+                    list.innerHTML = data.map(a => `
+                        <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start gap-3">
+                                    <iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent mt-1"></iconify-icon>
+                                    <div>
+                                        <p class="font-medium text-sm">${a.label}</p>
+                                        <p class="text-xs text-neutral-400 mt-1">${a.houseNo}, ${a.building}</p>
+                                        <p class="text-xs text-neutral-500">${a.area}</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="editAddress('${a._id}', '${a.label}', '${a.houseNo}', '${a.building}', '${a.area}', ${a.lat}, ${a.lng})" class="text-neutral-400 hover:text-white p-1"><iconify-icon icon="lucide:pencil" width="14"></iconify-icon></button>
+                                    <button onclick="deleteAddress('${a._id}')" class="text-neutral-400 hover:text-red-500 p-1"><iconify-icon icon="lucide:trash-2" width="14"></iconify-icon></button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `<p class="text-neutral-500 text-sm text-center py-4">No saved addresses. Add one now!</p>`;
                 }
-
-                container.innerHTML = orders.map(o => `
-                    <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-neutral-500">${new Date(o.createdAt).toLocaleDateString()}</span>
-                            <span class="text-xs font-bold ${o.status === 'pending' ? 'text-yellow-500' : 'text-green-500'} uppercase">${o.status}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm">${o.items.length} Item(s)</span>
-                            <span class="font-bold">₹${o.totalAmount}</span>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                container.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Failed to load orders.</p>';
+            } catch(e) {
+                console.error(e);
             }
         }
 
-        function logoutUser() {
-            localStorage.clear();
-            window.location.href = 'index.html';
+        async function deleteAddress(id) {
+            if(!confirm("Delete this address?")) return;
+            try {
+                await fetch(`${API_URL}/api/addresses/${id}`, { method: 'DELETE' });
+                showNotification("Address Deleted");
+                loadAddresses();
+            } catch(e) { alert("Error deleting"); }
         }
+
+        function editAddress(id, label, house, building, area, lat, lng) {
+            document.getElementById('editAddressId').value = id;
+            openLocationModal(); // Open Modal
+            
+            // Fill Data
+            document.getElementById('inputHouse').value = house;
+            document.getElementById('inputBuilding').value = building;
+            document.getElementById('selectedAreaText').textContent = area;
+            tempSelectedArea = area;
+            tempSelectedLat = lat;
+            tempSelectedLng = lng;
+            setLabel(label);
+            document.getElementById('modalTitle').textContent = "Edit Address";
+
+            // Set Marker
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+        }
+
+        // --- MAP MODAL LOGIC ---
+        function openLocationModal() {
+            document.getElementById('editAddressId').value = ''; // Reset ID for new
+            document.getElementById('modalTitle').textContent = "Add New Address";
+            // Clear inputs
+            document.getElementById('inputHouse').value = '';
+            document.getElementById('inputBuilding').value = '';
+            document.getElementById('selectedAreaText').textContent = 'Select on Map';
+            tempSelectedArea = "";
+            
+            const modal = document.getElementById('locationModal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            setTimeout(() => { if (!locationMap) { initLocationMap(); } else { locationMap.invalidateSize(); } }, 100);
+        }
+
+        function closeLocationModal() { 
+            const modal = document.getElementById('locationModal'); 
+            modal.classList.add('hidden'); modal.classList.remove('flex'); 
+        }
+
+        function initLocationMap() {
+            const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
+            const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
+            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
+            locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+            
+            locationMap.on('click', async (e) => {
+                locationMarker.setLatLng(e.latlng);
+                tempSelectedLat = e.latlng.lat; tempSelectedLng = e.latlng.lng;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`);
+                    const data = await res.json();
+                    const name = data.display_name.split(',').slice(0, 3).join(', ');
+                    document.getElementById('selectedAreaText').textContent = name;
+                    tempSelectedArea = name;
+                } catch (err) { document.getElementById('selectedAreaText').textContent = "Selected"; }
+            });
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('locationSearchInput').value; if(query.length < 3) return;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${query}&limit=5`);
+                const data = await res.json();
+                const resultsDiv = document.getElementById('searchResults');
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.innerHTML = data.map(r => `<div onclick="selectSearchResult(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')" class="p-2 hover:bg-brand-accent/10 cursor-pointer rounded-lg text-xs border-b border-white/5">${r.display_name}</div>`).join('');
+            } catch(e) {}
+        }
+
+        function selectSearchResult(lat, lng, name) {
+            const shortName = name.split(',').slice(0, 3).join(', ');
+            document.getElementById('selectedAreaText').textContent = shortName; tempSelectedArea = shortName;
+            if(locationMap && locationMarker) { locationMap.setView([lat, lng], 15); locationMarker.setLatLng([lat, lng]); }
+            tempSelectedLat = lat; tempSelectedLng = lng;
+            document.getElementById('searchResults').classList.add('hidden'); document.getElementById('locationSearchInput').value = '';
+        }
+
+        function setLabel(label){ 
+            currentLabel = label; 
+            document.querySelectorAll('.label-btn').forEach(b => b.classList.remove('bg-brand-accent', 'text-black', 'border-brand-accent')); 
+            document.getElementById('label'+label).classList.add('bg-brand-accent', 'text-black', 'border-brand-accent'); 
+        }
+
+        async function saveAddress() {
+            const id = document.getElementById('editAddressId').value;
+            const house = document.getElementById('inputHouse').value;
+            const building = document.getElementById('inputBuilding').value;
+            const phone = localStorage.getItem('nc_userPhone');
+
+            if(!house || !tempSelectedLat) { alert("Please fill details and select location on map."); return; }
+
+            const body = {
+                phone, 
+                label: currentLabel, 
+                houseNo: house, 
+                building, 
+                landmark: '', 
+                area: tempSelectedArea, 
+                lat: tempSelectedLat, 
+                lng: tempSelectedLng
+            };
+
+            try {
+                let url = `${API_URL}/api/addresses`;
+                let method = 'POST';
+
+                if (id) {
+                    url = `${API_URL}/api/addresses/${id}`;
+                    method = 'PUT';
+                }
+
+                await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                closeLocationModal();
+                loadAddresses();
+                showNotification(id ? "Address Updated" : "Address Saved");
+            } catch(e) {
+                alert("Error saving address");
+            }
+        }
+
+        // --- UTILS ---
+        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
+        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); if(!d || !r) return; document.addEventListener('mousemove', e => { d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; }); }
     </script>
 </body>
 </html>
