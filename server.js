@@ -272,6 +272,21 @@ app.delete('/api/addresses/:id', async (req, res) => {
   }
 });
 
+// 4. Update Address (Edit)
+app.put('/api/addresses/:id', async (req, res) => {
+  try {
+    const { label, houseNo, building, landmark, area, lat, lng } = req.body;
+    const updatedAddress = await Address.findByIdAndUpdate(
+      req.params.id, 
+      { label, houseNo, building, landmark, area, lat, lng }, 
+      { new: true }
+    );
+    res.json({ success: true, address: updatedAddress });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
 // --- LOCATION ROUTES (Map/Polygon) ---
 
 // 1. Add Location
