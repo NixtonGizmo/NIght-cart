@@ -7,29 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    
-    <!-- Leaflet for Map Modal -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } }
     </script>
     <style>
-        /* Cursor Styles */
         * { cursor: none; }
         #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s, height 0.15s, background 0.15s; }
-        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-color: white; }
-
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
+        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
-        
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
-        
-        /* Leaflet Overrides */
         .leaflet-container { background: #050505; z-index: 10; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
     </style>
@@ -44,7 +36,7 @@
     <!-- ERROR POPUP -->
     <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><p class="text-neutral-400 mb-2">Couldn't connect to the server.</p><button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
 
-    <!-- MAP MODAL (For Add Address) -->
+    <!-- MAP MODAL -->
     <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
             <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
@@ -59,7 +51,7 @@
                     </div>
                     <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
                 </div>
-                <div id="locationMap" class="w-full h-40 bg-brand-black"></div>
+                <div id="locationMap" class="w-full h-40 bg-brand-black flex-shrink-0"></div>
                 <div class="p-6 space-y-4">
                     <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
                     <div class="grid grid-cols-3 gap-3">
@@ -94,29 +86,26 @@
     <!-- Main Content -->
     <main class="pt-28 md:pt-32 pb-40 min-h-screen">
         <div class="max-w-2xl mx-auto px-6">
-            
-            <!-- PAGE TITLE -->
             <div class="flex items-center gap-4 mb-6"><a href="index.html" class="text-neutral-500 hover:text-white transition-colors"><iconify-icon icon="lucide:arrow-left" width="24"></iconify-icon></a><h1 class="text-3xl font-semibold tracking-tight">My Cart</h1></div>
 
-            <!-- 1. SELECT ADDRESS CARD (Big) -->
+            <!-- 1. SELECT ADDRESS CARD -->
             <div class="bg-brand-gray rounded-2xl p-5 border border-white/5 mb-6">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="font-semibold">Deliver To</h3>
                     <button onclick="openLocationModal()" class="text-xs text-brand-accent font-medium hover:underline">+ Add New</button>
                 </div>
                 <div id="addressListContainer" class="space-y-2">
-                    <!-- Addresses will be injected here -->
                     <p class="text-neutral-500 text-sm text-center py-4">No addresses found. Add a new one.</p>
                 </div>
             </div>
 
-            <!-- 2. CART ITEMS (Middle) -->
+            <!-- 2. CART ITEMS -->
             <div id="cartItemsContainer" class="space-y-4 mb-6"></div>
 
             <!-- EMPTY CART STATE -->
             <div id="emptyCart" class="hidden text-center py-16"><div class="w-24 h-24 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6"><iconify-icon icon="lucide:shopping-cart" width="40" class="text-neutral-500"></iconify-icon></div><h2 class="text-2xl font-semibold mb-2">Your cart is empty</h2><p class="text-neutral-500 mb-6">Add items to your cart to see them here.</p><a href="index.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-neutral-200 transition-colors"><iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>Continue Shopping</a></div>
 
-            <!-- 3. BILL DETAILS CARD (Big Summary) -->
+            <!-- 3. BILL DETAILS CARD -->
             <div id="billDetailsCard" class="bg-brand-gray rounded-2xl p-5 border border-white/5">
                 <h3 class="font-semibold mb-4 text-sm uppercase text-neutral-400">Bill Details</h3>
                 <div class="space-y-3 text-sm">
@@ -130,7 +119,7 @@
         </div>
     </main>
 
-    <!-- 4. BOTTOM BAR (Just Total & Button) -->
+    <!-- 4. BOTTOM BAR -->
     <div class="fixed bottom-0 left-0 right-0 z-40 bg-brand-dark/95 backdrop-blur-xl border-t border-white/5 p-4">
         <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
             <div>
@@ -154,134 +143,71 @@
         let currentLabel = "Home";
         let selectedAddressId = null;
 
-        document.addEventListener('DOMContentLoaded', () => { 
-            loadCart(); 
-            checkLoginStatus(); 
-            loadSavedAddresses();
-            setupCursor(); 
-        });
+        document.addEventListener('DOMContentLoaded', () => { loadCart(); checkLoginStatus(); loadSavedAddresses(); setupCursor(); });
 
-        // --- POPUPS ---
         function showOrderSuccessModal(orderId) { const modal = document.getElementById('orderSuccessModal'); document.getElementById('modalOrderId').textContent = orderId; modal.classList.remove('hidden'); modal.classList.add('flex'); const container = document.getElementById('confettiContainer'); container.innerHTML = ''; for(let i=0; i<20; i++) { const c = document.createElement('div'); c.className='confetti'; c.style.left=Math.random()*100+'%'; c.style.top=Math.random()*100+'%'; c.style.background=['#8CFF00','#FFD700','#22C55E','#ffffff'][Math.floor(Math.random()*4)]; c.style.animationDelay=Math.random()*0.5+'s'; container.appendChild(c); } }
         function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
         function closeErrorModal() { const m=document.getElementById('errorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
         function goToHome() { window.location.href = 'index.html'; }
 
-        // --- LOAD CART ---
-        function loadCart() { 
-            try { const s=localStorage.getItem('nc_cart'); if(s){ cart=JSON.parse(s); } } catch(e) { cart = []; }
-            renderCartPage(); 
-        }
+        function loadCart() { try { const s=localStorage.getItem('nc_cart'); if(s){ cart=JSON.parse(s); } } catch(e) { cart = []; } renderCartPage(); }
 
-        // --- LOAD ADDRESSES ---
         async function loadSavedAddresses() {
             const container = document.getElementById('addressListContainer');
             const phone = localStorage.getItem('nc_userPhone');
-            
-            if (!phone) {
-                container.innerHTML = `<a href="login.html" class="block text-center text-red-400 text-sm py-4">Please login to see addresses</a>`;
-                return;
-            }
+            if (!phone) { container.innerHTML = `<a href="login.html" class="block text-center text-red-400 text-sm py-4">Please login to see addresses</a>`; return; }
 
             try {
                 const res = await fetch(`${API_URL}/api/addresses/${phone}`);
                 const addresses = await res.json();
-                
-                // Get currently selected ID from LocalStorage
                 const savedAddr = localStorage.getItem('nc_selected_address');
-                if(savedAddr) {
-                    const addrObj = JSON.parse(savedAddr);
-                    selectedAddressId = addrObj._id || 'local'; // Use _id if exists
-                }
-
+                if(savedAddr) { const addrObj = JSON.parse(savedAddr); selectedAddressId = addrObj._id || 'local'; }
                 if (addresses.length > 0) {
                     container.innerHTML = addresses.map(a => `
-                        <div onclick="selectAddress('${a._id}', '${a.label}', '${a.houseNo}', '${a.building}', '${a.area}', ${a.lat}, ${a.lng})" 
-                             class="flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all ${selectedAddressId === a._id ? 'bg-brand-accent/10 border-brand-accent/50' : 'bg-brand-black/50 border-white/5 hover:border-white/20'}">
+                        <div onclick="selectAddress('${a._id}', '${a.label}', '${a.houseNo}', '${a.building}', '${a.area}', ${a.lat}, ${a.lng})" class="flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all ${selectedAddressId === a._id ? 'bg-brand-accent/10 border-brand-accent/50' : 'bg-brand-black/50 border-white/5 hover:border-white/20'}">
                             <iconify-icon icon="lucide:check-circle" width="18" class="${selectedAddressId === a._id ? 'text-brand-accent' : 'text-neutral-600'}"></iconify-icon>
-                            <div class="flex-1">
-                                <p class="font-medium text-sm">${a.label} - ${a.houseNo}</p>
-                                <p class="text-xs text-neutral-400 truncate">${a.building}, ${a.area}</p>
-                            </div>
+                            <div class="flex-1"><p class="font-medium text-sm">${a.label} - ${a.houseNo}</p><p class="text-xs text-neutral-400 truncate">${a.building}, ${a.area}</p></div>
                         </div>
                     `).join('');
-                } else {
-                    container.innerHTML = `<p class="text-neutral-500 text-sm text-center py-4">No saved addresses.</p>`;
-                }
-            } catch(e) {
-                container.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Error loading addresses</p>`;
-            }
+                } else { container.innerHTML = `<p class="text-neutral-500 text-sm text-center py-4">No saved addresses.</p>`; }
+            } catch(e) { container.innerHTML = `<p class="text-red-400 text-sm text-center py-4">Error loading addresses</p>`; }
         }
 
         function selectAddress(id, label, house, building, area, lat, lng) {
             selectedAddressId = id;
-            const addressObj = { _id: id, label, houseNo: house, building: building, area: area, lat, lng };
+            const addressObj = { _id: id, label, houseNo: house, building: building, area: area };
             localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
-            localStorage.setItem('nc_location_lat', lat);
-            localStorage.setItem('nc_location_lng', lng);
-            // Reload list to update UI highlight
-            loadSavedAddresses();
-            showNotification("Address Selected");
+            localStorage.setItem('nc_location_lat', lat); localStorage.setItem('nc_location_lng', lng);
+            loadSavedAddresses(); showNotification("Address Selected");
         }
 
-        // --- RENDER CART ---
         function renderCartPage() { 
-            const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), b=document.getElementById('billDetailsCard'); 
-            const main = document.querySelector('main');
-            
-            if(cart.length===0){
-                c.classList.add('hidden'); e.classList.remove('hidden'); b.classList.add('hidden');
-                main.classList.remove('pb-40');
-            } else { 
-                c.classList.remove('hidden'); e.classList.add('hidden'); b.classList.remove('hidden');
-                main.classList.add('pb-40');
-            }
-            
+            const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), b=document.getElementById('billDetailsCard'); const main = document.querySelector('main');
+            if(cart.length===0){ c.classList.add('hidden'); e.classList.remove('hidden'); b.classList.add('hidden'); main.classList.remove('pb-40'); } else { c.classList.remove('hidden'); e.classList.add('hidden'); b.classList.remove('hidden'); main.classList.add('pb-40'); }
             c.innerHTML=cart.map(i=>`<div class="bg-brand-gray rounded-2xl p-4 border border-white/5 flex gap-4 items-center"><img src="${i.image}" class="w-20 h-20 rounded-xl object-cover"><div class="flex-1"><h3 class="font-medium text-sm">${i.name}</h3><p class="text-xs text-neutral-500">${i.weight}</p><p class="font-semibold mt-1 text-brand-accent text-sm">₹${i.price}</p></div><div class="flex flex-col items-end gap-2"><button onclick="removeItem(${i.id})" class="text-neutral-500 hover:text-red-500 transition-colors"><iconify-icon icon="lucide:trash-2" width="16"></iconify-icon></button><div class="flex items-center gap-1 bg-white/5 rounded-lg p-1"><button onclick="updateQuantity(${i.id},-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:minus" width="12"></iconify-icon></button><span class="text-xs font-medium w-6 text-center">${i.quantity}</span><button onclick="updateQuantity(${i.id},1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md"><iconify-icon icon="lucide:plus" width="12"></iconify-icon></button></div></div></div>`).join(''); 
             updateTotals(); 
         }
         
         function updateTotals() { 
-            const sub=cart.reduce((s,i)=>s+(i.price*i.quantity),0); 
-            let del=0; if(sub>0 && sub<99)del=30; 
-            const dis=sub>500?Math.round(sub*0.05):0; 
-            const tot=sub+del-dis; 
-            
-            // Update Bill Card
-            document.getElementById('subtotal').textContent=`₹${sub}`; 
-            const dEl=document.getElementById('deliveryFee'); 
+            const sub=cart.reduce((s,i)=>s+(i.price*i.quantity),0); let del=0; if(sub>0 && sub<99)del=30; const dis=sub>500?Math.round(sub*0.05):0; const tot=sub+del-dis; 
+            document.getElementById('subtotal').textContent=`₹${sub}`; const dEl=document.getElementById('deliveryFee'); 
             if(del===0 && sub>0){dEl.textContent='FREE';dEl.classList.add('text-green-500');}else{dEl.textContent=`₹${del}`;dEl.classList.remove('text-green-500');} 
-            document.getElementById('discount').textContent=`- ₹${dis}`; 
-            document.getElementById('totalAmount').textContent=`₹${tot}`;
-            
-            // Update Sticky Bar
-            document.getElementById('stickyTotal').textContent = `₹${tot}`;
+            document.getElementById('discount').textContent=`- ₹${dis}`; document.getElementById('totalAmount').textContent=`₹${tot}`; document.getElementById('stickyTotal').textContent = `₹${tot}`;
         }
         
         function updateQuantity(id,ch) { const i=cart.find(x=>x.id===id); if(i){i.quantity+=ch; if(i.quantity<=0)removeItem(id); else{saveCart();renderCartPage();}} }
         function removeItem(id) { cart=cart.filter(i=>i.id!==id); saveCart(); renderCartPage(); showNotification("Item removed"); }
         function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
         
-        // --- PLACE ORDER ---
         async function placeOrder() {
             if (cart.length === 0) return;
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
             if (!isLoggedIn) { alert("Please login to place order."); window.location.href = 'login.html'; return; }
-
-            // Get Selected Address
             const addrString = localStorage.getItem('nc_selected_address');
             if (!addrString) { alert("Please select or add a delivery address."); return; }
 
             const addr = JSON.parse(addrString);
-            // Construct userAddress object as expected by server
-            const userAddress = {
-                label: addr.label,
-                houseNo: addr.houseNo,
-                building: addr.building,
-                area: addr.area,
-                landmark: addr.landmark || ''
-            };
-
+            const userAddress = { label: addr.label, houseNo: addr.houseNo, building: addr.building, area: addr.area };
             const userName = localStorage.getItem('nc_userName') || 'Customer';
             const userPhone = localStorage.getItem('nc_userPhone');
             const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -298,13 +224,12 @@
             } catch(e){console.error(e);showErrorModal();}
         }
 
-        // --- MAP MODAL LOGIC ---
+        // --- MAP LOGIC (FIXED) ---
         function openLocationModal() {
-            const modal = document.getElementById('locationModal');
-            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex');
             setTimeout(() => { if (!locationMap) { initLocationMap(); } else { locationMap.invalidateSize(); } }, 100);
         }
-        function closeLocationModal() { const modal = document.getElementById('locationModal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
 
         function initLocationMap() {
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
@@ -312,6 +237,19 @@
             locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+
+            // FIX: Sync variables with initial marker position
+            if (localStorage.getItem('nc_location_lat')) {
+                tempSelectedLat = savedLat; tempSelectedLng = savedLng;
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
+                .then(res => res.json())
+                .then(data => {
+                     const name = data.display_name.split(',').slice(0, 3).join(', ');
+                     document.getElementById('selectedAreaText').textContent = name;
+                     tempSelectedArea = name;
+                });
+            }
+
             locationMap.on('click', async (e) => {
                 locationMarker.setLatLng(e.latlng);
                 tempSelectedLat = e.latlng.lat; tempSelectedLng = e.latlng.lng;
@@ -347,39 +285,30 @@
         async function saveNewAddress() {
             const house = document.getElementById('inputHouse').value;
             const building = document.getElementById('inputBuilding').value;
-            if(!house || !tempSelectedLat) { alert("Select location on map and fill House No."); return; }
-            
+            if(!house || !tempSelectedLat) { alert("Please fill details and select location on map."); return; }
             const phone = localStorage.getItem('nc_userPhone');
             if(!phone) { alert("Please login first."); return; }
 
-            // Save to DB
             try {
                 await fetch(`${API_URL}/api/addresses`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone, label: currentLabel, houseNo: house, building, landmark: '', area: tempSelectedArea, lat: tempSelectedLat, lng: tempSelectedLng
-                    })
+                    body: JSON.stringify({ phone, label: currentLabel, houseNo: house, building, landmark: '', area: tempSelectedArea, lat: tempSelectedLat, lng: tempSelectedLng })
                 });
             } catch(e) {}
 
-            // Save to LocalStorage as selected
             const addressObj = { _id: 'new_' + Date.now(), label: currentLabel, houseNo: house, building: building, area: tempSelectedArea };
             localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
-            localStorage.setItem('nc_location_lat', tempSelectedLat);
-            localStorage.setItem('nc_location_lng', tempSelectedLng);
+            localStorage.setItem('nc_location_lat', tempSelectedLat); localStorage.setItem('nc_location_lng', tempSelectedLng);
             
-            closeLocationModal();
-            loadSavedAddresses(); // Refresh list
-            showNotification("Address Added & Selected");
+            closeLocationModal(); loadSavedAddresses(); showNotification("Address Added & Selected");
         }
         
-        // --- HELPERS ---
         function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
         function checkLoginStatus() { const i=localStorage.getItem('nc_isLoggedIn'); if(i==='true'){document.getElementById('loginBtn').classList.add('hidden');document.getElementById('userProfile').classList.remove('hidden');document.getElementById('navUserName').textContent=localStorage.getItem('nc_userName')||'User';}else{document.getElementById('loginBtn').classList.remove('hidden');document.getElementById('userProfile').classList.add('hidden');} }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('hidden'); }
-        function logoutUser() { localStorage.clear(); location.reload(); }
-        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); if(!d || !r) return; document.addEventListener('mousemove', e => { d.style.left = e.clientX - 4 + 'px'; d.style.top = e.clientY - 4 + 'px'; r.style.left = e.clientX - 20 + 'px'; r.style.top = e.clientY - 20 + 'px'; }); }
+        function logoutUser() { localStorage.clear(); window.location.href = 'index.html'; }
+        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); if(!d || !r) return; document.addEventListener('mousemove', e => { d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; }); }
     </script>
 </body>
 </html>
