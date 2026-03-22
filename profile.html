@@ -21,7 +21,10 @@
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
-        .leaflet-container { background: #050505; z-index: 10; }
+        
+        /* FIX: Explicit Map Height */
+        #locationMap { height: 160px; width: 100%; background: #050505; z-index: 10; }
+        .leaflet-container { background: #050505; }
         .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
     </style>
 </head>
@@ -62,7 +65,7 @@
                     </div>
                     <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
                 </div>
-                <div id="locationMap" class="w-full h-40 bg-brand-black flex-shrink-0"></div>
+                <div id="locationMap" class="w-full flex-shrink-0"></div>
                 <div class="p-6 space-y-4">
                     <input type="hidden" id="editAddressId">
                     <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
@@ -208,8 +211,11 @@
         }
 
         function openLocationModal() {
+            // FIX: Reset vars for New Address
             document.getElementById('editAddressId').value = ''; document.getElementById('modalTitle').textContent = "Add New Address";
             document.getElementById('inputHouse').value = ''; document.getElementById('inputBuilding').value = ''; document.getElementById('selectedAreaText').textContent = 'Select on Map'; tempSelectedArea = "";
+            tempSelectedLat = null; tempSelectedLng = null;
+            
             document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex');
             setTimeout(() => { if (!locationMap) { initLocationMap(); } else { locationMap.invalidateSize(); } }, 100);
         }
@@ -221,16 +227,16 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
             
-            // FIX: Sync variables
-            if (localStorage.getItem('nc_location_lat')) {
+            // FIX: Sync variables only if valid location exists
+            if (localStorage.getItem('nc_location_lat') && localStorage.getItem('nc_location_ok') === 'true') {
                 tempSelectedLat = savedLat; tempSelectedLng = savedLng;
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
-                .then(res => res.json())
-                .then(data => {
+                 fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
+                 .then(res => res.json())
+                 .then(data => {
                      const name = data.display_name.split(',').slice(0, 3).join(', ');
                      document.getElementById('selectedAreaText').textContent = name;
                      tempSelectedArea = name;
-                });
+                 });
             }
 
             locationMap.on('click', async (e) => {
