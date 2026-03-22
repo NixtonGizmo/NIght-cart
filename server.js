@@ -1,411 +1,366 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Night Cart</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+
+// 1. MIDDLEWARE
+app.use(cors());
+app.use(express.json());
+
+// 2. DATABASE CONNECTION
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://admin:BgK18x5FvZYftNWi@cluster0.3demhgn.mongodb.net/nightcart?retryWrites=true&w=majority';
+
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+
+// 3. MODELS
+
+// User Model
+const User = mongoose.model('User', new mongoose.Schema({
+  phone: String, 
+  otp: String, 
+  name: String, 
+  dob: String, 
+  gender: String, 
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Product Model
+const Product = mongoose.model('Product', new mongoose.Schema({
+  id: Number, 
+  name: String, 
+  weight: String, 
+  price: Number, 
+  originalPrice: Number, 
+  discount: Number, 
+  image: String, 
+  category: String
+}));
+
+// Address Model
+const Address = mongoose.model('Address', new mongoose.Schema({
+  phone: String,
+  label: String, // Home, Work, etc.
+  houseNo: String,
+  building: String,
+  landmark: String,
+  area: String, // Main address text
+  lat: Number,
+  lng: Number,
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Order Model (Updated with userAddress)
+const Order = mongoose.model('Order', new mongoose.Schema({
+  orderId: String, 
+  userName: String, 
+  userPhone: String, 
+  userAddress: { 
+    houseNo: String,
+    building: String,
+    landmark: String,
+    area: String
+  }, 
+  items: Array, 
+  totalAmount: Number, 
+  status: { type: String, default: 'pending' }, // pending, delivered, cancelled
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Location Model (GeoJSON Polygon)
+const Location = mongoose.model('Location', new mongoose.Schema({
+  name: String,
+  area: {
+    type: { type: String, enum: ['Polygon'], required: true },
+    coordinates: { type: [[[Number]]], required: true }
+  },
+  createdAt: { type: Date, default: Date.now }
+}));
+
+// Create Geospatial Index
+Location.collection.createIndex({ area: "2dsphere" });
+
+// 4. ROUTES
+
+// --- Home ---
+app.get('/', (req, res) => res.send('<h1>🚀 Night Cart Server is Running!</h1>'));
+
+// --- Admin Login ---
+app.post('/api/admin/login', (req, res) => {
+  const { email, password } = req.body;
+  const ADMIN_EMAIL = 'nixton2007@nightcart.com';
+  const ADMIN_PASSWORD = 'Gulu@2006';
+  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false, message: "Invalid Email or Password" });
+  }
+});
+
+// --- Users ---
+app.get('/api/users', async (req, res) => {
+  try { 
+    const users = await User.find({}, { otp: 0 }).sort({ createdAt: -1 }); 
+    res.json(users); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+// --- Auth Routes (OTP) ---
+app.post('/api/send-otp', async (req, res) => {
+  const { phone } = req.body;
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+  try { 
+    await User.findOneAndUpdate({ phone }, { otp }, { upsert: true, new: true }); 
+    console.log(`📱 OTP for ${phone}: ${otp}`); 
+    res.json({ success: true }); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+app.post('/api/verify-otp', async (req, res) => {
+  const { phone, otp } = req.body;
+  try {
+    const user = await User.findOne({ phone, otp });
+    if (user) {
+      await User.updateOne({ _id: user._id }, { $unset: { otp: "" } });
+      if (!user.name) { 
+        res.json({ success: true, isNew: true }); 
+      } else { 
+        res.json({ success: true, isNew: false, user: { name: user.name, dob: user.dob, gender: user.gender } }); 
+      }
+    } else { 
+      res.status(400).json({ success: false, message: "Invalid OTP" }); 
+    }
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+app.post('/api/update-profile', async (req, res) => {
+  const { phone, name, dob, gender } = req.body;
+  try { 
+    await User.findOneAndUpdate({ phone }, { name, dob, gender }); 
+    res.json({ success: true }); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+// --- Product Routes ---
+app.get('/api/products', async (req, res) => {
+  try { 
+    const products = await Product.find(); 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+app.post('/api/products', async (req, res) => {
+  try { 
+    const newProduct = new Product(req.body); 
+    await newProduct.save(); 
+    res.json({ success: true }); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+app.delete('/api/products/:id', async (req, res) => {
+  try { 
+    await Product.deleteOne({ id: req.params.id }); 
+    res.json({ success: true }); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+// --- ORDER ROUTES ---
+
+// 1. Create Order
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { userName, userPhone, userAddress, items, totalAmount } = req.body;
+    const orderId = `ORD-${Date.now()}`;
+    const newOrder = new Order({ orderId, userName, userPhone, userAddress, items, totalAmount });
+    await newOrder.save();
+    res.json({ success: true, orderId });
+  } catch (error) {
+    console.error("Order Error:", error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// 2. Get All Orders (Admin)
+app.get('/api/orders', async (req, res) => {
+  try { 
+    const orders = await Order.find().sort({ createdAt: -1 }); 
+    res.json(orders); 
+  } catch (error) { 
+    res.status(500).json({ success: false }); 
+  }
+});
+
+// 3. Get User Orders (Profile)
+app.get('/api/orders/user/:phone', async (req, res) => {
+  try {
+    const phone = req.params.phone;
+    const orders = await Order.find({ userPhone: phone }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 4. Mark as Delivered
+app.put('/api/orders/:id/deliver', async (req, res) => {
+  try {
+    await Order.findByIdAndUpdate(req.params.id, { status: 'delivered' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 5. Cancel Order
+app.put('/api/orders/:id/cancel', async (req, res) => {
+  try {
+    await Order.findByIdAndUpdate(req.params.id, { status: 'cancelled' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- ADDRESS ROUTES ---
+
+// 1. Get Saved Addresses
+app.get('/api/addresses/:phone', async (req, res) => {
+  try {
+    const addresses = await Address.find({ phone: req.params.phone }).sort({ createdAt: -1 });
+    res.json(addresses);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 2. Save New Address
+app.post('/api/addresses', async (req, res) => {
+  try {
+    const { phone, label, houseNo, building, landmark, area, lat, lng } = req.body;
+    const newAddress = new Address({ phone, label, houseNo, building, landmark, area, lat, lng });
+    await newAddress.save();
+    res.json({ success: true, address: newAddress });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 3. Delete Address
+app.delete('/api/addresses/:id', async (req, res) => {
+  try {
+    await Address.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 4. Update Address (Edit)
+app.put('/api/addresses/:id', async (req, res) => {
+  try {
+    const { label, houseNo, building, landmark, area, lat, lng } = req.body;
+    const updatedAddress = await Address.findByIdAndUpdate(
+      req.params.id, 
+      { label, houseNo, building, landmark, area, lat, lng }, 
+      { new: true }
+    );
+    res.json({ success: true, address: updatedAddress });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- LOCATION ROUTES (Map/Polygon) ---
+
+// 1. Add Location
+app.post('/api/locations', async (req, res) => {
+  try {
+    const { name, coordinates } = req.body; // coordinates: [[lng, lat], [lng, lat]...]
     
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    // GeoJSON Polygon requires the ring to be closed (first point === last point)
+    let finalCoords = coordinates;
+    const first = coordinates[0];
+    const last = coordinates[coordinates.length - 1];
+    
+    // Check if loop is not closed
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      finalCoords.push(first); // Close the loop
+    }
 
-    <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00' } } } } }
-    </script>
-    <style>
-        * { cursor: none; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::selection { background: white; color: black; }
-        
-        /* Custom Cursor */
-        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
-        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+    const newLocation = new Location({
+      name,
+      area: { type: 'Polygon', coordinates: [finalCoords] } // Polygon expects array of linear rings
+    });
+    await newLocation.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false });
+  }
+});
 
-        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
-        .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
+// 2. Get All Locations
+app.get('/api/locations', async (req, res) => {
+  try {
+    const locations = await Location.find().sort({ createdAt: -1 });
+    res.json(locations);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
 
-        /* Leaflet Overrides */
-        .leaflet-container { background: #050505; z-index: 10; }
-        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
-    </style>
-</head>
-<body class="bg-brand-black text-white font-sans antialiased">
-    <div id="cursor-dot"></div>
-    <div id="cursor-ring"></div>
+// 3. Delete Location
+app.delete('/api/locations/:id', async (req, res) => {
+  try {
+    await Location.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-between h-16 md:h-20">
-                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
-                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/><g transform="translate(12, 18) scale(0.8)" fill="#8CFF00"><path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" /><circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" /></g><line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/><line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/><text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text></svg>
-                </a>
-                <div class="flex items-center gap-3">
-                    <a href="cart.html" class="p-2 hover:bg-white/5 rounded-full transition-colors relative">
-                        <iconify-icon icon="lucide:shopping-bag" width="20" class="text-white"></iconify-icon>
-                        <span id="navCartCount" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
-                    </a>
-                    <button onclick="logoutUser()" class="text-sm text-red-500 hover:underline">Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- MAP MODAL -->
-    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
-            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
-                <h3 class="font-semibold text-lg" id="modalTitle">Add New Address</h3>
-                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
-            </div>
-            <div class="flex-1 overflow-y-auto">
-                <div class="p-4 bg-brand-black/50">
-                    <div class="relative">
-                        <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search for area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none">
-                        <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"><iconify-icon icon="lucide:search" width="18"></iconify-icon></button>
-                    </div>
-                    <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
-                </div>
-                <div id="locationMap" class="w-full h-40 bg-brand-black flex-shrink-0"></div>
-                <div class="p-6 space-y-4">
-                    <input type="hidden" id="editAddressId">
-                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
-                    <div class="grid grid-cols-3 gap-3">
-                         <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
-                         <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
-                         <button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button>
-                    </div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label><input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input"></div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">Sector / Building</label><input type="text" id="inputBuilding" placeholder="Building Name" class="address-input"></div>
-                </div>
-            </div>
-            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0">
-                <button onclick="saveAddress()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Save Address</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <main class="pt-28 md:pt-32 pb-16 min-h-screen">
-        <!-- Changed to max-w-6xl for wider layout -->
-        <div class="max-w-6xl mx-auto px-6">
-            
-            <!-- User Info Card -->
-            <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 mb-6">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center">
-                        <iconify-icon icon="lucide:user" width="32" class="text-brand-accent"></iconify-icon>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-semibold" id="userName">Loading...</h2>
-                        <p class="text-sm text-neutral-400" id="userPhone">+91 XXXXXXXXXX</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-brand-black/50 p-3 rounded-lg">
-                        <p class="text-neutral-500 text-xs mb-1">Date of Birth</p>
-                        <p id="userDob" class="font-medium">Not Set</p>
-                    </div>
-                    <div class="bg-brand-black/50 p-3 rounded-lg">
-                        <p class="text-neutral-500 text-xs mb-1">Gender</p>
-                        <p id="userGender" class="font-medium capitalize">Not Set</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 50-50 Split Grid Container -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- LEFT COLUMN: Order History -->
-                <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 h-fit">
-                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2"><iconify-icon icon="lucide:receipt" width="18" class="text-brand-accent"></iconify-icon> Order History</h3>
-                    <div id="orderHistoryList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                        <p class="text-neutral-500 text-sm text-center py-4">Loading orders...</p>
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN: Saved Addresses -->
-                <div class="bg-brand-gray rounded-2xl p-6 border border-white/5 h-fit">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-lg">Saved Addresses</h3>
-                        <button onclick="openLocationModal()" class="text-brand-accent text-sm font-medium hover:underline flex items-center gap-1">
-                            <iconify-icon icon="lucide:plus" width="16"></iconify-icon> Add New
-                        </button>
-                    </div>
-                    <div id="addressList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                        <p class="text-neutral-500 text-sm text-center py-4">Loading addresses...</p>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </main>
-
-    <script>
-        const API_URL = 'https://night-cart.onrender.com';
-        let locationMap;
-        let locationMarker;
-        let tempSelectedLat = null;
-        let tempSelectedLng = null;
-        let tempSelectedArea = "";
-        let currentLabel = "Home";
-
-        document.addEventListener('DOMContentLoaded', () => { 
-            checkAuth(); 
-            loadCartCount();
-            setupCursor(); 
-        });
-
-        // --- Auth Check ---
-        function checkAuth() {
-            const loggedIn = localStorage.getItem('nc_isLoggedIn');
-            if (loggedIn !== 'true') {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            // FIX: Correctly retrieve and display data
-            const name = localStorage.getItem('nc_userName') || 'User';
-            const phone = localStorage.getItem('nc_userPhone') || 'N/A';
-            const dob = localStorage.getItem('nc_userDob') || 'Not Set';
-            const gender = localStorage.getItem('nc_userGender') || 'Not Set';
-
-            document.getElementById('userName').textContent = name;
-            document.getElementById('userPhone').textContent = phone;
-            document.getElementById('userDob').textContent = dob;
-            document.getElementById('userGender').textContent = gender.charAt(0).toUpperCase() + gender.slice(1); // Capitalize
-            
-            loadAddresses();
-            loadOrderHistory(phone); // Load orders
+// 4. Check User Location
+app.post('/api/check-location', async (req, res) => {
+  try {
+    const { userLat, userLng } = req.body;
+    
+    // Check if user point intersects with ANY saved polygon
+    const isServiceable = await Location.findOne({
+      area: {
+        $geoIntersects: {
+          $geometry: {
+            type: "Point",
+            coordinates: [userLng, userLat] // GeoJSON is [Longitude, Latitude]
+          }
         }
+      }
+    });
 
-        function logoutUser() { localStorage.clear(); window.location.href = 'index.html'; }
-        
-        function loadCartCount() { 
-            const s=localStorage.getItem('nc_cart'); 
-            if(s){ 
-                const c=JSON.parse(s); 
-                const t=c.reduce((a,i)=>a+i.quantity,0); 
-                const el=document.getElementById('navCartCount');
-                if(t>0){el.textContent=t;el.classList.remove('hidden');}else{el.classList.add('hidden');} 
-            } 
-        }
+    res.json({ serviceable: !!isServiceable });
+  } catch (error) {
+    console.error(error);
+    // If error (or no locations), default to true so you don't block users by mistake during server error
+    res.json({ serviceable: true }); 
+  }
+});
 
-        // --- ORDER HISTORY ---
-        async function loadOrderHistory(phone) {
-            const container = document.getElementById('orderHistoryList');
-            if (!phone || phone === 'N/A') {
-                container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No orders found.</p>';
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/api/orders/user/${phone}`);
-                const orders = await res.json();
-
-                if (orders.length > 0) {
-                    container.innerHTML = orders.map(o => `
-                        <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs font-mono text-neutral-500">${o.orderId}</span>
-                                <span class="text-xs px-2 py-1 rounded ${
-                                    o.status === 'delivered' ? 'bg-green-500/10 text-green-500' : 
-                                    o.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 
-                                    'bg-yellow-500/10 text-yellow-500'
-                                } capitalize">${o.status}</span>
-                            </div>
-                            <p class="text-sm font-medium">${o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</p>
-                            <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-2">
-                                <span class="text-xs text-neutral-500">${new Date(o.createdAt).toLocaleDateString()}</span>
-                                <span class="font-bold">₹${o.totalAmount}</span>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p class="text-neutral-500 text-sm text-center py-4">No past orders found.</p>';
-                }
-            } catch(e) {
-                container.innerHTML = '<p class="text-red-400 text-sm text-center py-4">Error loading history.</p>';
-            }
-        }
-
-        // --- ADDRESS LOGIC ---
-        async function loadAddresses() {
-            const phone = localStorage.getItem('nc_userPhone');
-            if (!phone) return;
-
-            try {
-                const res = await fetch(`${API_URL}/api/addresses/${phone}`);
-                const data = await res.json();
-                const list = document.getElementById('addressList');
-                
-                if (data.length > 0) {
-                    list.innerHTML = data.map(a => `
-                        <div class="bg-brand-black/50 p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-start gap-3">
-                                    <iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent mt-1"></iconify-icon>
-                                    <div>
-                                        <p class="font-medium text-sm">${a.label}</p>
-                                        <p class="text-xs text-neutral-400 mt-1">${a.houseNo}, ${a.building}</p>
-                                        <p class="text-xs text-neutral-500">${a.area}</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="editAddress('${a._id}', '${a.label}', '${a.houseNo}', '${a.building}', '${a.area}', ${a.lat}, ${a.lng})" class="text-neutral-400 hover:text-white p-1"><iconify-icon icon="lucide:pencil" width="14"></iconify-icon></button>
-                                    <button onclick="deleteAddress('${a._id}')" class="text-neutral-400 hover:text-red-500 p-1"><iconify-icon icon="lucide:trash-2" width="14"></iconify-icon></button>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    list.innerHTML = `<p class="text-neutral-500 text-sm text-center py-4">No saved addresses. Add one now!</p>`;
-                }
-            } catch(e) {
-                console.error(e);
-            }
-        }
-
-        async function deleteAddress(id) {
-            if(!confirm("Delete this address?")) return;
-            try {
-                await fetch(`${API_URL}/api/addresses/${id}`, { method: 'DELETE' });
-                showNotification("Address Deleted");
-                loadAddresses();
-            } catch(e) { alert("Error deleting"); }
-        }
-
-        function editAddress(id, label, house, building, area, lat, lng) {
-            document.getElementById('editAddressId').value = id;
-            openLocationModal(); 
-            document.getElementById('inputHouse').value = house;
-            document.getElementById('inputBuilding').value = building;
-            document.getElementById('selectedAreaText').textContent = area;
-            tempSelectedArea = area;
-            tempSelectedLat = lat;
-            tempSelectedLng = lng;
-            setLabel(label);
-            document.getElementById('modalTitle').textContent = "Edit Address";
-            if(locationMap && locationMarker) {
-                locationMap.setView([lat, lng], 15);
-                locationMarker.setLatLng([lat, lng]);
-            }
-        }
-
-        // --- MAP MODAL LOGIC ---
-        function openLocationModal() {
-            document.getElementById('editAddressId').value = ''; 
-            document.getElementById('modalTitle').textContent = "Add New Address";
-            document.getElementById('inputHouse').value = '';
-            document.getElementById('inputBuilding').value = '';
-            document.getElementById('selectedAreaText').textContent = 'Select on Map';
-            tempSelectedArea = "";
-            
-            const modal = document.getElementById('locationModal');
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            setTimeout(() => { if (!locationMap) { initLocationMap(); } else { locationMap.invalidateSize(); } }, 100);
-        }
-
-        function closeLocationModal() { 
-            const modal = document.getElementById('locationModal'); 
-            modal.classList.add('hidden'); modal.classList.remove('flex'); 
-        }
-
-        function initLocationMap() {
-            const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
-            const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
-            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
-            locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
-            
-            locationMap.on('click', async (e) => {
-                locationMarker.setLatLng(e.latlng);
-                tempSelectedLat = e.latlng.lat; tempSelectedLng = e.latlng.lng;
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`);
-                    const data = await res.json();
-                    const name = data.display_name.split(',').slice(0, 3).join(', ');
-                    document.getElementById('selectedAreaText').textContent = name;
-                    tempSelectedArea = name;
-                } catch (err) { document.getElementById('selectedAreaText').textContent = "Selected"; }
-            });
-        }
-
-        async function searchLocation() {
-            const query = document.getElementById('locationSearchInput').value; if(query.length < 3) return;
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${query}&limit=5`);
-                const data = await res.json();
-                const resultsDiv = document.getElementById('searchResults');
-                resultsDiv.classList.remove('hidden');
-                resultsDiv.innerHTML = data.map(r => `<div onclick="selectSearchResult(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')" class="p-2 hover:bg-brand-accent/10 cursor-pointer rounded-lg text-xs border-b border-white/5">${r.display_name}</div>`).join('');
-            } catch(e) {}
-        }
-
-        function selectSearchResult(lat, lng, name) {
-            const shortName = name.split(',').slice(0, 3).join(', ');
-            document.getElementById('selectedAreaText').textContent = shortName; tempSelectedArea = shortName;
-            if(locationMap && locationMarker) { locationMap.setView([lat, lng], 15); locationMarker.setLatLng([lat, lng]); }
-            tempSelectedLat = lat; tempSelectedLng = lng;
-            document.getElementById('searchResults').classList.add('hidden'); document.getElementById('locationSearchInput').value = '';
-        }
-
-        function setLabel(label){ 
-            currentLabel = label; 
-            document.querySelectorAll('.label-btn').forEach(b => b.classList.remove('bg-brand-accent', 'text-black', 'border-brand-accent')); 
-            document.getElementById('label'+label).classList.add('bg-brand-accent', 'text-black', 'border-brand-accent'); 
-        }
-
-        async function saveAddress() {
-            const id = document.getElementById('editAddressId').value;
-            const house = document.getElementById('inputHouse').value;
-            const building = document.getElementById('inputBuilding').value;
-            const phone = localStorage.getItem('nc_userPhone');
-
-            if(!house || !tempSelectedLat) { alert("Please fill details and select location on map."); return; }
-
-            const body = {
-                phone, 
-                label: currentLabel, 
-                houseNo: house, 
-                building, 
-                landmark: '', 
-                area: tempSelectedArea, 
-                lat: tempSelectedLat, 
-                lng: tempSelectedLng
-            };
-
-            try {
-                let url = `${API_URL}/api/addresses`;
-                let method = 'POST';
-
-                if (id) {
-                    url = `${API_URL}/api/addresses/${id}`;
-                    method = 'PUT';
-                }
-
-                await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                closeLocationModal();
-                loadAddresses();
-                showNotification(id ? "Address Updated" : "Address Saved");
-            } catch(e) {
-                alert("Error saving address");
-            }
-        }
-
-        // --- UTILS ---
-        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
-        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); if(!d || !r) return; document.addEventListener('mousemove', e => { d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; }); }
-    </script>
-</body>
-</html>
+// 5. START
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
