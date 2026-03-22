@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    <!-- Leaflet -->
+    <!-- Leaflet (Engine) + CartoDB (Better Maps) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -22,22 +22,21 @@
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
         @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
         .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
-        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
+        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
         
-        /* Leaflet */
-        .leaflet-container { background: #050505; z-index: 10; }
-        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+        /* Map Overrides */
+        #locationMap { height: 250px; width: 100%; background: #000; z-index: 10; }
+        .leaflet-container { background: #000; }
+        .leaflet-control-zoom { display: none; } /* Hide zoom for cleaner look */
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
 
-    <!-- SUCCESS POPUP -->
+    <!-- POPUPS (Same as before) -->
     <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden"><div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10"><div class="p-10"><div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20"><iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon></div><h2 class="text-3xl font-bold mb-2">Order Placed!</h2><p class="text-neutral-400 mb-2">Your order has been placed successfully.</p><p class="text-xs text-neutral-500 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono">#ORD-123</span></p><button onclick="goToHome()" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Continue Shopping</button></div></div></div>
-
-    <!-- ERROR POPUP -->
     <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><p class="text-neutral-400 mb-2">Couldn't connect to the server.</p><button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
 
     <!-- MAP MODAL -->
@@ -48,17 +47,20 @@
                 <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto">
-                <div class="p-4 bg-brand-black/50">
+                <!-- Search Bar -->
+                <div class="p-4 bg-brand-black/50 relative z-20">
                     <div class="relative">
                         <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none">
                         <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"><iconify-icon icon="lucide:search" width="18"></iconify-icon></button>
                     </div>
-                    <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
+                    <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden absolute left-4 right-4 bg-brand-gray rounded-lg p-2 border border-white/10"></div>
                 </div>
+                
                 <!-- Map Container -->
-                <div id="locationMap" style="height: 200px; width: 100%; background: #050505;"></div>
+                <div id="locationMap" class="w-full flex-shrink-0"></div>
+                
                 <div class="p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
+                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Move map to select location</span></div>
                     <div class="grid grid-cols-3 gap-3">
                          <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
                          <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
@@ -99,41 +101,23 @@
                     <h3 class="font-semibold">Deliver To</h3>
                     <button onclick="openLocationModal()" class="text-xs text-brand-accent font-medium hover:underline">+ Add New</button>
                 </div>
-                <div id="addressListContainer" class="space-y-2">
-                    <p class="text-neutral-500 text-sm text-center py-4">No addresses found. Add a new one.</p>
-                </div>
+                <div id="addressListContainer" class="space-y-2"><p class="text-neutral-500 text-sm text-center py-4">No addresses found. Add a new one.</p></div>
             </div>
 
             <!-- 2. CART ITEMS -->
             <div id="cartItemsContainer" class="space-y-4 mb-6"></div>
-
-            <!-- EMPTY CART STATE -->
             <div id="emptyCart" class="hidden text-center py-16"><div class="w-24 h-24 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6"><iconify-icon icon="lucide:shopping-cart" width="40" class="text-neutral-500"></iconify-icon></div><h2 class="text-2xl font-semibold mb-2">Your cart is empty</h2><p class="text-neutral-500 mb-6">Add items to your cart to see them here.</p><a href="index.html" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-neutral-200 transition-colors"><iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>Continue Shopping</a></div>
 
             <!-- 3. BILL DETAILS CARD -->
-            <div id="billDetailsCard" class="bg-brand-gray rounded-2xl p-5 border border-white/5">
-                <h3 class="font-semibold mb-4 text-sm uppercase text-neutral-400">Bill Details</h3>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between text-neutral-300"><span>Item Total</span><span id="subtotal">₹0</span></div>
-                    <div class="flex justify-between text-neutral-300"><span>Delivery Fee</span><span id="deliveryFee">₹0</span></div>
-                    <div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div>
-                    <div class="border-t border-white/10 pt-3 flex justify-between font-bold text-lg"><span>To Pay</span><span id="totalAmount">₹0</span></div>
-                </div>
-            </div>
-
+            <div id="billDetailsCard" class="bg-brand-gray rounded-2xl p-5 border border-white/5"><h3 class="font-semibold mb-4 text-sm uppercase text-neutral-400">Bill Details</h3><div class="space-y-3 text-sm"><div class="flex justify-between text-neutral-300"><span>Item Total</span><span id="subtotal">₹0</span></div><div class="flex justify-between text-neutral-300"><span>Delivery Fee</span><span id="deliveryFee">₹0</span></div><div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div><div class="border-t border-white/10 pt-3 flex justify-between font-bold text-lg"><span>To Pay</span><span id="totalAmount">₹0</span></div></div></div>
         </div>
     </main>
 
     <!-- 4. BOTTOM BAR -->
     <div class="fixed bottom-0 left-0 right-0 z-40 bg-brand-dark/95 backdrop-blur-xl border-t border-white/5 p-4">
         <div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
-            <div>
-                <p class="text-xs text-neutral-500">Total Amount</p>
-                <p class="text-2xl font-bold" id="stickyTotal">₹0</p>
-            </div>
-            <button onclick="placeOrder()" class="flex-1 max-w-xs bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20">
-                Place Order <iconify-icon icon="lucide:arrow-right" width="18"></iconify-icon>
-            </button>
+            <div><p class="text-xs text-neutral-500">Total Amount</p><p class="text-2xl font-bold" id="stickyTotal">₹0</p></div>
+            <button onclick="placeOrder()" class="flex-1 max-w-xs bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2 shadow-lg shadow-brand-accent/20">Place Order <iconify-icon icon="lucide:arrow-right" width="18"></iconify-icon></button>
         </div>
     </div>
 
@@ -150,7 +134,7 @@
 
         document.addEventListener('DOMContentLoaded', () => { loadCart(); checkLoginStatus(); loadSavedAddresses(); setupCursor(); });
 
-        // --- Helpers ---
+        // Standard Helpers...
         function showOrderSuccessModal(orderId) { const modal = document.getElementById('orderSuccessModal'); document.getElementById('modalOrderId').textContent = orderId; modal.classList.remove('hidden'); modal.classList.add('flex'); const container = document.getElementById('confettiContainer'); container.innerHTML = ''; for(let i=0; i<20; i++) { const c = document.createElement('div'); c.className='confetti'; c.style.left=Math.random()*100+'%'; c.style.top=Math.random()*100+'%'; c.style.background=['#8CFF00','#FFD700','#22C55E','#ffffff'][Math.floor(Math.random()*4)]; c.style.animationDelay=Math.random()*0.5+'s'; container.appendChild(c); } }
         function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
         function closeErrorModal() { const m=document.getElementById('errorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
@@ -158,18 +142,16 @@
         function loadCart() { try { const s=localStorage.getItem('nc_cart'); if(s){ cart=JSON.parse(s); } } catch(e) { cart = []; } renderCartPage(); }
         function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-[60] shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),2000); }
         
-        // --- Addresses ---
+        // Addresses
         async function loadSavedAddresses() {
             const container = document.getElementById('addressListContainer');
             const phone = localStorage.getItem('nc_userPhone');
             if (!phone) { container.innerHTML = `<a href="login.html" class="block text-center text-red-400 text-sm py-4">Please login to see addresses</a>`; return; }
-
             try {
                 const res = await fetch(`${API_URL}/api/addresses/${phone}`);
                 const addresses = await res.json();
                 const savedAddr = localStorage.getItem('nc_selected_address');
                 if(savedAddr) { try { const addrObj = JSON.parse(savedAddr); selectedAddressId = addrObj._id || 'local'; } catch(e){} }
-                
                 if (addresses.length > 0) {
                     container.innerHTML = addresses.map(a => `
                         <div onclick="selectAddress('${a._id}', '${a.label}', '${a.houseNo}', '${a.building}', '${a.area}', ${a.lat}, ${a.lng})" class="flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all ${selectedAddressId === a._id ? 'bg-brand-accent/10 border-brand-accent/50' : 'bg-brand-black/50 border-white/5 hover:border-white/20'}">
@@ -189,7 +171,7 @@
             loadSavedAddresses(); showNotification("Address Selected");
         }
 
-        // --- Cart Logic ---
+        // Cart Logic
         function renderCartPage() { 
             const c=document.getElementById('cartItemsContainer'), e=document.getElementById('emptyCart'), b=document.getElementById('billDetailsCard'); const main = document.querySelector('main');
             if(cart.length===0){ c.classList.add('hidden'); e.classList.remove('hidden'); b.classList.add('hidden'); main.classList.remove('pb-40'); } else { c.classList.remove('hidden'); e.classList.add('hidden'); b.classList.remove('hidden'); main.classList.add('pb-40'); }
@@ -212,48 +194,40 @@
             if (!isLoggedIn) { alert("Please login to place order."); window.location.href = 'login.html'; return; }
             const addrString = localStorage.getItem('nc_selected_address');
             if (!addrString) { alert("Please select or add a delivery address."); return; }
-
             let addr;
             try { addr = JSON.parse(addrString); } catch(e) { alert("Invalid address data."); return; }
-
             const userAddress = { label: addr.label, houseNo: addr.houseNo, building: addr.building, area: addr.area };
             const userName = localStorage.getItem('nc_userName') || 'Customer';
             const userPhone = localStorage.getItem('nc_userPhone');
             const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
             try {
-                const response = await fetch(`${API_URL}/api/orders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userName, userPhone, userAddress, items: cart, totalAmount })
-                });
+                const response = await fetch(`${API_URL}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userName, userPhone, userAddress, items: cart, totalAmount }) });
                 if (!response.ok) throw new Error('HTTP error');
                 const data = await response.json();
                 if(data.success){cart=[];saveCart();showOrderSuccessModal(data.orderId);}else{showErrorModal();}
             } catch(e){console.error(e);showErrorModal();}
         }
 
-        // --- MAP LOGIC (ULTIMATE FIX) ---
+        // --- MAP LOGIC (CARTODB - RELIABLE) ---
         function openLocationModal() {
-            // Reset UI Text fields
+            // Reset UI
             document.getElementById('editAddressId').value = ''; 
             document.getElementById('modalTitle').textContent = "Add New Address";
             document.getElementById('inputHouse').value = ''; 
             document.getElementById('inputBuilding').value = ''; 
+            document.getElementById('selectedAreaText').textContent = 'Move map to select location'; 
+            tempSelectedArea = "";
             
-            // Show Modal
             document.getElementById('locationModal').classList.remove('hidden');
             document.getElementById('locationModal').classList.add('flex');
             
-            // Initialize Map with small delay
             setTimeout(() => {
                 if (!locationMap) {
                     initLocationMap();
                 } else {
-                    // If map exists, just invalidate size
                     locationMap.invalidateSize();
                 }
-            }, 200);
+            }, 100);
         }
         
         function closeLocationModal() { 
@@ -265,31 +239,37 @@
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
-            // Create map
-            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(locationMap);
-            
-            // Add marker
+            // 1. Initialize Map
+            locationMap = L.map('locationMap', {
+                center: [savedLat, savedLng],
+                zoom: 13,
+                zoomControl: false
+            });
+
+            // 2. Use CartoDB Dark Matter Tiles (Much more reliable than OSM)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '©CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(locationMap);
+
+            // 3. Add Marker
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
 
-            // *** CRITICAL FIX ***
-            // Always set the variables to the initial marker position immediately.
-            // This prevents 0,0 if the user doesn't click but just saves.
+            // 4. Set initial vars (Fail-safe)
             tempSelectedLat = savedLat;
             tempSelectedLng = savedLng;
 
-            // Try to get name for initial position
+            // 5. Try to get name
             fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
             .then(res => res.json())
             .then(data => {
                  const name = data.display_name.split(',').slice(0, 3).join(', ');
                  document.getElementById('selectedAreaText').textContent = name;
                  tempSelectedArea = name;
-            }).catch(() => {
-                 document.getElementById('selectedAreaText').textContent = "Move pin for accuracy";
-            });
+            }).catch(() => {});
 
-            // On Click -> Update variables
+            // 6. On Click -> Update Marker & Vars
             locationMap.on('click', async (e) => {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
@@ -319,13 +299,9 @@
         
         function selectSearchResult(lat, lng, name) {
             const shortName = name.split(',').slice(0, 3).join(', ');
-            document.getElementById('selectedAreaText').textContent = shortName; 
-            tempSelectedArea = shortName;
-            
-            // Update Map & Vars
+            document.getElementById('selectedAreaText').textContent = shortName; tempSelectedArea = shortName;
             if(locationMap && locationMarker) { locationMap.setView([lat, lng], 15); locationMarker.setLatLng([lat, lng]); }
             tempSelectedLat = lat; tempSelectedLng = lng;
-            
             document.getElementById('searchResults').classList.add('hidden'); document.getElementById('locationSearchInput').value = '';
         }
         
@@ -335,7 +311,13 @@
             const house = document.getElementById('inputHouse').value;
             const building = document.getElementById('inputBuilding').value;
             
-            // Final Check
+            // *** NUCLEAR FIX ***
+            // If variables are missing, FORCE get them from the map center
+            if (locationMap) {
+                if(tempSelectedLat === null) tempSelectedLat = locationMap.getCenter().lat;
+                if(tempSelectedLng === null) tempSelectedLng = locationMap.getCenter().lng;
+            }
+            
             if(!house) { alert("Please enter House/Flat No."); return; }
             if(tempSelectedLat === null) { alert("Please select a location on the map."); return; }
 
