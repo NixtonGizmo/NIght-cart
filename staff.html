@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal - Night Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', accent: '#8CFF00', yellow: '#FFD700' } } } } }
+    </script>
+    <style>
+        * { cursor: none; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::selection { background: white; color: black; }
+        
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
+
+        .tab-btn.active { background: rgba(140, 255, 0, 0.1); color: #8CFF00; border-color: rgba(140, 255, 0, 0.3); }
+        
+        /* Leaflet Overrides */
+        .leaflet-container { background: #050505; z-index: 10; border-radius: 12px; }
+        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
+    </style>
+</head>
+<body class="bg-brand-black text-white font-sans antialiased">
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- STAFF LOGIN SCREEN -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-black">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl p-8 text-center">
+            <div class="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <iconify-icon icon="lucide:truck" width="32" class="text-brand-accent"></iconify-icon>
+            </div>
+            <h1 class="text-2xl font-bold mb-2">Staff Portal</h1>
+            <p class="text-neutral-400 text-sm mb-6">Login to access dashboard</p>
+            
+            <form onsubmit="staffLogin(event)" class="space-y-4">
+                <input type="tel" id="staffPhone" placeholder="Phone Number" class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-accent">
+                <input type="password" id="staffPass" placeholder="Password (1234)" class="w-full bg-brand-black border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-accent">
+                <button type="submit" class="w-full bg-brand-accent text-black font-bold py-3 rounded-full hover:bg-brand-yellow transition-colors">Login</button>
+            </form>
+            <p id="loginError" class="text-red-500 text-xs mt-4 hidden">Invalid credentials</p>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboardScreen" class="hidden">
+        <!-- Top Nav -->
+        <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <h1 class="font-bold text-lg">Staff Dashboard</h1>
+                <div class="flex items-center gap-3">
+                    <span id="staffName" class="text-sm text-neutral-400"></span>
+                    <button onclick="staffLogout()" class="text-xs bg-white/5 px-3 py-1 rounded-full hover:bg-white/10">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="max-w-7xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+                <button onclick="switchTab('new')" id="tab-new" class="tab-btn flex-shrink-0 px-4 py-2 rounded-full border border-white/10 text-sm font-medium transition-all">
+                    New Orders <span id="count-new" class="ml-1 text-xs opacity-60">(0)</span>
+                </button>
+                <button onclick="switchTab('picking')" id="tab-picking" class="tab-btn flex-shrink-0 px-4 py-2 rounded-full border border-white/10 text-sm font-medium transition-all">
+                    Picking <span id="count-picking" class="ml-1 text-xs opacity-60">(0)</span>
+                </button>
+                <button onclick="switchTab('ready')" id="tab-ready" class="tab-btn flex-shrink-0 px-4 py-2 rounded-full border border-white/10 text-sm font-medium transition-all">
+                    Ready <span id="count-ready" class="ml-1 text-xs opacity-60">(0)</span>
+                </button>
+                <button onclick="switchTab('delivery')" id="tab-delivery" class="tab-btn flex-shrink-0 px-4 py-2 rounded-full border border-white/10 text-sm font-medium transition-all">
+                    Out for Delivery <span id="count-delivery" class="ml-1 text-xs opacity-60">(0)</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <main class="pt-32 pb-8 px-4 max-w-7xl mx-auto">
+            
+            <!-- LIST CONTAINERS -->
+            <div id="list-new" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
+            <div id="list-picking" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
+            <div id="list-ready" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 hidden"></div>
+            <div id="list-delivery" class="grid md:grid-cols-1 lg:grid-cols-2 gap-4 hidden"></div>
+
+        </main>
+    </div>
+
+    <!-- MAP MODAL (For Delivery Address) -->
+    <div id="mapModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-2xl w-full max-w-lg border border-white/10 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-white/5 flex justify-between items-center">
+                <h3 class="font-semibold">Delivery Location</h3>
+                <button onclick="closeMapModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="20"></iconify-icon></button>
+            </div>
+            <div id="modalMap" class="w-full h-64 bg-brand-black"></div>
+            <div class="p-4 bg-brand-black/50 text-sm">
+                <p class="font-medium text-white mb-1" id="mapAddressText">Address</p>
+                <p class="text-neutral-400 text-xs" id="mapCustomerName">Customer Name</p>
+                <a id="mapCallBtn" href="tel:" class="mt-3 inline-flex items-center gap-2 bg-brand-accent text-black px-4 py-2 rounded-full text-sm font-bold">
+                    <iconify-icon icon="lucide:phone" width="14"></iconify-icon> Call Customer
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://night-cart.onrender.com';
+        let orders = [];
+        let currentTab = 'new';
+        let modalMap;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCursor();
+            // Check if already logged in
+            if (localStorage.getItem('nc_staff_auth') === 'true') {
+                showDashboard();
+            }
+        });
+
+        // --- AUTH ---
+        async function staffLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('staffPhone').value;
+            const pass = document.getElementById('staffPass').value;
+
+            try {
+                const res = await fetch(`${API_URL}/api/staff/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password: pass })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('nc_staff_auth', 'true');
+                    localStorage.setItem('nc_staff_phone', phone);
+                    showDashboard();
+                } else {
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch(e) {
+                document.getElementById('loginError').textContent = "Server error";
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function staffLogout() {
+            localStorage.removeItem('nc_staff_auth');
+            location.reload();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('staffName').textContent = localStorage.getItem('nc_staff_phone');
+            loadData();
+            // Refresh data every 10 seconds
+            setInterval(loadData, 10000);
+        }
+
+        // --- DATA LOGIC ---
+        async function loadData() {
+            try {
+                const res = await fetch(`${API_URL}/api/staff/orders`);
+                orders = await res.json();
+                renderLists();
+            } catch(e) {
+                console.error("Failed to load orders");
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            // Hide all lists
+            document.querySelectorAll('[id^="list-"]').forEach(el => el.classList.add('hidden'));
+            // Show active list
+            document.getElementById(`list-${tab}`).classList.remove('hidden');
+            // Update tab styles
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        function renderLists() {
+            // Filter orders by status
+            const newOrders = orders.filter(o => o.status === 'pending');
+            const pickingOrders = orders.filter(o => o.status === 'picking');
+            const readyOrders = orders.filter(o => o.status === 'ready');
+            const deliveryOrders = orders.filter(o => o.status === 'out_for_delivery');
+
+            // Update counts
+            document.getElementById('count-new').textContent = `(${newOrders.length})`;
+            document.getElementById('count-picking').textContent = `(${pickingOrders.length})`;
+            document.getElementById('count-ready').textContent = `(${readyOrders.length})`;
+            document.getElementById('count-delivery').textContent = `(${deliveryOrders.length})`;
+
+            // Render HTML
+            document.getElementById('list-new').innerHTML = newOrders.map(o => orderCard(o, 'Accept & Pick')).join('') || emptyState("No new orders");
+            document.getElementById('list-picking').innerHTML = pickingOrders.map(o => pickingCard(o)).join('') || emptyState("No items being picked");
+            document.getElementById('list-ready').innerHTML = readyOrders.map(o => orderCard(o, 'Start Delivery')).join('') || emptyState("No orders ready");
+            document.getElementById('list-delivery').innerHTML = deliveryOrders.map(o => deliveryCard(o)).join('') || emptyState("No active deliveries");
+        }
+
+        function orderCard(o, btnText) {
+            return `
+            <div class="bg-brand-gray rounded-2xl p-5 border border-white/5">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="font-mono text-xs text-neutral-500">${o.orderId}</p>
+                        <p class="font-semibold">${o.userName}</p>
+                    </div>
+                    <span class="text-lg font-bold text-brand-accent">₹${o.totalAmount}</span>
+                </div>
+                <p class="text-xs text-neutral-400 mb-4">${o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</p>
+                <button onclick="updateStatus('${o._id}', '${getNextStatus(o.status)}')" class="w-full bg-brand-accent text-black font-semibold py-2 rounded-lg text-sm hover:bg-brand-yellow transition-colors">
+                    ${btnText}
+                </button>
+            </div>`;
+        }
+
+        function pickingCard(o) {
+            return `
+            <div class="bg-brand-gray rounded-2xl p-5 border border-brand-accent/30">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="font-mono text-xs text-neutral-500">${o.orderId}</p>
+                    <span class="text-xs px-2 py-1 rounded bg-yellow-500/10 text-yellow-500">PICKING</span>
+                </div>
+                <h3 class="font-bold mb-3">Items to Pack:</h3>
+                <ul class="space-y-2 mb-4">
+                    ${o.items.map(i => `
+                        <li class="flex items-center justify-between text-sm bg-brand-black/30 p-2 rounded-lg">
+                            <span>${i.name}</span>
+                            <span class="font-bold">x${i.quantity}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                <button onclick="updateStatus('${o._id}', 'ready')" class="w-full border border-brand-accent text-brand-accent font-semibold py-2 rounded-lg text-sm hover:bg-brand-accent/10 transition-colors">
+                    Mark Ready for Delivery
+                </button>
+            </div>`;
+        }
+
+        function deliveryCard(o) {
+            return `
+            <div class="bg-brand-gray rounded-2xl overflow-hidden border border-white/5">
+                <div class="p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-mono text-xs text-neutral-500">${o.orderId}</p>
+                            <p class="font-bold text-xl">${o.userName}</p>
+                        </div>
+                        <a href="tel:${o.userPhone}" class="bg-green-500 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1">
+                            <iconify-icon icon="lucide:phone" width="12"></iconify-icon> Call
+                        </a>
+                    </div>
+                    
+                    <!-- Address Details -->
+                    <div class="bg-brand-black/50 p-3 rounded-xl mt-3 text-sm">
+                        <p class="text-neutral-400 text-xs mb-1">Deliver to:</p>
+                        <p class="font-medium">${o.userAddress?.houseNo}, ${o.userAddress?.building}</p>
+                        <p class="text-neutral-500">${o.userAddress?.area}</p>
+                    </div>
+
+                    <button onclick="openMap(${o.userAddress?.lat || 0}, ${o.userAddress?.lng || 0}, '${o.userAddress?.area}', '${o.userName}')" class="mt-3 text-brand-accent text-xs font-medium flex items-center gap-1 hover:underline">
+                        <iconify-icon icon="lucide:map-pin" width="12"></iconify-icon> View on Map
+                    </button>
+                </div>
+                
+                <div class="border-t border-white/5 p-3 bg-brand-dark/50">
+                     <button onclick="updateStatus('${o._id}', 'delivered')" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl text-sm hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                        <iconify-icon icon="lucide:check-circle" width="16"></iconify-icon> Confirm Delivered
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function emptyState(msg) {
+            return `<div class="col-span-full text-center py-16 text-neutral-500">${msg}</div>`;
+        }
+
+        function getNextStatus(current) {
+            if(current === 'pending') return 'picking';
+            if(current === 'ready') return 'out_for_delivery';
+            return 'delivered';
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                await fetch(`${API_URL}/api/orders/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                // Refresh data
+                loadData();
+                // Vibrate if supported
+                if(navigator.vibrate) navigator.vibrate(100);
+            } catch(e) {
+                alert("Error updating status");
+            }
+        }
+
+        // --- MAP MODAL ---
+        function openMap(lat, lng, address, name) {
+            document.getElementById('mapModal').classList.remove('hidden');
+            document.getElementById('mapModal').classList.add('flex');
+            document.getElementById('mapAddressText').textContent = address;
+            document.getElementById('mapCustomerName').textContent = name;
+            
+            setTimeout(() => {
+                if(!modalMap) {
+                    modalMap = L.map('modalMap').setView([lat || 20.59, lng || 78.96], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMap);
+                } else {
+                    modalMap.setView([lat || 20.59, lng || 78.96], 15);
+                }
+                L.marker([lat, lng]).addTo(modalMap);
+                modalMap.invalidateSize();
+            }, 100);
+        }
+
+        function closeMapModal() {
+            document.getElementById('mapModal').classList.add('hidden');
+            document.getElementById('mapModal').classList.remove('flex');
+        }
+
+        // --- CURSOR ---
+        function setupCursor() { 
+            const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); 
+            if(!d || !r) return; 
+            document.addEventListener('mousemove', e => { 
+                d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; 
+                r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; 
+            }); 
+        }
+    </script>
+</body>
+</html>
