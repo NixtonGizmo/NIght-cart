@@ -489,39 +489,47 @@
             modal.classList.remove('flex');
         }
 
-        function initLocationMap() {
+              function initLocationMap() {
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
             locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(locationMap);
-
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(locationMap);
+            
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+
+            // FIX: If we have a saved location (from auto-detect), update the variables automatically
+            if (localStorage.getItem('nc_location_lat')) {
+                tempSelectedLat = savedLat;
+                tempSelectedLng = savedLng;
+                
+                // Try to get the name for the initial marker
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
+                .then(res => res.json())
+                .then(data => {
+                    const name = data.display_name.split(',').slice(0, 3).join(', ');
+                    document.getElementById('selectedAreaText').textContent = name;
+                    tempSelectedArea = name;
+                }).catch(e => console.log("Initial reverse geocode failed"));
+            }
 
             locationMap.on('click', async (e) => {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
-                
                 locationMarker.setLatLng(e.latlng);
                 tempSelectedLat = lat;
                 tempSelectedLng = lng;
-                
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
                     const data = await res.json();
-                    const name = data.display_name.split(',').slice(0, 2).join(', ');
-                    document.getElementById('selectedAddressText').textContent = name;
-                    // Show Save UI
-                    document.getElementById('saveAddressUI').classList.remove('hidden');
-                } catch (err) {
-                    document.getElementById('selectedAddressText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                }
+                    const name = data.display_name.split(',').slice(0, 3).join(', ');
+                    document.getElementById('selectedAreaText').textContent = name;
+                    tempSelectedArea = name;
+                } catch (err) { document.getElementById('selectedAreaText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
             });
-        }
-
+        } 
+        
         async function searchLocation() {
             const query = document.getElementById('locationSearchInput').value;
             if(query.length < 3) return;
