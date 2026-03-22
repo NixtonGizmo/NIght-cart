@@ -238,6 +238,54 @@ app.put('/api/orders/:id/cancel', async (req, res) => {
   }
 });
 
+// --- STAFF ROUTES ---
+
+// 1. Staff Login (Simple hardcoded for prototype)
+app.post('/api/staff/login', (req, res) => {
+  const { phone, password } = req.body;
+  // In real app, check DB. Here we use simple logic:
+  // Password is "1234" for any staff phone number
+  if (phone && password === "1234") {
+    res.json({ success: true, role: 'staff', phone: phone });
+  } else {
+    res.status(401).json({ success: false, message: "Invalid credentials (Use any phone, pass: 1234)" });
+  }
+});
+
+// 2. Get Orders by Status (For Staff Dashboard)
+app.get('/api/staff/orders', async (req, res) => {
+  try {
+    // Fetch orders that are NOT cancelled or delivered
+    const orders = await Order.find({ 
+      status: { $in: ['pending', 'picking', 'ready', 'out_for_delivery'] } 
+    }).sort({ createdAt: 1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// 3. Update Order Status (The core logic)
+app.put('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['pending', 'picking', 'ready', 'out_for_delivery', 'delivered', 'cancelled'];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id, 
+      { status }, 
+      { new: true }
+    );
+    res.json({ success: true, order: updatedOrder });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});  
+
 // --- ADDRESS ROUTES ---
 
 // 1. Get Saved Addresses
