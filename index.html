@@ -8,701 +8,221 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5',
-                            yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00'
-                        }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } }
     </script>
     <style>
         * { cursor: none; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::selection { background: white; color: black; }
-        
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
-        .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
-        .product-card:hover .product-image { transform: scale(1.05); }
-        .category-card:hover { transform: translateY(-5px); }
-        
-        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
-        #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.15s; }
         
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
 
-        .widget-container { transition: all 0.3s ease; }
-        .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
-        .widget-items.open { max-height: 300px; opacity: 1; }
-
-        /* Leaflet Overrides */
-        .leaflet-container { background: #050505; z-index: 10; }
-        .leaflet-control-zoom a { background-color: #171717 !important; color: white !important; border-color: rgba(255,255,255,0.1) !important; }
-        .leaflet-control-zoom a:hover { background-color: #333 !important; }
-        .leaflet-popup-content-wrapper { background: #171717; color: white; border-radius: 12px; }
-        .leaflet-popup-tip { background: #171717; }
+        /* Map Overrides */
+        #locationMap { height: 200px; width: 100%; background: #000; z-index: 10; }
+        .leaflet-container { background: #000; }
+        .leaflet-control-zoom { display: none; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
-    <div class="fixed inset-0 bg-grain pointer-events-none z-50"></div>
-    
-    <!-- ERROR POPUP -->
-    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center animate-scale-in">
-            <div class="p-10">
-                <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
-                    <iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon>
-                </div>
-                <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
-                <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
-                <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button>
+
+    <!-- Location Modal -->
+    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
+            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+                <h3 class="font-semibold text-lg" id="modalTitle">Save Delivery Address</h3>
+                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-4 bg-brand-black/50 relative z-20">
+                    <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none">
+                    <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden absolute left-4 right-4 bg-brand-gray rounded-lg p-2 border border-white/10"></div>
+                </div>
+                <div id="locationMap" class="w-full flex-shrink-0"></div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Move map to select</span></div>
+                    <div class="grid grid-cols-3 gap-3">
+                         <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
+                         <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
+                         <button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button>
+                    </div>
+                    <div><label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label><input type="text" id="inputHouse" placeholder="House/Flat No." class="w-full bg-brand-black border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none"></div>
+                    <div><label class="text-xs text-neutral-500 block mb-1">Sector / Building</label><input type="text" id="inputBuilding" placeholder="Building Name" class="w-full bg-brand-black border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0"><button onclick="saveAndConfirmAddress()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Save Address & Confirm</button></div>
         </div>
     </div>
 
-    <!-- Navigation -->
+    <!-- Navigation (Updated Layout) -->
     <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5">
         <div class="max-w-7xl mx-auto px-6">
             <div class="flex items-center justify-between h-16 md:h-20">
-                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity">
-                    <svg width="180" height="60" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
-                        <g transform="translate(12, 18) scale(0.8)" fill="#8CFF00">
-                            <path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" />
-                            <circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" />
-                        </g>
-                        <line x1="45" y1="25" x2="60" y2="25" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
-                        <line x1="48" y1="32" x2="65" y2="32" stroke="#8CFF00" stroke-width="3" stroke-linecap="round"/>
-                        <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text>
-                    </svg>
+                <!-- Logo -->
+                <a href="index.html" class="flex items-center group hover:opacity-80 transition-opacity pr-4">
+                     <svg width="140" height="50" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/><g transform="translate(12, 18) scale(0.8)" fill="#8CFF00"><path d="M0 0 L4 0 L6 12 L30 12 L28 4 L8 4 L8 2 L30 2 L34 16 L4 16 L0 0 Z" /><circle cx="10" cy="22" r="4" /><circle cx="26" cy="22" r="4" /></g><text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text></svg>
                 </a>
 
-                <div class="hidden md:flex flex-1 max-w-md mx-8">
-                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 px-6 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
+                <!-- Center Group: Location Btn + Search -->
+                <div class="flex-1 flex items-center gap-3">
+                    <!-- Location Button (Long) -->
+                    <button onclick="openLocationModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors flex-shrink-0">
+                        <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
+                        <span id="navLocationText" class="text-sm font-medium truncate max-w-[100px] lg:max-w-[200px]">Select</span>
+                        <iconify-icon icon="lucide:chevron-down" width="14"></iconify-icon>
+                    </button>
+
+                    <!-- Search Input -->
+                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="hidden md:block w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
-                
-                <div class="flex items-center gap-3">
-                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
-                        <iconify-icon icon="lucide:user" width="18"></iconify-icon>
-                        <span class="hidden sm:inline">Login</span>
-                    </a>
+
+                <!-- Right Side -->
+                <div class="flex items-center gap-3 pl-4">
+                    <!-- Mobile Location Button -->
+                    <button onclick="openLocationModal()" class="md:hidden p-2 bg-white/5 border border-white/10 rounded-full"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon></button>
+
+                    <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors"><iconify-icon icon="lucide:user" width="18"></iconify-icon><span class="hidden sm:inline">Login</span></a>
                     
                     <div id="userProfile" class="hidden relative">
-                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors">
-                            <iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon>
-                            <span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span>
-                        </button>
-                        <div id="profileDropdown" class="profile-dropdown">
-                            <div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
-                                <div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div>
-                                <div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div>
-                            </div>
-                            <a href="profile.html" class="w-full flex items-center gap-2 text-white py-2 rounded-lg hover:bg-white/5 transition-colors text-sm mb-2"><iconify-icon icon="lucide:settings" width="16"></iconify-icon> My Profile</a>
-                            <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm">Logout</button>
-                        </div>
+                        <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors"><iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon><span id="navUserName" class="text-sm font-medium hidden sm:inline">User</span></button>
+                        <div id="profileDropdown" class="profile-dropdown"><div class="flex items-center gap-3 mb-4 pb-4 border-b border-white/10"><div class="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center"><iconify-icon icon="lucide:user" width="24" class="text-brand-accent"></iconify-icon></div><div><p id="dropName" class="font-semibold">User Name</p><p class="text-xs text-neutral-500">Verified Account</p></div></div><a href="profile.html" class="w-full flex items-center gap-2 text-white py-2 rounded-lg hover:bg-white/5 transition-colors text-sm mb-2"><iconify-icon icon="lucide:settings" width="16"></iconify-icon> My Profile</a><button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-red-500/10 text-red-500 py-2 rounded-lg hover:bg-red-500/20 transition-colors text-sm">Logout</button></div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="md:hidden px-6 pb-4">
-            <div class="relative w-full">
-                <iconify-icon icon="lucide:search" width="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"></iconify-icon>
-                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
+            
+            <!-- Mobile Search -->
+            <div class="md:hidden pb-4 flex gap-2">
+                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="flex-1 bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
             </div>
         </div>
     </nav>
 
-    <!-- LOCATION BAR -->
-    <div class="fixed top-16 md:top-20 left-0 right-0 z-20 bg-brand-dark/80 backdrop-blur-lg border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
-            <button onclick="openLocationModal()" class="flex items-center gap-2 text-sm group">
-                <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
-                <span class="text-neutral-400 group-hover:text-white transition-colors">Deliver to</span>
-                <span id="currentLocationText" class="font-semibold text-white">Select Location</span>
-                <iconify-icon icon="lucide:chevron-down" width="16" class="text-neutral-400 group-hover:text-white transition-colors"></iconify-icon>
-            </button>
-        </div>
-    </div>
-
-    <!-- LOCATION PICKER MODAL -->
-    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
-                <h3 class="font-semibold text-lg">Select Delivery Location</h3>
-                <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
-            </div>
-            
-            <div class="p-4 bg-brand-black/50 flex-shrink-0">
-                <div class="relative">
-                    <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search for area, street name..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 pr-10 text-sm focus:outline-none focus:border-brand-accent/50">
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white">
-                        <iconify-icon icon="lucide:search" width="18"></iconify-icon>
-                    </button>
-                </div>
-                <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden"></div>
-            </div>
-
-            <!-- SAVED ADDRESSES (NEW) -->
-            <div id="savedAddressesContainer" class="p-4 border-b border-white/5 flex-shrink-0 hidden">
-                <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Saved Addresses</h4>
-                <div id="savedAddressesList" class="space-y-2"></div>
-            </div>
-
-            <div id="locationMap" class="w-full h-48 bg-brand-black flex-shrink-0"></div>
-
-            <!-- Footer Actions -->
-            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="text-xs text-neutral-500 truncate pr-4" id="selectedAddressText">Click on map to select location</div>
-                </div>
-                
-                <!-- SAVE ADDRESS INPUT (NEW) -->
-                <div id="saveAddressUI" class="hidden mb-3 flex gap-2">
-                    <input type="text" id="addressLabelInput" placeholder="Label (e.g. Home, Office)" class="flex-1 bg-brand-black border border-white/10 rounded-lg py-2 px-3 text-xs focus:outline-none">
-                    <button onclick="saveCurrentAddress()" class="px-4 py-2 bg-white/5 text-white text-xs font-medium rounded-lg hover:bg-white/10 whitespace-nowrap">Save</button>
-                </div>
-
-                <button onclick="confirmLocation()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Confirm Location</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- HERO SECTION (Increased Padding Top) -->
-    <!-- Changed pt-44 to pt-56 for more gap -->
-    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-56 md:pt-52">
-        <div class="absolute inset-0 z-0">
-            <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
-            <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
-        </div>
+    <!-- Hero Section -->
+    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-32 md:pt-20">
+        <div class="absolute inset-0 z-0"><img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale"><div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div></div>
         <div class="relative z-10 max-w-7xl mx-auto px-6 w-full">
             <div class="grid md:grid-cols-2 gap-12 items-center">
                 <div>
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-6 animate-fade-in">
-                        <div class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
-                        <span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span>
-                    </div>
-                    <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100">
-                        <span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span>
-                    </h1>
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-6 animate-fade-in"><div class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div><span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span></div>
+                    <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100"><span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span></h1>
                     <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
                 </div>
-                <div class="hidden md:block relative animate-fade-in delay-300">
-                    <div class="relative">
-                        <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
-                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold">10 MIN</div>
-                    </div>
-                </div>
+                <div class="hidden md:block relative animate-fade-in delay-300"><div class="relative"><img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl"><div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold">10 MIN</div></div></div>
             </div>
         </div>
     </section>
 
-    <!-- Categories Section -->
+    <!-- Categories -->
     <section class="py-16 md:py-24">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Fruits</h3>
-                </a>
-                <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Snacks</h3>
-                </a>
-                <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Beverages</h3>
-                </a>
+                <a href="category.html?cat=fruits" class="bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block"><div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"><iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon></div><h3 class="font-medium text-sm">Fruits</h3></a>
+                <a href="category.html?cat=snacks" class="bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block"><div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"><iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon></div><h3 class="font-medium text-sm">Snacks</h3></a>
+                <a href="category.html?cat=beverages" class="bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block"><div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"><iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon></div><h3 class="font-medium text-sm">Beverages</h3></a>
             </div>
         </div>
     </section>
     
-    <!-- Products Section -->
+    <!-- Products -->
     <section class="py-16 md:py-24 bg-brand-dark">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-between mb-10">
-                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">All Products</h2></div>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
-                <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
-            </div>
-        </div>
+        <div class="max-w-7xl mx-auto px-6"><div class="flex items-center justify-between mb-10"><div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">All Products</h2></div></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid"><div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div></div></div>
     </section>
     
-    <footer class="py-16 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
-    </footer>
+    <footer class="py-16 border-t border-white/5"><div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div></footer>
 
-    <!-- FLOATING CART WIDGET -->
+    <!-- Cart Widget -->
     <div id="floatingCartWidget" class="fixed bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto md:min-w-[500px] bg-brand-gray border border-white/10 rounded-2xl shadow-2xl z-40 hidden transition-all duration-300">
-        <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()">
-            <div class="flex items-center gap-3">
-                <div class="relative">
-                    <img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10">
-                    <span id="widgetBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
-                </div>
-                <div class="text-left">
-                    <div class="flex items-center gap-2">
-                        <span id="widgetCount" class="font-bold text-white">0 Items</span>
-                        <iconify-icon id="widgetArrow" icon="lucide:chevron-up" width="16" class="text-neutral-400 transition-transform duration-300"></iconify-icon>
-                    </div>
-                    <p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p>
-                </div>
-            </div>
-            <a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">
-                Checkout <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
-            </a>
-        </div>
-        <div id="widgetItems" class="widget-items border-t border-white/5">
-            <div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList"></div>
-        </div>
+        <div class="flex items-center justify-between p-3 cursor-pointer" onclick="toggleWidgetItems()"><div class="flex items-center gap-3"><div class="relative"><img id="widgetImg" src="https://picsum.photos/seed/item/100/100" class="w-12 h-12 rounded-xl object-cover border border-white/10"><span id="widgetBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-brand-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">0</span></div><div class="text-left"><div class="flex items-center gap-2"><span id="widgetCount" class="font-bold text-white">0 Items</span><iconify-icon id="widgetArrow" icon="lucide:chevron-up" width="16" class="text-neutral-400 transition-transform duration-300"></iconify-icon></div><p id="widgetSavings" class="text-sm text-brand-green font-medium">₹0 saved</p></div></div><a href="cart.html" onclick="event.stopPropagation()" class="bg-brand-accent text-black px-5 py-2 rounded-xl font-semibold text-sm hover:bg-brand-yellow transition-colors flex items-center gap-2 shadow-lg shadow-brand-accent/20">Checkout <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon></a></div>
+        <div id="widgetItems" class="widget-items border-t border-white/5"><div class="p-3 space-y-2 max-h-48 overflow-y-auto" id="widgetItemsList"></div></div>
     </div>
 
     <script>
         const API_URL = 'https://night-cart.onrender.com';
-        let allProducts = []; 
-        let cart = [];
-        let locationMap;
-        let locationMarker;
-        let tempSelectedLat = null;
-        let tempSelectedLng = null;
+        let allProducts = []; let cart = [];
+        let locationMap; let locationMarker;
+        let tempSelectedLat = null; let tempSelectedLng = null; let tempSelectedArea = "";
+        let currentLabel = "Home";
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCart(); 
-            checkLoginStatus();
-            loadProductsFromDB(); 
-            setupCursor();
-            loadSavedLocation();
-        });
+        document.addEventListener('DOMContentLoaded', () => { loadCart(); checkLoginStatus(); loadProductsFromDB(); setupCursor(); loadSavedLocation(); });
 
-        // --- POPUP LOGIC ---
-        function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
-        function closeErrorModal() { const m=document.getElementById('errorModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
-
-        // --- 1. DATABASE CONNECTION ---
-        async function loadProductsFromDB() {
-            try {
-                const response = await fetch(`${API_URL}/api/products`);
-                if (!response.ok) throw new Error("Server error");
-                allProducts = await response.json(); 
-                renderProducts(allProducts);
-            } catch (error) {
-                console.error('Error loading products:', error);
-                showErrorModal();
-                document.getElementById('productsGrid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400">Could not load products.</div>';
-            }
-        }
-
-        // --- 2. RENDER LOGIC ---
-        function renderProducts(productsToRender) {
-            const grid = document.getElementById('productsGrid');
-            if (!productsToRender || productsToRender.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
-                return;
-            }
-            grid.innerHTML = productsToRender.map(product => `
-                <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
-                    <div class="relative overflow-hidden">
-                        <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105">
-                        ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
-                        <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
-                            <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
-                        </button>
-                    </div>
-                    <div class="p-4">
-                        <p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${product.category}</p>
-                        <h3 class="font-medium text-sm mb-1 line-clamp-1">${product.name}</h3>
-                        <p class="text-xs text-neutral-500 mb-3">${product.weight}</p>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-lg font-semibold">₹${product.price}</span>
-                                <span class="text-sm text-neutral-500 line-through ml-2">₹${product.originalPrice}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // --- 3. FILTER LOGIC ---
-        function filterProducts() {
-            const desktopInput = document.getElementById('searchInputDesktop');
-            const mobileInput = document.getElementById('searchInputMobile');
-            let searchTerm = '';
-            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
-            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
-            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
-            renderProducts(filtered);
-        }
-
-        // --- 4. CART LOGIC ---
-        function loadCart() { const s=localStorage.getItem('nc_cart'); if(s){cart=JSON.parse(s);} updateFloatingWidget(); }
-        function updateFloatingWidget() {
-            const w=document.getElementById('floatingCartWidget');
-            const t=cart.reduce((s,i)=>s+i.quantity,0);
-            if(t>0){
-                const sav=cart.reduce((s,i)=>s+((i.originalPrice-i.price)*i.quantity),0);
-                document.getElementById('widgetCount').textContent=`${t} Item${t>1?'s':''}`;
-                document.getElementById('widgetSavings').textContent=`₹${sav} saved`;
-                document.getElementById('widgetBadge').textContent=t;
-                const l=cart[cart.length-1]; if(l)document.getElementById('widgetImg').src=l.image;
-                const c=document.getElementById('widgetItemsList');
-                c.innerHTML=cart.map(i=>`<div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg"><img src="${i.image}" class="w-10 h-10 rounded object-cover"><div class="flex-1"><p class="text-xs font-medium truncate">${i.name}</p><p class="text-xs text-neutral-500">Qty: ${i.quantity}</p></div><span class="text-xs font-bold">₹${i.price*i.quantity}</span></div>`).join('');
-                w.classList.remove('hidden');
-            }else{w.classList.add('hidden');}
-        }
-        window.toggleWidgetItems = () => { const i=document.getElementById('widgetItems'), a=document.getElementById('widgetArrow'); i.classList.toggle('open'); a.style.transform=i.classList.contains('open')?'rotate(0deg)':'rotate(180deg)'; };
-        window.addToCart = (productId) => { const p=allProducts.find(x=>x.id===productId); if(!p)return; const e=cart.find(x=>x.id===productId); if(e){e.quantity+=1;}else{cart.push({...p,quantity:1});} saveCart(); updateFloatingWidget(); showNotification(`${p.name} added!`); };
-        function saveCart() { localStorage.setItem('nc_cart', JSON.stringify(cart)); }
-        function showNotification(m) { const n=document.createElement('div'); n.className='fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),1500); }
-
-        // --- 5. AUTH LOGIC ---
-        function checkLoginStatus() {
-            const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
-            const heroSection = document.getElementById('heroSection');
-            const userName = localStorage.getItem('nc_userName') || 'User';
-            
-            if (isLoggedIn === 'true') {
-                if (heroSection) heroSection.style.display = 'none';
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('userProfile').classList.remove('hidden');
-                document.getElementById('navUserName').textContent = userName;
-                document.getElementById('dropName').textContent = userName;
-            } else {
-                if (heroSection) heroSection.style.display = 'flex';
-                document.getElementById('loginBtn').classList.remove('hidden');
-                document.getElementById('userProfile').classList.add('hidden');
-            }
-        }
+        function loadProductsFromDB() { fetch(`${API_URL}/api/products`).then(r => r.json()).then(d => { allProducts = d; renderProducts(allProducts); }).catch(e => console.error(e)); }
+        function renderProducts(p) { const g = document.getElementById('productsGrid'); g.innerHTML = p.map(i => `<div class="bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group"><div class="relative overflow-hidden"><img src="${i.image}" class="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500">${i.discount ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${i.discount}% OFF</div>` : ''}</div><div class="p-4"><p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${i.category}</p><h3 class="font-medium text-sm mb-1">${i.name}</h3><p class="text-xs text-neutral-500 mb-3">${i.weight}</p><div class="flex justify-between items-center"><span class="text-lg font-semibold">₹${i.price}</span><button onclick="addToCart(${i.id})" class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:bg-brand-accent"><iconify-icon icon="lucide:plus" width="16"></iconify-icon></button></div></div></div>`).join(''); }
+        function filterProducts() { const d = document.getElementById('searchInputDesktop')?.value || ''; const m = document.getElementById('searchInputMobile')?.value || ''; const s = (d || m).toLowerCase(); renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(s))); }
         
+        // --- Cart ---
+        function loadCart() { const s = localStorage.getItem('nc_cart'); if (s) cart = JSON.parse(s); updateFloatingWidget(); }
+        function updateFloatingWidget() { const t = cart.reduce((s, i) => s + i.quantity, 0); const w = document.getElementById('floatingCartWidget'); if (t > 0) { w.classList.remove('hidden'); document.getElementById('widgetCount').textContent = `${t} Items`; document.getElementById('widgetSavings').textContent = `₹${cart.reduce((s, i) => s + ((i.originalPrice - i.price) * i.quantity), 0)} saved`; document.getElementById('widgetBadge').textContent = t; const l = cart[cart.length - 1]; if (l) document.getElementById('widgetImg').src = l.image; document.getElementById('widgetItemsList').innerHTML = cart.map(i => `<div class="flex items-center gap-3 p-2 bg-brand-black/50 rounded-lg"><img src="${i.image}" class="w-10 h-10 rounded object-cover"><div class="flex-1"><p class="text-xs font-medium truncate">${i.name}</p><p class="text-xs text-neutral-500">Qty: ${i.quantity}</p></div><span class="text-xs font-bold">₹${i.price * i.quantity}</span></div>`).join(''); } else { w.classList.add('hidden'); } }
+        window.toggleWidgetItems = () => { const i = document.getElementById('widgetItems'); i.classList.toggle('open'); };
+        window.addToCart = (id) => { const p = allProducts.find(x => x.id === id); if (!p) return; const e = cart.find(x => x.id === id); if (e) e.quantity += 1; else cart.push({ ...p, quantity: 1 }); localStorage.setItem('nc_cart', JSON.stringify(cart)); updateFloatingWidget(); showNotification("Added!"); };
+        function showNotification(m) { const n = document.createElement('div'); n.className = 'fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 bg-white text-black rounded-full font-medium text-sm z-50 shadow-lg'; n.textContent = m; document.body.appendChild(n); setTimeout(() => n.remove(), 1500); }
+
+        // --- Auth ---
+        function checkLoginStatus() { const i = localStorage.getItem('nc_isLoggedIn'); if (i === 'true') { document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('userProfile').classList.remove('hidden'); document.getElementById('navUserName').textContent = localStorage.getItem('nc_userName') || 'User'; document.getElementById('dropName').textContent = localStorage.getItem('nc_userName') || 'User'; } else { document.getElementById('loginBtn').classList.remove('hidden'); document.getElementById('userProfile').classList.add('hidden'); } }
         function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('open'); }
         function logoutUser() { localStorage.clear(); location.reload(); }
 
-        // --- 6. CURSOR LOGIC ---
-        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove',e=>{d.style.left=e.clientX-4+'px';d.style.top=e.clientY-4+'px';r.style.left=e.clientX-20+'px';r.style.top=e.clientY-20+'px';}); }
+        // --- Location Logic (Updated) ---
+        function loadSavedLocation() { const t = localStorage.getItem('nc_location_text'); if (t) { document.getElementById('navLocationText').textContent = t; } const ok = localStorage.getItem('nc_location_ok'); if (ok === 'false') { showNotServiceableOverlay(); } else if (ok !== 'true') { checkAutoLocation(); } }
+        async function checkAutoLocation() { if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => checkServiceable(p.coords.latitude, p.coords.longitude, "Current Location"), e => {}); }
+        async function checkServiceable(lat, lng, text) { try { const r = await fetch(`${API_URL}/api/check-location`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userLat: lat, userLng: lng }) }); const d = await r.json(); if (d.serviceable) { localStorage.setItem('nc_location_ok', 'true'); localStorage.setItem('nc_location_lat', lat); localStorage.setItem('nc_location_lng', lng); localStorage.setItem('nc_location_text', text); document.getElementById('navLocationText').textContent = text; } else { localStorage.setItem('nc_location_ok', 'false'); showNotServiceableOverlay(); } } catch (e) {} }
 
-        // --- 7. LOCATION LOGIC ---
-        function loadSavedLocation() {
-            const savedText = localStorage.getItem('nc_location_text');
-            const isOk = localStorage.getItem('nc_location_ok');
-
-            if (savedText) {
-                document.getElementById('currentLocationText').textContent = savedText;
-            } 
-
-            if(isOk === 'false') {
-                showNotServiceableOverlay();
-            } else if (isOk === 'true') {
-                // All good
-            } else {
-                checkAutoLocation();
-            }
-        }
-
-        async function checkAutoLocation() {
-             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        await checkServiceable(lat, lng, "Current Location");
-                    },
-                    (error) => {
-                        console.log("Auto location denied");
-                        document.getElementById('currentLocationText').textContent = "Select Location";
-                    }
-                );
-            }
-        }
-
-        async function checkServiceable(lat, lng, text) {
-            try {
-                const res = await fetch(`${API_URL}/api/check-location`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userLat: lat, userLng: lng })
-                });
-                const data = await res.json();
-                
-                if (data.serviceable) {
-                    localStorage.setItem('nc_location_ok', 'true');
-                    localStorage.setItem('nc_location_lat', lat);
-                    localStorage.setItem('nc_location_lng', lng);
-                    localStorage.setItem('nc_location_text', text);
-                    document.getElementById('currentLocationText').textContent = text;
-                } else {
-                    localStorage.setItem('nc_location_ok', 'false');
-                    localStorage.setItem('nc_location_text', text);
-                    showNotServiceableOverlay();
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        function openLocationModal() {
-            const modal = document.getElementById('locationModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            loadSavedAddresses(); // Load list
-            
-            setTimeout(() => {
-                if (!locationMap) {
-                    initLocationMap();
-                } else {
-                    locationMap.invalidateSize();
-                }
-            }, 100);
-        }
-
-        function closeLocationModal() {
-            const modal = document.getElementById('locationModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-              function initLocationMap() {
+        function openLocationModal() { document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex'); setTimeout(() => { if (!locationMap) initLocationMap(); else locationMap.invalidateSize(); }, 100); }
+        function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
+        
+        function initLocationMap() {
             const savedLat = parseFloat(localStorage.getItem('nc_location_lat')) || 20.5937;
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
-            locationMap = L.map('locationMap').setView([savedLat, savedLng], 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(locationMap);
+            locationMap = L.map('locationMap', { center: [savedLat, savedLng], zoom: 13, zoomControl: false });
+            // Use CartoDB Dark Matter (Reliable & Dark Theme)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '©CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(locationMap);
             
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
+            tempSelectedLat = savedLat; tempSelectedLng = savedLng;
 
-            // FIX: If we have a saved location (from auto-detect), update the variables automatically
-            if (localStorage.getItem('nc_location_lat')) {
-                tempSelectedLat = savedLat;
-                tempSelectedLng = savedLng;
-                
-                // Try to get the name for the initial marker
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${savedLat}&lon=${savedLng}`)
-                .then(res => res.json())
-                .then(data => {
-                    const name = data.display_name.split(',').slice(0, 3).join(', ');
-                    document.getElementById('selectedAreaText').textContent = name;
-                    tempSelectedArea = name;
-                }).catch(e => console.log("Initial reverse geocode failed"));
-            }
+            locationMap.on('click', async (e) => { locationMarker.setLatLng(e.latlng); tempSelectedLat = e.latlng.lat; tempSelectedLng = e.latlng.lng; try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0, 3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; } catch (e) {} });
+        }
 
-            locationMap.on('click', async (e) => {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
-                locationMarker.setLatLng(e.latlng);
-                tempSelectedLat = lat;
-                tempSelectedLng = lng;
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-                    const data = await res.json();
-                    const name = data.display_name.split(',').slice(0, 3).join(', ');
-                    document.getElementById('selectedAreaText').textContent = name;
-                    tempSelectedArea = name;
-                } catch (err) { document.getElementById('selectedAreaText').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
-            });
-        } 
+        function setLabel(l) { currentLabel = l; document.querySelectorAll('.label-btn').forEach(b => b.classList.remove('bg-brand-accent', 'text-black', 'border-brand-accent')); document.getElementById('label' + l).classList.add('bg-brand-accent', 'text-black', 'border-brand-accent'); }
         
-        async function searchLocation() {
-            const query = document.getElementById('locationSearchInput').value;
-            if(query.length < 3) return;
-
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${query}&limit=5`);
-                const data = await res.json();
-                const resultsDiv = document.getElementById('searchResults');
-                resultsDiv.classList.remove('hidden');
-                resultsDiv.innerHTML = data.map(r => `
-                    <div onclick="selectSearchResult(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')" class="p-2 hover:bg-brand-accent/10 cursor-pointer rounded-lg text-xs border-b border-white/5">
-                        <p class="font-medium truncate">${r.display_name.split(',')[0]}</p>
-                        <p class="text-neutral-500 truncate">${r.display_name}</p>
-                    </div>
-                `).join('');
-            } catch(e) {
-                console.error(e);
-            }
-        }
-
-        function selectSearchResult(lat, lng, name) {
-            const shortName = name.split(',').slice(0, 2).join(', ');
-            document.getElementById('selectedAddressText').textContent = shortName;
+        async function saveAndConfirmAddress() {
+            const house = document.getElementById('inputHouse').value;
+            const building = document.getElementById('inputBuilding').value;
             
-            if(locationMap && locationMarker) {
-                locationMap.setView([lat, lng], 15);
-                locationMarker.setLatLng([lat, lng]);
+            // NUCLEAR FIX: Force Get Center if variables are null
+            if (locationMap) {
+                if(tempSelectedLat === null) tempSelectedLat = locationMap.getCenter().lat;
+                if(tempSelectedLng === null) tempSelectedLng = locationMap.getCenter().lng;
             }
-            tempSelectedLat = lat;
-            tempSelectedLng = lng;
+
+            if (!house) { alert("Enter House/Flat No."); return; }
             
-            document.getElementById('searchResults').classList.add('hidden');
-            document.getElementById('locationSearchInput').value = '';
-            document.getElementById('saveAddressUI').classList.remove('hidden');
-        }
-
-        async function confirmLocation() {
-            if(!tempSelectedLat || !tempSelectedLng) {
-                alert("Please select a location on the map or search for an address.");
-                return;
-            }
-
             try {
-                const res = await fetch(`${API_URL}/api/check-location`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userLat: tempSelectedLat, userLng: tempSelectedLng })
-                });
-                const data = await res.json();
-
-                const text = document.getElementById('selectedAddressText').textContent;
-                localStorage.setItem('nc_location_lat', tempSelectedLat);
-                localStorage.setItem('nc_location_lng', tempSelectedLng);
-                localStorage.setItem('nc_location_text', text);
-                
-                if (data.serviceable) {
-                    localStorage.setItem('nc_location_ok', 'true');
-                    document.getElementById('currentLocationText').textContent = text;
-                    closeLocationModal();
-                    showNotification("Location updated!");
-                    
-                    const overlay = document.getElementById('notServiceableOverlay');
-                    if(overlay) overlay.remove();
-                } else {
-                    localStorage.setItem('nc_location_ok', 'false');
-                    closeLocationModal();
-                    showNotServiceableOverlay();
-                }
-            } catch(e) {
-                alert("Error checking location.");
-            }
+                const r = await fetch(`${API_URL}/api/check-location`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userLat: tempSelectedLat, userLng: tempSelectedLng }) }); const d = await r.json();
+                const displayText = `${house}, ${tempSelectedArea || 'Selected Location'}`;
+                localStorage.setItem('nc_location_lat', tempSelectedLat); localStorage.setItem('nc_location_lng', tempSelectedLng); localStorage.setItem('nc_location_text', displayText);
+                const addressObj = { label: currentLabel, houseNo: house, building: building, area: tempSelectedArea };
+                localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
+                if (d.serviceable) { localStorage.setItem('nc_location_ok', 'true'); document.getElementById('navLocationText').textContent = displayText; closeLocationModal(); showNotification("Address Saved!"); } else { localStorage.setItem('nc_location_ok', 'false'); closeLocationModal(); showNotServiceableOverlay(); }
+            } catch (e) { alert("Error"); }
         }
 
-        // --- 8. SAVED ADDRESSES LOGIC (NEW) ---
-        async function loadSavedAddresses() {
-            const phone = localStorage.getItem('nc_userPhone');
-            if (!phone) return;
+        function showNotServiceableOverlay() { const o = document.createElement('div'); o.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black'; o.innerHTML = `<div class="text-center max-w-sm"><h2 class="text-2xl font-bold mb-2">Not Available</h2><p class="text-neutral-400 text-sm mb-6">We are not available in your location yet.</p><button onclick="this.parentElement.parentElement.remove(); openLocationModal();" class="w-full bg-white/5 border border-white/10 text-white font-semibold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Change Location</button></div>`; document.body.appendChild(o); }
 
-            try {
-                const res = await fetch(`${API_URL}/api/addresses/${phone}`);
-                const addresses = await res.json();
-                
-                const container = document.getElementById('savedAddressesContainer');
-                const list = document.getElementById('savedAddressesList');
-
-                if(addresses.length > 0) {
-                    container.classList.remove('hidden');
-                    list.innerHTML = addresses.map(a => `
-                        <div onclick="useSavedAddress(${a.lat}, ${a.lng}, '${a.address.replace(/'/g, "\\'")}')" class="flex items-center justify-between p-3 bg-brand-black/50 rounded-lg cursor-pointer hover:bg-brand-accent/5 border border-white/5 hover:border-brand-accent/30 transition-all">
-                            <div class="flex items-center gap-2">
-                                <iconify-icon icon="lucide:bookmark" width="14" class="text-brand-accent"></iconify-icon>
-                                <div>
-                                    <p class="text-xs font-medium">${a.label}</p>
-                                    <p class="text-[10px] text-neutral-500 truncate max-w-[200px]">${a.address}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.classList.add('hidden');
-                }
-            } catch(e) {
-                console.error("Error loading addresses", e);
-            }
-        }
-
-        function useSavedAddress(lat, lng, address) {
-            tempSelectedLat = lat;
-            tempSelectedLng = lng;
-            document.getElementById('selectedAddressText').textContent = address;
-            
-            if(locationMap && locationMarker) {
-                locationMap.setView([lat, lng], 15);
-                locationMarker.setLatLng([lat, lng]);
-            }
-            // Hide save UI because it's already saved
-            document.getElementById('saveAddressUI').classList.add('hidden');
-        }
-
-        async function saveCurrentAddress() {
-            const label = document.getElementById('addressLabelInput').value;
-            const address = document.getElementById('selectedAddressText').textContent;
-            const phone = localStorage.getItem('nc_userPhone');
-
-            if(!label) { alert("Enter a label (e.g. Home)"); return; }
-            if(!phone) { alert("Please login to save address"); return; }
-
-            try {
-                await fetch(`${API_URL}/api/addresses`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: phone,
-                        label: label,
-                        address: address,
-                        lat: tempSelectedLat,
-                        lng: tempSelectedLng
-                    })
-                });
-                showNotification("Address Saved!");
-                document.getElementById('addressLabelInput').value = '';
-                document.getElementById('saveAddressUI').classList.add('hidden');
-                loadSavedAddresses(); // Refresh list
-            } catch(e) {
-                alert("Error saving address");
-            }
-        }
-
-        function showNotServiceableOverlay() {
-            const existing = document.getElementById('notServiceableOverlay');
-            if(existing) existing.remove();
-
-            const overlay = document.createElement('div');
-            overlay.id = 'notServiceableOverlay';
-            overlay.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black';
-            overlay.innerHTML = `
-                <div class="text-center max-w-sm">
-                    <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
-                        <iconify-icon icon="lucide:map-pin-off" width="40" class="text-red-500"></iconify-icon>
-                    </div>
-                    <h2 class="text-2xl font-bold mb-2 text-white">Not Available</h2>
-                    <p class="text-neutral-400 text-sm mb-6">We are not available in your location yet. We will be there soon!</p>
-                    <button onclick="changeLocation()" class="w-full bg-white/5 border border-white/10 text-white font-semibold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Change Location</button>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-        }
-
-        function changeLocation() {
-            const overlay = document.getElementById('notServiceableOverlay');
-            if(overlay) overlay.remove();
-            openLocationModal();
-        }
+        function setupCursor() { const d = document.getElementById('cursor-dot'), r = document.getElementById('cursor-ring'); document.addEventListener('mousemove', e => { d.style.left = e.clientX - 4 + 'px'; d.style.top = e.clientY - 4 + 'px'; r.style.left = e.clientX - 20 + 'px'; r.style.top = e.clientY - 20 + 'px'; }); }
     </script>
 </body>
 </html>
