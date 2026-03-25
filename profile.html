@@ -57,14 +57,22 @@
         document.addEventListener('DOMContentLoaded', () => { checkAuth(); setupCursor(); });
         function checkAuth() { if(localStorage.getItem('nc_isLoggedIn')!=='true') location.href='login.html'; document.getElementById('userName').textContent = localStorage.getItem('nc_userName'); document.getElementById('userPhone').textContent = localStorage.getItem('nc_userPhone'); loadOrders(); loadAddresses(); }
         async function loadOrders() { const r = await fetch(`${API_URL}/api/orders/user/${localStorage.getItem('nc_userPhone')}`); const d = await r.json(); document.getElementById('orderHistoryList').innerHTML = d.length ? d.map(o => `<div class="p-3 bg-black/30 rounded-lg text-xs"><div class="flex justify-between"><span class="font-mono text-neutral-500">${o.orderId}</span><span class="text-brand-accent capitalize">${o.status}</span></div><p class="my-1">${o.items.map(i=>i.name).join(', ')}</p><div class="flex justify-between border-t border-white/5 pt-1 mt-1"><span class="text-neutral-500">${new Date(o.createdAt).toLocaleDateString()}</span><span>₹${o.totalAmount}</span></div></div>`).join('') : '<p class="text-neutral-500 text-sm text-center">No orders</p>'; }
-        async function loadAddresses() { const r = await fetch(`${API_URL}/api/addresses/${localStorage.getItem('nc_userPhone')}`); const d = await r.json(); document.getElementById('addressList').innerHTML = d.length ? d.map(a => `<div class="p-10px; }
+        async function loadAddresses() { const r = await fetch(`${API_URL}/api/addresses/${localStorage.getItem('nc_userPhone')}`); const d = await r.json(); document.getElementById('addressList').innerHTML = d.length ? d.map(a => `<div class="p-3 bg-black/30 rounded-lg group relative"><div class="flex justify-between"><p class="font-medium text-sm">${a.label} - ${a.houseNo}</p><div class="hidden group-hover:flex gap-2"><button onclick="editAddr('${a._id}','${a.label}','${a.houseNo}','${a.building}','${a.area}',${a.lat},${a.lng})" class="text-neutral-400 hover:text-white">Edit</button><button onclick="delAddr('${a._id}')" class="text-red-400">Del</button></div></div><p class="text-xs text-neutral-500">${a.area}</p></div>`).join('') : '<p class="text-neutral-500 text-sm text-center">No addresses</p>'; }
+        async function delAddr(id) { if(confirm("Delete?")){ await fetch(`${API_URL}/api/addresses/${id}`,{method:'DELETE'}); loadAddresses(); } }
+        function editAddr(id,l,h,b,a,lat,lng) { editId=id; document.getElementById('inputHouse').value=h; document.getElementById('inputBuilding').value=b; document.getElementById('selectedAreaText').textContent=a; tempSelectedArea=a; tempSelectedLat=lat; tempSelectedLng=lng; setLabel(l); openLocationModal(); }
+        
+        // Map (Standard OSM)
+        function openLocationModal() { if(!editId){ editId=null; document.getElementById('inputHouse').value=''; document.getElementById('inputBuilding').value=''; document.getElementById('selectedAreaText').textContent='Move map'; tempSelectedArea=''; tempSelectedLat=tempSelectedLng=null; } document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex'); setTimeout(()=>{ if(!locationMap) initMap(); else locationMap.invalidateSize(); }, 100); }
+        function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
         function initMap() { 
             const lat = parseFloat(localStorage.getItem('nc_location_lat'))||20.59; 
             const lng = parseFloat(localStorage.getItem('nc_location_lng'))||78.96; 
             locationMap = L.map('locationMap', {center:[lat,lng], zoom:13, zoomControl:false}); 
             
-            // --- REPLACED WITH OSM LIGHT MAP (CartoDB Positron) ---
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {subdomains:'abcd'}).addTo(locationMap); 
+            // --- STANDARD OSM TILES (No CartoDB) ---
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(locationMap);
             
             locationMarker = L.marker([lat,lng]).addTo(locationMap); 
             tempSelectedLat=lat; tempSelectedLng=lng; 
@@ -79,7 +87,6 @@
         function selectSearch(lat,lng,name) { document.getElementById('selectedAreaText').textContent = name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; locationMap.setView([lat,lng],15); locationMarker.setLatLng([lat,lng]); tempSelectedLat=lat; tempSelectedLng=lng; document.getElementById('searchResults').classList.add('hidden'); }
         function setLabel(l) { currentLabel=l; document.querySelectorAll('.label-btn').forEach(b=>b.classList.remove('bg-brand-accent','text-black')); document.getElementById('label'+l).classList.add('bg-brand-accent','text-black'); }
         async function saveAddress() {
-            // NUCLEAR FIX
             if(locationMap){ if(tempSelectedLat===null) tempSelectedLat = locationMap.getCenter().lat; if(tempSelectedLng===null) tempSelectedLng = locationMap.getCenter().lng; }
             if(!document.getElementById('inputHouse').value || !tempSelectedLat) return alert("Fill details");
             const body = { phone:localStorage.getItem('nc_userPhone'), label:currentLabel, houseNo:document.getElementById('inputHouse').value, building:document.getElementById('inputBuilding').value, area:tempSelectedArea, lat:tempSelectedLat, lng:tempSelectedLng };
