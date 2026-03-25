@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-     
+    
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -97,21 +97,26 @@
 
                 <!-- Center Group: Location Btn + Search -->
                 <div class="flex-1 flex items-center gap-3">
+                    <!-- Location Button (Long) -->
                     <button onclick="openLocationModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors flex-shrink-0">
                         <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
                         <span id="navLocationText" class="text-sm font-medium truncate max-w-[100px] lg:max-w-[200px]">Select</span>
                         <iconify-icon icon="lucide:chevron-down" width="14"></iconify-icon>
                     </button>
+
+                    <!-- Search Input -->
                     <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="hidden md:block w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
 
                 <!-- Right Side -->
                 <div class="flex items-center gap-3 pl-4">
                     <button onclick="openLocationModal()" class="md:hidden p-2 bg-white/5 border border-white/10 rounded-full"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon></button>
+
                     <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:user" width="18"></iconify-icon>
                         <span class="hidden sm:inline">Login</span>
                     </a>
+                    
                     <div id="userProfile" class="hidden relative">
                         <button onclick="toggleProfileDropdown()" class="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors">
                             <iconify-icon icon="lucide:user-check" width="18" class="text-brand-accent"></iconify-icon>
@@ -128,6 +133,8 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Mobile Search -->
             <div class="md:hidden pb-4 flex gap-2">
                 <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="flex-1 bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
             </div>
@@ -142,24 +149,41 @@
                 <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto">
+                <!-- Search -->
                 <div class="p-4 bg-brand-black/50 relative z-20">
                     <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none">
                     <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden absolute left-4 right-4 bg-brand-gray rounded-lg p-2 border border-white/10"></div>
                 </div>
+                
+                <!-- Map -->
                 <div id="locationMap" class="w-full flex-shrink-0"></div>
+
+                <!-- Saved Addresses -->
                 <div id="savedAddressesContainer" class="p-4 border-b border-white/5 hidden">
                     <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Saved Addresses</h4>
                     <div id="savedAddressesList" class="space-y-2"></div>
                 </div>
+
+                <!-- FULL ADDRESS FORM -->
                 <div class="p-6 space-y-4">
                     <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
+                    
+                    <!-- Labels -->
                     <div class="grid grid-cols-3 gap-3">
                          <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
                          <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
                          <button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button>
                     </div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label><input type="text" id="inputHouse" placeholder="e.g. 404, A Wing" class="address-input"></div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">Building / Society Name</label><input type="text" id="inputBuilding" placeholder="e.g. Sunflower Apartments" class="address-input"></div>
+
+                    <!-- Inputs -->
+                    <div>
+                        <label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label>
+                        <input type="text" id="inputHouse" placeholder="e.g. 404, A Wing" class="address-input">
+                    </div>
+                    <div>
+                        <label class="text-xs text-neutral-500 block mb-1">Building / Society Name</label>
+                        <input type="text" id="inputBuilding" placeholder="e.g. Sunflower Apartments" class="address-input">
+                    </div>
                 </div>
             </div>
             <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0">
@@ -168,7 +192,7 @@
         </div>
     </div>
 
-    <!-- HERO SECTION -->
+    <!-- HERO SECTION (Adjusted Padding) -->
     <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-28 md:pt-20">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
@@ -455,9 +479,11 @@
 
             locationMap = L.map('locationMap', { zoomControl: false }).setView([savedLat, savedLng], 13);
             
-            // --- STANDARD OSM TILES (No CartoDB) ---
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            // --- REPLACED WITH OSM LIGHT MAP (CartoDB Positron) ---
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+                attribution: '©OpenStreetMap, ©CartoDB', 
+                subdomains: 'abcd', 
+                maxZoom: 19 
             }).addTo(locationMap);
             
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
@@ -527,126 +553,111 @@
             document.getElementById('label'+label).classList.add('bg-brand-accent', 'text-black', 'border-brand-accent'); 
         }
 
-        async function loadProductsFromDB` (Too large to fit in context) ... [Truncated for brevity in thought process, but full file generated below] ...`initLocationMap` reverts to `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`.
-
-I will now generate the full content for the other files.
-
-### 2. `cart.html`
-
-Updated `initMap` to use standard OSM tiles.
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Cart - Night Cart</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script> tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5', yellow: '#FFD700', green: '#22C55E', accent: '#8CFF00' } } } } } </script>
-    <style>
-        * { cursor: none; } #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; } #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.8); position: fixed; pointer-events: none; z-index: 99998; border-radius: 50%; transition: width 0.15s; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0a; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::selection { background: white; color: black; }
-        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } } @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100px) rotate(720deg); opacity: 0; } }
-        .popup-animate { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } .confetti { position: absolute; width: 10px; height: 10px; animation: confetti 1s ease-out forwards; }
-        .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; }
-        #locationMap { height: 200px; width: 100%; background: #fff; z-index: 10; border-radius: 12px; }
-        .leaflet-control-zoom { display: none; }
-    </style>
-</head>
-<body class="bg-brand-black text-white font-sans antialiased">
-    <div id="cursor-dot"></div><div id="cursor-ring"></div>
-    <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden"><div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10"><div class="p-10"><div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20"><iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon></div><h2 class="text-3xl font-bold mb-2">Order Placed!</h2><p class="text-neutral-400 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono"></span></p><button onclick="location.href='index.html'" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Continue Shopping</button></div></div></div>
-    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><button onclick="this.closest('.fixed').classList.add('hidden')" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
-
-    <!-- Map Modal -->
-    <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
-        <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
-            <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0"><h3 class="font-semibold text-lg">Add New Address</h3><button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button></div>
-            <div class="flex-1 overflow-y-auto">
-                <div class="p-4 bg-brand-black/50 relative z-20"><input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none"><div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden absolute left-4 right-4 bg-brand-gray rounded-lg p-2 border border-white/10"></div></div>
-                <div id="locationMap" class="w-full flex-shrink-0"></div>
-                <div class="p-6 space-y-4">
-                    <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Move map to select</span></div>
-                    <div class="grid grid-cols-3 gap-3"><button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button><button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button><button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button></div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label><input type="text" id="inputHouse" placeholder="House/Flat No." class="address-input"></div>
-                    <div><label class="text-xs text-neutral-500 block mb-1">Sector / Building</label><input type="text" id="inputBuilding" placeholder="Building Name" class="address-input"></div>
-                </div>
-            </div>
-            <div class="p-4 border-t border-white/5 bg-brand-dark flex-shrink-0"><button onclick="saveNewAddress()" class="w-full bg-brand-accent text-black font-semibold py-3 rounded-xl hover:bg-brand-yellow transition-colors text-sm">Save Address</button></div>
-        </div>
-    </div>
-
-    <!-- Nav -->
-    <nav class="fixed top-0 left-0 right-0 z-30 bg-brand-black/90 backdrop-blur-xl border-b border-white/5"><div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between"><a href="index.html" class="font-bold text-lg">Night Cart</a><div class="flex items-center gap-3"><a id="loginBtn" href="login.html" class="text-sm">Login</a><div id="userProfile" class="hidden relative"><button onclick="document.getElementById('profileDropdown').classList.toggle('hidden')" class="text-sm font-medium text-brand-accent">User</button><div id="profileDropdown" class="hidden absolute right-0 top-full mt-2 w-32 bg-brand-gray border border-white/10 rounded-lg p-2"><button onclick="localStorage.clear();location.reload()" class="text-red-500 text-xs w-full text-left p-2">Logout</button></div></div></div></div></nav>
-
-    <!-- Main -->
-    <main class="pt-28 pb-40 px-6 max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">My Cart</h1>
-        <div class="bg-brand-gray rounded-xl p-4 mb-4 border border-white/5"><h3 class="font-semibold mb-3">Deliver To</h3><div id="addressListContainer" class="space-y-2"></div><button onclick="openLocationModal()" class="w-full mt-3 text-xs text-brand-accent border border-dashed border-brand-accent/30 py-2 rounded-lg hover:bg-brand-accent/5">+ Add New</button></div>
-        <div id="cartItemsContainer" class="space-y-3 mb-4"></div>
-        <div id="billDetailsCard" class="bg-brand-gray rounded-xl p-4 border border-white/5"><h3 class="text-xs font-medium text-neutral-400 uppercase mb-3">Bill Details</h3><div class="space-y-2 text-sm"><div class="flex justify-between"><span>Item Total</span><span id="subtotal">₹0</span></div><div class="flex justify-between"><span>Delivery</span><span id="deliveryFee">₹0</span></div><div class="flex justify-between text-green-500"><span>Discount</span><span id="discount">- ₹0</span></div><div class="border-t border-white/10 pt-2 flex justify-between font-bold"><span>To Pay</span><span id="totalAmount">₹0</span></div></div></div>
-    </main>
-
-    <!-- Bottom Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-brand-dark/95 backdrop-blur-xl border-t border-white/5 p-4 z-40"><div class="max-w-2xl mx-auto flex justify-between items-center"><div><p class="text-xs text-neutral-500">Total</p><p class="text-xl font-bold" id="stickyTotal">₹0</p></div><button onclick="placeOrder()" class="bg-brand-accent text-black font-bold py-3 px-8 rounded-full hover:bg-brand-yellow transition-colors">Place Order</button></div></div>
-
-    <script>
-        const API_URL = 'https://night-cart.onrender.com';
-        let cart = [], locationMap, locationMarker, tempSelectedLat, tempSelectedLng, tempSelectedArea, currentLabel="Home";
-        document.addEventListener('DOMContentLoaded', () => { loadCart(); checkAuth(); loadAddresses(); setupCursor(); });
-        
-        // Helpers
-        function showNotification(m) { const n = document.createElement('div'); n.className = 'fixed top-20 left-1/2 -translate-x-1/2 px-4 py-2 bg-white text-black rounded-full text-sm z-50'; n.textContent = m; document.body.appendChild(n); setTimeout(() => n.remove(), 2000); }
-        function loadCart() { const s = localStorage.getItem('nc_cart'); if (s) cart = JSON.parse(s); renderCart(); }
-        function renderCart() { const c = document.getElementById('cartItemsContainer'); const e = document.getElementById('billDetailsCard'); if(cart.length===0){ c.innerHTML = '<p class="text-center text-neutral-500 py-8">Empty</p>'; e.classList.add('hidden'); return; } e.classList.remove('hidden'); c.innerHTML = cart.map(i => `<div class="bg-brand-gray rounded-xl p-3 flex gap-3 items-center border border-white/5"><img src="${i.image}" class="w-16 h-16 rounded-lg object-cover"><div class="flex-1"><p class="text-sm font-medium">${i.name}</p><p class="text-xs text-neutral-500">${i.weight}</p></div><div class="flex items-center gap-2"><button onclick="updateQty(${i.id},-1)" class="w-6 h-6 rounded bg-white/10 text-xs">-</button><span class="text-xs font-bold">${i.quantity}</span><button onclick="updateQty(${i.id},1)" class="w-6 h-6 rounded bg-white/10 text-xs">+</button></div><p class="text-sm font-bold w-16 text-right">₹${i.price*i.quantity}</p></div>`).join(''); updateTotals(); }
-        function updateTotals() { const sub = cart.reduce((s,i) => s+(i.price*i.quantity),0); const del = sub>0&&sub<99?30:0; const dis = sub>500?Math.round(sub*0.05):0; document.getElementById('subtotal').textContent = `₹${sub}`; document.getElementById('deliveryFee').textContent = del?`₹${del}`:'FREE'; document.getElementById('discount').textContent = `-₹${dis}`; document.getElementById('totalAmount').textContent = `₹${sub+del-dis}`; document.getElementById('stickyTotal').textContent = `₹${sub+del-dis}`; }
-        function updateQty(id, c) { const i = cart.find(x=>x.id===id); if(i){ i.quantity+=c; if(i.quantity<=0) cart = cart.filter(x=>x.id!==id); localStorage.setItem('nc_cart', JSON.stringify(cart)); renderCart(); } }
-        async function placeOrder() { if(cart.length===0) return; if(!localStorage.getItem('nc_isLoggedIn')) return alert("Login first"); const addr = localStorage.getItem('nc_selected_address'); if(!addr) return alert("Select address"); const a = JSON.parse(addr); const body = { userName: localStorage.getItem('nc_userName'), userPhone: localStorage.getItem('nc_userPhone'), userAddress: a, items: cart, totalAmount: cart.reduce((s,i)=>s+(i.price*i.quantity),0) }; const r = await fetch(`${API_URL}/api/orders`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }); const d = await r.json(); if(d.success){ localStorage.removeItem('nc_cart'); document.getElementById('modalOrderId').textContent=d.orderId; document.getElementById('orderSuccessModal').classList.remove('hidden'); document.getElementById('orderSuccessModal').classList.add('flex'); } }
-
-        // Map Logic (Standard OSM)
-        function openLocationModal() { document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex'); setTimeout(()=>{ if(!locationMap) initMap(); else locationMap.invalidateSize(); }, 100); }
-        function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
-        function initMap() { 
-            const lat = parseFloat(localStorage.getItem('nc_location_lat'))||20.59; 
-            const lng = parseFloat(localStorage.getItem('nc_location_lng'))||78.96; 
-            locationMap = L.map('locationMap', {center:[lat,lng], zoom:13, zoomControl:false}); 
-            
-            // --- STANDARD OSM TILES (No CartoDB) ---
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(locationMap);
-            
-            locationMarker = L.marker([lat,lng]).addTo(locationMap); 
-            tempSelectedLat=lat; tempSelectedLng=lng; 
-            
-            locationMap.on('click', async e => { 
-                locationMarker.setLatLng(e.latlng); 
-                tempSelectedLat=e.latlng.lat; tempSelectedLng=e.latlng.lng; 
-                try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; }catch(e){} 
-            }); 
-        }
-        async function searchLocation() { const q = document.getElementById('locationSearchInput').value; if(q.length<3) return; const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${q}&limit=5`); const d = await r.json(); document.getElementById('searchResults').classList.remove('hidden'); document.getElementById('searchResults').innerHTML = d.map(r=>`<div onclick="selectSearch(${r.lat},${r.lon},'${r.display_name}')" class="p-2 text-xs hover:bg-white/5 cursor-pointer">${r.display_name}</div>`).join(''); }
-        function selectSearch(lat,lng,name) { document.getElementById('selectedAreaText').textContent = name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; locationMap.setView([lat,lng],15); locationMarker.setLatLng([lat,lng]); tempSelectedLat=lat; tempSelectedLng=lng; document.getElementById('searchResults').classList.add('hidden'); }
-        function setLabel(l) { currentLabel=l; document.querySelectorAll('.label-btn').forEach(b=>b.classList.remove('bg-brand-accent','text-black')); document.getElementById('label'+l).classList.add('bg-brand-accent','text-black'); }
-        async function saveNewAddress() {
-            const house = document.getElementById('inputHouse').value;
-            if(locationMap){ if(tempSelectedLat===null) tempSelectedLat = locationMap.getCenter().lat; if(tempSelectedLng===null) tempSelectedLng = locationMap.getCenter().lng; }
-            if(!house || !tempSelectedLat) return alert("Fill details and select location");
+        async function loadSavedAddresses() { 
             const phone = localStorage.getItem('nc_userPhone');
-            await fetch(`${API_URL}/api/addresses`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ phone, label:currentLabel, houseNo:house, building:document.getElementById('inputBuilding').value, area:tempSelectedArea, lat:tempSelectedLat, lng:tempSelectedLng }) });
-            const addr = { _id:'new', label:currentLabel, houseNo:house, building:document.getElementById('inputBuilding').value, area:tempSelectedArea }; localStorage.setItem('nc_selected_address', JSON.stringify(addr));
-            closeLocationModal(); loadAddresses(); showNotification("Saved");
+            if (!phone) return;
+            try {
+                const res = await fetch(`${API_URL}/api/addresses/${phone}`);
+                const addresses = await res.json();
+                const container = document.getElementById('savedAddressesContainer');
+                const list = document.getElementById('savedAddressesList');
+                if(addresses.length > 0) {
+                    container.classList.remove('hidden');
+                    list.innerHTML = addresses.map(a => `
+                        <div onclick="useSavedAddress('${a._id}', ${a.lat}, ${a.lng}, '${a.area.replace(/'/g, "\\'")}')" class="flex items-center justify-between p-3 bg-brand-black/50 rounded-lg cursor-pointer hover:bg-brand-accent/5 border border-white/5 hover:border-brand-accent/30 transition-all">
+                            <div class="flex items-center gap-2">
+                                <iconify-icon icon="lucide:bookmark" width="14" class="text-brand-accent"></iconify-icon>
+                                <div>
+                                    <p class="text-xs font-medium">${a.label} - ${a.houseNo}</p>
+                                    <p class="text-[10px] text-neutral-500 truncate max-w-[200px]">${a.area}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else { container.classList.add('hidden'); }
+            } catch(e) { console.error("Error loading addresses", e); }
         }
-        async function loadAddresses() { const phone = localStorage.getItem('nc_userPhone'); if(!phone) return; const r = await fetch(`${API_URL}/api/addresses/${phone}`); const d = await r.json(); const s = localStorage.getItem('nc_selected_address'); let selId = s?JSON.parse(s)._id:null; document.getElementById('addressListContainer').innerHTML = d.map(a=>`<div onclick="selectAddr('${a._id}','${a.label}','${a.houseNo}','${a.building}','${a.area}',${a.lat},${a.lng})" class="flex items-center gap-2 p-2 rounded-lg cursor-pointer border ${selId===a._id?'bg-brand-accent/10 border-brand-accent':'bg-black/50 border-white/5'}"><iconify-icon icon="lucide:map-pin" width="14" class="text-brand-accent"></iconify-icon><div class="flex-1"><p class="text-xs font-medium">${a.label} - ${a.houseNo}</p><p class="text-[10px] text-neutral-500">${a.area}</p></div></div>`).join(''); }
-        function selectAddr(id,l,h,b,a,lat,lng) { const addr = {_id:id,label:l,houseNo:h,building:b,area:a}; localStorage.setItem('nc_selected_address',JSON.stringify(addr)); loadAddresses(); showNotification("Selected"); }
 
-        function checkAuth() { if(localStorage.getItem('nc_isLoggedIn')){ document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('userProfile').classList.remove('hidden'); } }
-        function setupCursor() { const d=document.getElementById('cursor-dot'), r=document.getElementById('cursor-ring'); document.addEventListener('mousemove', e => { d.style.left=e.clientX-4+'px'; d.style.top=e.clientY-4+'px'; r.style.left=e.clientX-20+'px'; r.style.top=e.clientY-20+'px'; }); }
+        function useSavedAddress(id, lat, lng, area) {
+            tempSelectedLat = lat;
+            tempSelectedLng = lng;
+            tempSelectedArea = area;
+            document.getElementById('selectedAreaText').textContent = area;
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+        }
+
+        async function saveAndConfirmAddress() {
+            const house = document.getElementById('inputHouse').value; 
+            const building = document.getElementById('inputBuilding').value; 
+            const area = tempSelectedArea;
+            
+            // NUCLEAR FIX
+            if (locationMap) {
+                if(tempSelectedLat === null) tempSelectedLat = locationMap.getCenter().lat;
+                if(tempSelectedLng === null) tempSelectedLng = locationMap.getCenter().lng;
+            }
+
+            if(!house) { alert("Enter House/Flat No."); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/api/check-location`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ userLat: tempSelectedLat, userLng: tempSelectedLng }) 
+                });
+                const data = await res.json();
+                const displayText = `${house}, ${area}`;
+                localStorage.setItem('nc_location_lat', tempSelectedLat); 
+                localStorage.setItem('nc_location_lng', tempSelectedLng); 
+                localStorage.setItem('nc_location_text', displayText);
+                const addressObj = { label: currentLabel, houseNo: house, building: building, area: area };
+                localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
+                
+                if (data.serviceable) {
+                    localStorage.setItem('nc_location_ok', 'true');
+                    document.getElementById('navLocationText').textContent = displayText;
+                    const phone = localStorage.getItem('nc_userPhone');
+                    if(phone) {
+                        await fetch(`${API_URL}/api/addresses`, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ phone, label: currentLabel, houseNo: house, building, landmark: '', area, lat: tempSelectedLat, lng: tempSelectedLng }) 
+                        });
+                    }
+                    closeLocationModal(); showNotification("Address Saved!");
+                    const overlay = document.getElementById('notServiceableOverlay'); if(overlay) overlay.remove();
+                } else {
+                    localStorage.setItem('nc_location_ok', 'false');
+                    closeLocationModal(); showNotServiceableOverlay();
+                }
+            } catch(e) { alert("Error checking location."); }
+        }
+
+        function showNotServiceableOverlay() {
+            const existing = document.getElementById('notServiceableOverlay');
+            if(existing) existing.remove();
+            const overlay = document.createElement('div');
+            overlay.id = 'notServiceableOverlay';
+            overlay.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-brand-black';
+            overlay.innerHTML = `
+                <div class="text-center max-w-sm">
+                    <div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20">
+                        <iconify-icon icon="lucide:map-pin-off" width="40" class="text-red-500"></iconify-icon>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2 text-white">Not Available</h2>
+                    <p class="text-neutral-400 text-sm mb-6">We are not available in your location yet.</p>
+                    <button onclick="changeLocation()" class="w-full bg-white/5 border border-white/10 text-white font-semibold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Change Location</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function changeLocation() {
+            const overlay = document.getElementById('notServiceableOverlay');
+            if(overlay) overlay.remove();
+            openLocationModal();
+        }
     </script>
 </body>
 </html>
