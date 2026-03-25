@@ -74,7 +74,23 @@
         // Map Logic (Fixed)
         function openLocationModal() { document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex'); setTimeout(()=>{ if(!locationMap) initMap(); else locationMap.invalidateSize(); }, 100); }
         function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
-        function initMap() { const lat = parseFloat(localStorage.getItem('nc_location_lat'))||20.59; const lng = parseFloat(localStorage.getItem('nc_location_lng'))||78.96; locationMap = L.map('locationMap', {center:[lat,lng], zoom:13, zoomControl:false}); L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {subdomains:'abcd'}).addTo(locationMap); locationMarker = L.marker([lat,lng]).addTo(locationMap); tempSelectedLat=lat; tempSelectedLng=lng; locationMap.on('click', async e => { locationMarker.setLatLng(e.latlng); tempSelectedLat=e.latlng.lat; tempSelectedLng=e.latlng.lng; try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; }catch(e){} }); }
+        function initMap() { 
+            const lat = parseFloat(localStorage.getItem('nc_location_lat'))||20.59; 
+            const lng = parseFloat(localStorage.getItem('nc_location_lng'))||78.96; 
+            locationMap = L.map('locationMap', {center:[lat,lng], zoom:13, zoomControl:false}); 
+            
+            // --- REPLACED OSM WITH CARTODB ---
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {subdomains:'abcd'}).addTo(locationMap); 
+            
+            locationMarker = L.marker([lat,lng]).addTo(locationMap); 
+            tempSelectedLat=lat; tempSelectedLng=lng; 
+            
+            locationMap.on('click', async e => { 
+                locationMarker.setLatLng(e.latlng); 
+                tempSelectedLat=e.latlng.lat; tempSelectedLng=e.latlng.lng; 
+                try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; }catch(e){} 
+            }); 
+        }
         async function searchLocation() { const q = document.getElementById('locationSearchInput').value; if(q.length<3) return; const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${q}&limit=5`); const d = await r.json(); document.getElementById('searchResults').classList.remove('hidden'); document.getElementById('searchResults').innerHTML = d.map(r=>`<div onclick="selectSearch(${r.lat},${r.lon},'${r.display_name}')" class="p-2 text-xs hover:bg-white/5 cursor-pointer">${r.display_name}</div>`).join(''); }
         function selectSearch(lat,lng,name) { document.getElementById('selectedAreaText').textContent = name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; locationMap.setView([lat,lng],15); locationMarker.setLatLng([lat,lng]); tempSelectedLat=lat; tempSelectedLng=lng; document.getElementById('searchResults').classList.add('hidden'); }
         function setLabel(l) { currentLabel=l; document.querySelectorAll('.label-btn').forEach(b=>b.classList.remove('bg-brand-accent','text-black')); document.getElementById('label'+l).classList.add('bg-brand-accent','text-black'); }
