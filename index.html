@@ -54,8 +54,7 @@
         .widget-items.open { max-height: 300px; opacity: 1; }
 
         /* Leaflet Overrides */
-        #locationMap { height: 200px; width: 100%; background: #000; z-index: 10; }
-        .leaflet-container { background: #000; }
+        #locationMap { height: 200px; width: 100%; background: #fff; z-index: 10; border-radius: 12px; }
         .leaflet-control-zoom { display: none; }
         
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
@@ -111,7 +110,6 @@
 
                 <!-- Right Side -->
                 <div class="flex items-center gap-3 pl-4">
-                    <!-- Mobile Location Button -->
                     <button onclick="openLocationModal()" class="md:hidden p-2 bg-white/5 border border-white/10 rounded-full"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon></button>
 
                     <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
@@ -481,9 +479,9 @@
 
             locationMap = L.map('locationMap', { zoomControl: false }).setView([savedLat, savedLng], 13);
             
-            // --- REPLACED OSM WITH CARTODB ---
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
-                attribution: '©CartoDB', 
+            // --- REPLACED WITH OSM LIGHT MAP (CartoDB Positron) ---
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+                attribution: '©OpenStreetMap, ©CartoDB', 
                 subdomains: 'abcd', 
                 maxZoom: 19 
             }).addTo(locationMap);
@@ -585,7 +583,11 @@
             tempSelectedLng = lng;
             tempSelectedArea = area;
             document.getElementById('selectedAreaText').textContent = area;
-            tempSelectedArea = a.area; }
+            if(locationMap && locationMarker) {
+                locationMap.setView([lat, lng], 15);
+                locationMarker.setLatLng([lat, lng]);
+            }
+        }
 
         async function saveAndConfirmAddress() {
             const house = document.getElementById('inputHouse').value; 
