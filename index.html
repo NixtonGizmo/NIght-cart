@@ -419,7 +419,6 @@
         function loadSavedLocation() {
             const savedText = localStorage.getItem('nc_location_text');
             const isOk = localStorage.getItem('nc_location_ok');
-
             if (savedText) { document.getElementById('navLocationText').textContent = savedText; }
             if(isOk === 'false') { showNotServiceableOverlay(); } 
             else if (isOk === 'true') { /* Good */ } 
@@ -481,12 +480,16 @@
             const savedLng = parseFloat(localStorage.getItem('nc_location_lng')) || 78.9629;
 
             locationMap = L.map('locationMap', { zoomControl: false }).setView([savedLat, savedLng], 13);
-            // Use CartoDB Dark Matter (Reliable + Dark Theme)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '©CartoDB', subdomains: 'abcd', maxZoom: 19 }).addTo(locationMap);
+            
+            // --- REPLACED OSM WITH CARTODB ---
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
+                attribution: '©CartoDB', 
+                subdomains: 'abcd', 
+                maxZoom: 19 
+            }).addTo(locationMap);
             
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
 
-            // FIX: If we have valid coordinates, update vars immediately
             if (localStorage.getItem('nc_location_lat')) {
                 tempSelectedLat = savedLat;
                 tempSelectedLng = savedLng;
@@ -582,18 +585,14 @@
             tempSelectedLng = lng;
             tempSelectedArea = area;
             document.getElementById('selectedAreaText').textContent = area;
-            if(locationMap && locationMarker) {
-                locationMap.setView([lat, lng], 15);
-                locationMarker.setLatLng([lat, lng]);
-            }
-        }
+            tempSelectedArea = a.area; }
 
         async function saveAndConfirmAddress() {
             const house = document.getElementById('inputHouse').value; 
             const building = document.getElementById('inputBuilding').value; 
             const area = tempSelectedArea;
             
-            // NUCLEAR FIX: Force coordinates from map if variables are null
+            // NUCLEAR FIX
             if (locationMap) {
                 if(tempSelectedLat === null) tempSelectedLat = locationMap.getCenter().lat;
                 if(tempSelectedLng === null) tempSelectedLng = locationMap.getCenter().lng;
