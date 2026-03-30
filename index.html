@@ -54,7 +54,7 @@
         .widget-items.open { max-height: 300px; opacity: 1; }
 
         /* Leaflet Overrides */
-        #locationMap { height: 200px; width: 100%; background: #fff; z-index: 10; border-radius: 12px; }
+        #locationMap { height: 200px; width: 100%; background: #e5e5e5; z-index: 10; border-radius: 12px; }
         .leaflet-control-zoom { display: none; }
         
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
@@ -479,11 +479,9 @@
 
             locationMap = L.map('locationMap', { zoomControl: false }).setView([savedLat, savedLng], 13);
             
-            // --- REPLACED WITH OSM LIGHT MAP (CartoDB Positron) ---
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
-                attribution: '©OpenStreetMap, ©CartoDB', 
-                subdomains: 'abcd', 
-                maxZoom: 19 
+            // --- STANDARD OPENSTREETMAP TILES ---
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(locationMap);
             
             locationMarker = L.marker([savedLat, savedLng]).addTo(locationMap);
@@ -594,7 +592,6 @@
             const building = document.getElementById('inputBuilding').value; 
             const area = tempSelectedArea;
             
-            // NUCLEAR FIX
             if (locationMap) {
                 if(tempSelectedLat === null) tempSelectedLat = locationMap.getCenter().lat;
                 if(tempSelectedLng === null) tempSelectedLng = locationMap.getCenter().lng;
