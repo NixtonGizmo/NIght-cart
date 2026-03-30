@@ -28,7 +28,6 @@
         .item-processed { opacity: 0.6; }
         .item-oos { text-decoration: line-through; }
 
-        /* FIX: Explicitly define map height */
         #modalMap { width: 100%; height: 300px; background: #050505; border-radius: 12px; z-index: 10; }
     </style>
 </head>
@@ -100,7 +99,6 @@
                 <button onclick="closeMapModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="20"></iconify-icon></button>
             </div>
             
-            <!-- Map Container -->
             <div id="modalMap"></div>
             
             <div class="p-4 bg-brand-black/50 text-sm">
@@ -224,7 +222,6 @@
             </div>`;
         }
 
-        // --- PICKING LOGIC ---
         function pickingCard(o) {
             return `
             <div class="bg-brand-gray rounded-2xl p-5 border border-brand-accent/30 relative" id="order-container-${o._id}">
@@ -284,29 +281,39 @@
             }
         }
 
-        // --- DELIVERY LOGIC (FIXED) ---
+        // --- DELIVERY LOGIC (ROBUST FIX) ---
         function deliveryCard(o) {
-            // 1. Safe extraction with fallbacks
-            const addr = o.userAddress || {};
+            // 1. Debug: Log the raw order object to see what fields exist
+            console.log("Raw Order Object:", o);
+
+            // 2. Robust Address Finding:
+            // Check common field names where the address might be stored
+            let addr = o.userAddress || o.deliveryAddress || o.address || o.shippingAddress || {};
+            
+            // If addr is still empty, check if lat/lng are at the root level (rare but possible)
+            if (!addr.lat && o.lat) addr.lat = o.lat;
+            if (!addr.lng && o.lng) addr.lng = o.lng;
+
+            console.log("Extracted Address:", addr);
+
             const lat = parseFloat(addr.lat);
             const lng = parseFloat(addr.lng);
             
-            // 2. Check if coordinates are valid numbers
+            // Check if coordinates are valid numbers
             const hasValidCoords = !isNaN(lat) && !isNaN(lng) && (lat !== 0 && lng !== 0);
             
-            // 3. Prepare display text
+            // Prepare display text
             const displayArea = addr.area || 'Area not specified';
             const displayHouse = addr.houseNo || '';
             const displayBuilding = addr.building || '';
             const fullAddress = `${displayHouse} ${displayBuilding}`.trim() || 'Address details missing';
             
-            // 4. Generate Buttons
+            // Generate Buttons
             let mapBtn = '';
             let navBtn = '';
 
             if (hasValidCoords) {
                 const navLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-                // Pass full address to map function, escape quotes
                 const safeAddress = fullAddress.replace(/'/g, "\\'");
                 mapBtn = `<button onclick="openMap(${lat}, ${lng}, '${safeAddress}')" class="text-brand-accent text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-white/5 hover:bg-white/5">
                             <iconify-icon icon="lucide:map-pin" width="12"></iconify-icon> View Map
@@ -378,18 +385,15 @@
             }
         }
 
-        // --- LEAFLET MAP LOGIC (FIXED) ---
+        // --- LEAFLET MAP LOGIC ---
         function openMap(lat, lng, address) {
-            // 1. Update UI Text
             document.getElementById('mapAddressText').textContent = address || 'Unknown Address';
             document.getElementById('mapCoordsText').textContent = `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
             document.getElementById('mapNavBtn').href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
             
-            // 2. Show Modal
             document.getElementById('mapModal').classList.remove('hidden');
             document.getElementById('mapModal').classList.add('flex');
 
-            // 3. Initialize or Update Map
             setTimeout(() => {
                 if (!locationMap) {
                     locationMap = L.map('modalMap').setView([lat, lng], 15);
@@ -401,8 +405,6 @@
                     locationMap.setView([lat, lng], 15);
                     locationMarker.setLatLng([lat, lng]);
                 }
-                
-                // 4. Force map to recalculate size
                 locationMap.invalidateSize();
             }, 100);
         }
