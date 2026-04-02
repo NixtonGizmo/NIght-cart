@@ -269,41 +269,36 @@
     <!-- MAIN CONTENT -->
     <main class="pt-20">
         
-        <!-- HERO BANNER (Updated with provided image & spacing) -->
-        <section class="bg-white py-8 md:py-0">
-            <div class="max-w-7xl mx-auto px-4 md:px-12">
-                <div onclick="location.href='category.html?cat=all'" class="relative rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
-                    <img src="https://z-cdn-media.chatglm.cn/files/7f22b8ca-7907-49f8-9950-5797fabddb42.jpg?auth_key=1875148578-c83eae0f6c76436cbb3267a08fb282e2-0-0c9666ea74acc3aaf4f53c66689b5357" alt="Grocery Banner" class="w-full h-auto object-cover">
-                    <!-- Overlay Content positioned absolutely over image for mobile, or hidden if image has text -->
-                    <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex-col justify-center p-8 md:p-12 hidden md:flex">
-                        <h2 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">Stock up on daily essentials</h2>
-                        <p class="text-white/90 text-lg mb-4 max-w-md drop-shadow">Get farm-fresh goodness & a range of exotic fruits, vegetables, eggs & more</p>
-                        <button class="bg-white text-green-600 font-bold py-3 px-8 rounded-full shadow-xl hover:bg-gray-100 transition-colors w-fit">Shop Now</button>
-                    </div>
+        <!-- HERO BANNER (GitHub Image, No Border, No Button) -->
+        <section class="bg-white py-4 md:py-0">
+            <div class="max-w-7xl mx-auto px-6 md:px-16">
+                <div onclick="location.href='category.html?cat=all'" class="relative overflow-hidden cursor-pointer group">
+                    <!-- Updated to use GitHub Raw URL -->
+                    <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/Frame-1437256605-2-2.jpg" alt="Grocery Banner" class="w-full h-auto object-contain">
                 </div>
             </div>
         </section>
 
-        <!-- 3-COLUMN PROMO (Updated with provided images) -->
-        <section class="py-12 bg-brand-dark">
+        <!-- 3-COLUMN PROMO (GitHub Images, No Buttons, No Borders) -->
+        <section class="py-8 bg-brand-dark">
             <div class="max-w-7xl mx-auto px-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     
-                    <!-- Pharmacy -->
-                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer hover:shadow-xl transition-all" onclick="filterByCategory('pharmacy')">
-                        <img src="https://z-cdn-media.chatglm.cn/files/d756300a-3b92-4f35-b16b-f659995b5fb4.png?auth_key=1875148578-fbdf385c208743c83debcc3d962b8ae-0-a17e7a5d9c4475686bdb16a9622a036c" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <!-- Pharmacy (Updated URL, No Border) -->
+                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('pharmacy')">
+                        <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/pasted_image_1775148382890.png" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105">
                     </div>
 
-                    <!-- Pet Care -->
-                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer hover:shadow-xl transition-all" onclick="filterByCategory('pets')">
-                        <img src="https://z-cdn-media.chatglm.cn/files/b8a240a0-b4fd-4f63-970d-cd79b87c5b30.png?auth_key=1875148578-4b1accf2015f4b54b4bb3b6cd669129d-0-0d258bb24ef08af227f02a2c4ad75ae0" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <!-- Pet Care (Updated URL, No Border) -->
+                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('pets')">
+                        <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/pasted_image_1775148398170.png" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105">
                     </div>
 
-                    <!-- Baby Care (Keeping existing design as no image provided) -->
-                    <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('baby')">
+                    <!-- Baby Care (Kept as CSS fallback since no 3rd image link provided in last prompt, no border) -->
+                    <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('baby')">
                         <div>
                             <h3 class="text-lg font-bold text-white mb-2">No time for a diaper run?</h3>
-                            <button class="mt-2 bg-white text-pink-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
+                            <p class="text-pink-100 text-xs">Essentials for your little ones.</p>
                         </div>
                         <img src="https://picsum.photos/seed/babycare/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
                     </div>
