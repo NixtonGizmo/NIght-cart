@@ -99,6 +99,9 @@
 
             const container = document.getElementById('checkoutAddress');
             
+            // Debug: Log to console to verify data is present
+            console.log("Checkout Data Check:", { text, addressObj, lat, lng });
+            
             // Display formatted address
             let html = '';
             if (addressObj.houseNo) {
@@ -178,15 +181,28 @@
                 userName: userName,
                 items: cart,
                 totalAmount: cart.reduce((sum, i) => sum + (i.price * i.quantity), 0),
-                // THIS IS THE FIX: Explicitly structure the address object
+                
+                // --- THE FIX: MULTIPLE DELIVERY STRATEGIES ---
+                
+                // Strategy 1: Root Level Fields (Most likely to be saved if schema is loose)
+                lat: lat,
+                lng: lng,
+                deliveryArea: addressText,
+
+                // Strategy 2: Nested Address Object (For structured schemas)
                 userAddress: {
                     houseNo: addressObj.houseNo || '',
                     building: addressObj.building || '',
                     area: addressObj.area || addressText,
                     lat: lat,
                     lng: lng
-                }
+                },
+                // Strategy 3: Flat address fields (Legacy support)
+                "userAddress.lat": lat,
+                "userAddress.lng": lng
             };
+
+            console.log("Sending Order Data:", orderData);
 
             try {
                 const res = await fetch(`${API_URL}/api/orders`, {
