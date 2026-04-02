@@ -53,14 +53,12 @@
         .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
         .widget-items.open { max-height: 300px; opacity: 1; }
 
-        /* Leaflet Overrides */
         #locationMap { height: 200px; width: 100%; background: #e5e5e5; z-index: 10; border-radius: 12px; }
         .leaflet-control-zoom { display: none; }
         
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
 
-        /* AI Chatbot Styles */
         .chatbot-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; }
         .chatbot-window { width: 350px; height: 500px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; margin-bottom: 10px; }
         .chatbot-window.open { display: flex; animation: scaleIn 0.3s ease-out; }
@@ -258,6 +256,7 @@
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                 
+                <!-- Fruits -->
                 <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
                     <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
@@ -265,6 +264,7 @@
                     <h3 class="font-medium text-sm">Fruits</h3>
                 </a>
 
+                <!-- Snacks -->
                 <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
                     <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
@@ -272,6 +272,7 @@
                     <h3 class="font-medium text-sm">Snacks</h3>
                 </a>
 
+                <!-- Beverages -->
                 <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
                     <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
@@ -279,11 +280,12 @@
                     <h3 class="font-medium text-sm">Beverages</h3>
                 </a>
 
-                <a href="category.html?cat=chocolate" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                <!-- Chocolates (UPDATED) -->
+                <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
                     <div class="w-12 h-12 bg-amber-700/20 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:cookie" width="24" class="text-amber-600"></iconify-icon>
+                        <iconify-icon icon="lucide:candy" width="24" class="text-amber-600"></iconify-icon>
                     </div>
-                    <h3 class="font-medium text-sm">Chocolate</h3>
+                    <h3 class="font-medium text-sm">Chocolates</h3>
                 </a>
 
             </div>
