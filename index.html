@@ -108,14 +108,11 @@
 
                 <!-- Center Group: Location Btn + Search -->
                 <div class="flex-1 flex items-center gap-3">
-                    <!-- Location Button (Long) -->
                     <button onclick="openLocationModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors flex-shrink-0">
                         <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
                         <span id="navLocationText" class="text-sm font-medium truncate max-w-[100px] lg:max-w-[200px]">Select</span>
                         <iconify-icon icon="lucide:chevron-down" width="14"></iconify-icon>
                     </button>
-
-                    <!-- Search Input -->
                     <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="hidden md:block w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
 
@@ -160,33 +157,22 @@
                 <button onclick="closeLocationModal()" class="text-neutral-400 hover:text-white"><iconify-icon icon="lucide:x" width="24"></iconify-icon></button>
             </div>
             <div class="flex-1 overflow-y-auto">
-                <!-- Search -->
                 <div class="p-4 bg-brand-black/50 relative z-20">
                     <input type="text" id="locationSearchInput" onkeyup="searchLocation()" placeholder="Search area..." class="w-full bg-brand-gray border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none">
                     <div id="searchResults" class="mt-2 space-y-1 max-h-24 overflow-y-auto hidden absolute left-4 right-4 bg-brand-gray rounded-lg p-2 border border-white/10"></div>
                 </div>
-                
-                <!-- Map -->
                 <div id="locationMap" class="w-full flex-shrink-0"></div>
-
-                <!-- Saved Addresses -->
                 <div id="savedAddressesContainer" class="p-4 border-b border-white/5 hidden">
                     <h4 class="text-xs font-medium text-neutral-500 uppercase mb-2">Saved Addresses</h4>
                     <div id="savedAddressesList" class="space-y-2"></div>
                 </div>
-
-                <!-- FULL ADDRESS FORM -->
                 <div class="p-6 space-y-4">
                     <div class="flex items-center gap-2 mb-2"><iconify-icon icon="lucide:navigation" width="16" class="text-brand-accent"></iconify-icon><span id="selectedAreaText" class="text-sm font-medium text-brand-accent">Select on Map</span></div>
-                    
-                    <!-- Labels -->
                     <div class="grid grid-cols-3 gap-3">
                          <button onclick="setLabel('Home')" id="labelHome" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Home</button>
                          <button onclick="setLabel('Work')" id="labelWork" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Work</button>
                          <button onclick="setLabel('Other')" id="labelOther" class="label-btn border border-white/10 py-2 rounded-lg text-xs font-medium hover:border-brand-accent transition-colors">Other</button>
                     </div>
-
-                    <!-- Inputs -->
                     <div>
                         <label class="text-xs text-neutral-500 block mb-1">House / Flat No.</label>
                         <input type="text" id="inputHouse" placeholder="e.g. 404, A Wing" class="address-input">
@@ -203,7 +189,7 @@
         </div>
     </div>
 
-    <!-- HERO SECTION (Adjusted Padding) -->
+    <!-- HERO SECTION -->
     <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-28 md:pt-20">
         <div class="absolute inset-0 z-0">
             <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
@@ -312,7 +298,7 @@
                 </div>
             </div>
             <div id="chatMessages" class="chat-messages">
-                <div class="chat-bubble bot-bubble">Hi! 👋 Tell me what you want to add to your cart. <br><span class="text-neutral-400 text-xs">e.g., "Add 2kg Onions"</span></div>
+                <div class="chat-bubble bot-bubble">Hi! 👋 Tell me what you want to add. <br><span class="text-neutral-400 text-xs">e.g., "Add 2kg Onions", "apl", "bnana"</span></div>
             </div>
             <div class="p-3 border-t border-white/10">
                 <div class="flex gap-2">
@@ -519,7 +505,6 @@
 
             locationMap = L.map('locationMap', { zoomControl: false }).setView([savedLat, savedLng], 13);
             
-            // --- STANDARD OPENSTREETMAP TILES ---
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(locationMap);
@@ -696,7 +681,7 @@
             openLocationModal();
         }
 
-        // --- 8. AI CHATBOT LOGIC ---
+        // --- 8. AI CHATBOT LOGIC (FUZZY) ---
         function toggleChatbot() {
             const win = document.getElementById('chatbotWindow');
             win.classList.toggle('open');
@@ -710,33 +695,75 @@
             addChatMessage(msg, 'user');
             input.value = '';
 
-            // Simple AI Logic
             setTimeout(() => {
-                const found = findProductInText(msg);
+                const found = fuzzyFindProduct(msg);
                 if(found) {
                     addToCart(found.id);
                     addChatMessage(`✅ Added ${found.name} to your cart!`, 'bot');
                 } else {
-                    addChatMessage("Sorry, I couldn't find that product. Try being more specific (e.g., 'Milk', 'Apple').", 'bot');
+                    addChatMessage("🤔 Sorry, I couldn't find that product. Try another name.", 'bot');
                 }
             }, 600);
         }
 
-        function findProductInText(text) {
+        // Smart Search Algorithm
+        function fuzzyFindProduct(text) {
             text = text.toLowerCase();
-            // Remove common words
-            const stopWords = ['add', 'please', 'i', 'want', 'need', 'buy', 'get', 'me', 'a', 'an', 'the', 'kg', 'g', 'pack'];
-            const keywords = text.split(' ').filter(w => !stopWords.includes(w) && w.length > 1);
             
-            // Search logic
+            // 1. Exact Match
+            let match = allProducts.find(p => p.name.toLowerCase() === text);
+            if(match) return match;
+
+            // 2. Includes Match
+            match = allProducts.find(p => p.name.toLowerCase().includes(text));
+            if(match) return match;
+            
+            // 3. Partial Word Match
+            const words = text.split(' ');
+            for(let word of words) {
+                if(word.length < 3) continue; // Skip small words
+                match = allProducts.find(p => p.name.toLowerCase().includes(word));
+                if(match) return match;
+            }
+
+            // 4. Levenshtein Distance (Typo Tolerance)
+            let bestMatch = null;
+            let bestScore = Infinity;
+
             for(let p of allProducts) {
-                const prodName = p.name.toLowerCase();
-                // Check if product name contains any keyword
-                for(let k of keywords) {
-                    if(prodName.includes(k)) return p;
+                const pName = p.name.toLowerCase();
+                const dist = levenshteinDistance(text, pName);
+                
+                // Normalize score by length
+                const score = dist / pName.length;
+                
+                if(score < bestScore && score < 0.5) { // Threshold: 50% difference allowed
+                    bestScore = score;
+                    bestMatch = p;
                 }
             }
-            return null;
+
+            return bestMatch;
+        }
+
+        // Levenshtein Distance Algorithm (for typos)
+        function levenshteinDistance(s1, s2) {
+            const m = s1.length, n = s2.length;
+            const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+            
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+            
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (s1[i - 1] === s2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1];
+                    } else {
+                        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+                    }
+                }
+            }
+            return dp[m][n];
         }
 
         function addChatMessage(text, type) {
@@ -748,7 +775,6 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Allow Enter key to send
         document.getElementById('chatInput').addEventListener('keyup', function(event) {
             if (event.key === "Enter") handleChat();
         });
