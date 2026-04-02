@@ -220,11 +220,12 @@
         </div>
     </section>
 
-    <!-- Categories Section -->
+    <!-- Categories Section (Updated Layout) -->
     <section class="py-16 md:py-24">
         <div class="max-w-7xl mx-auto px-6">
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <!-- Changed grid to 4 columns and max-w-5xl for better spacing -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
                 <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
                     <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                         <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
@@ -242,6 +243,13 @@
                         <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
                     </div>
                     <h3 class="font-medium text-sm">Beverages</h3>
+                </a>
+                <!-- NEW CHOCOLATES CATEGORY -->
+                <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <div class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                        <iconify-icon icon="lucide:cookie" width="24" class="text-pink-500"></iconify-icon>
+                    </div>
+                    <h3 class="font-medium text-sm">Chocolates</h3>
                 </a>
             </div>
         </div>
