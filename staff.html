@@ -116,6 +116,17 @@
         </div>
     </div>
 
+    <!-- DEBUG MODAL -->
+    <div id="debugModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/95" onclick="this.classList.add('hidden')">
+        <div class="bg-brand-gray rounded-xl w-full max-w-md p-4 border border-white/10 overflow-auto max-h-[80vh] text-xs" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-sm">Raw Order Data</h3>
+                <button onclick="document.getElementById('debugModal').classList.add('hidden')" class="text-neutral-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <pre id="debugContent" class="whitespace-pre-wrap text-neutral-300 bg-black p-2 rounded"></pre>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'https://night-cart.onrender.com';
         let orders = [];
@@ -281,25 +292,16 @@
             }
         }
 
-        // --- DELIVERY LOGIC (ROBUST FIX) ---
+        // --- DELIVERY LOGIC ---
         function deliveryCard(o) {
-            // 1. Debug: Log the raw order object to see what fields exist
-            console.log("Raw Order Object:", o);
-
-            // 2. Robust Address Finding:
-            // Check common field names where the address might be stored
+            // 1. Robust Address Finding:
             let addr = o.userAddress || o.deliveryAddress || o.address || o.shippingAddress || {};
             
-            // If addr is still empty, check if lat/lng are at the root level (rare but possible)
-            if (!addr.lat && o.lat) addr.lat = o.lat;
-            if (!addr.lng && o.lng) addr.lng = o.lng;
-
-            console.log("Extracted Address:", addr);
-
-            const lat = parseFloat(addr.lat);
-            const lng = parseFloat(addr.lng);
+            // 2. Robust Coordinate Finding (Check nested, then root, then alternate names)
+            let lat = parseFloat(addr.lat || o.lat || addr.latitude);
+            let lng = parseFloat(addr.lng || o.lng || addr.longitude);
             
-            // Check if coordinates are valid numbers
+            // 3. Validate
             const hasValidCoords = !isNaN(lat) && !isNaN(lng) && (lat !== 0 && lng !== 0);
             
             // Prepare display text
@@ -311,6 +313,7 @@
             // Generate Buttons
             let mapBtn = '';
             let navBtn = '';
+            let debugBtn = `<button onclick='showDebug(\`${JSON.stringify(o).replace(/`/g, "'")}\`)' class="col-span-2 text-center text-neutral-500 text-[10px] mt-1 underline">View Raw Data (Debug)</button>`;
 
             if (hasValidCoords) {
                 const navLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
@@ -321,13 +324,12 @@
                 navBtn = `<a href="${navLink}" target="_blank" class="text-blue-400 text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-blue-500/20 hover:bg-blue-500/10">
                             <iconify-icon icon="lucide:navigation" width="12"></iconify-icon> Navigate
                         </a>`;
+                debugBtn = ''; // Hide debug if working
             } else {
-                mapBtn = `<span class="text-neutral-500 text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-white/5">
-                            <iconify-icon icon="lucide:alert-circle" width="12"></iconify-icon> No Coords
+                mapBtn = `<span class="text-red-500 text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-red-500/20 bg-red-500/5">
+                            <iconify-icon icon="lucide:alert-circle" width="12"></iconify-icon> Location Missing
                         </span>`;
-                navBtn = `<span class="text-neutral-500 text-xs font-medium flex items-center justify-center gap-1 py-2 rounded-lg border border-white/5">
-                            Location Missing
-                        </span>`;
+                navBtn = ``;
             }
 
             return `
@@ -353,6 +355,7 @@
                         ${mapBtn}
                         ${navBtn}
                     </div>
+                    <div class="mt-2">${debugBtn}</div>
                 </div>
                 
                 <div class="border-t border-white/5 p-3 bg-brand-dark/50">
@@ -361,6 +364,16 @@
                     </button>
                 </div>
             </div>`;
+        }
+
+        function showDebug(jsonStr) {
+            try {
+                const obj = JSON.parse(jsonStr);
+                document.getElementById('debugContent').textContent = JSON.stringify(obj, null, 2);
+                document.getElementById('debugModal').classList.remove('hidden');
+            } catch(e) {
+                console.error("Error parsing debug json", e);
+            }
         }
 
         function emptyState(msg) { return `<div class="col-span-full text-center py-16 text-neutral-500">${msg}</div>`; }
