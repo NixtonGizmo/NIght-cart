@@ -269,32 +269,34 @@
     <!-- MAIN CONTENT -->
     <main class="pt-20">
         
-        <!-- HERO BANNER (GitHub Image, No Border, No Button) -->
-        <section class="bg-white py-4 md:py-0">
-            <div class="max-w-7xl mx-auto px-6 md:px-16">
-                <div onclick="location.href='category.html?cat=all'" class="relative overflow-hidden cursor-pointer group">
+        <!-- HERO BANNER (Black BG, Aligned Padding) -->
+        <!-- Changed bg-white to bg-brand-black -->
+        <section class="bg-brand-black py-4 md:py-2">
+            <div class="max-w-7xl mx-auto px-6">
+                <div onclick="location.href='category.html?cat=all'" class="relative overflow-hidden cursor-pointer group rounded-2xl">
                     <!-- Updated to use GitHub Raw URL -->
                     <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/Frame-1437256605-2-2.jpg" alt="Grocery Banner" class="w-full h-auto object-contain">
                 </div>
             </div>
         </section>
 
-        <!-- 3-COLUMN PROMO (GitHub Images, No Buttons, No Borders) -->
+        <!-- 3-COLUMN PROMO (Consistent Padding) -->
         <section class="py-8 bg-brand-dark">
+            <!-- Matching px-6 with hero section -->
             <div class="max-w-7xl mx-auto px-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     
-                    <!-- Pharmacy (Updated URL, No Border) -->
+                    <!-- Pharmacy -->
                     <div class="rounded-2xl overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('pharmacy')">
                         <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/pasted_image_1775148382890.png" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105">
                     </div>
 
-                    <!-- Pet Care (Updated URL, No Border) -->
+                    <!-- Pet Care -->
                     <div class="rounded-2xl overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('pets')">
                         <img src="https://raw.githubusercontent.com/NixtonGizmo/NIght-cart/main/images/pasted_image_1775148398170.png" class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105">
                     </div>
 
-                    <!-- Baby Care (Kept as CSS fallback since no 3rd image link provided in last prompt, no border) -->
+                    <!-- Baby Care -->
                     <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer transition-transform hover:scale-[1.01]" onclick="filterByCategory('baby')">
                         <div>
                             <h3 class="text-lg font-bold text-white mb-2">No time for a diaper run?</h3>
