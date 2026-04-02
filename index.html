@@ -269,56 +269,37 @@
     <!-- MAIN CONTENT -->
     <main class="pt-20">
         
-        <!-- HERO BANNER (Curved & Compact) -->
-        <section onclick="location.href='category.html?cat=all'" class="relative overflow-hidden bg-green-500 cursor-pointer group">
-             <!-- Curved Partition Shape -->
-             <div class="absolute inset-0 bg-green-600" style="clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);"></div>
-             
-             <div class="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16">
-                 <div class="grid md:grid-cols-2 gap-8 items-center">
-                     <div class="text-white">
-                         <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-3">Low Prices</span>
-                         <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">Stock up on daily essentials</h1>
-                         <p class="text-base opacity-90 mb-6 max-w-md">Fresh produce delivered to your doorstep in minutes.</p>
-                         <button class="bg-white text-green-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg text-sm">
-                             Shop Now
-                         </button>
-                     </div>
-                     <div class="hidden md:flex justify-end pr-8">
-                         <div class="relative w-64 h-64">
-                             <img src="https://picsum.photos/seed/fruit1/200/200" class="absolute top-0 right-0 w-32 h-32 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform">
-                             <img src="https://picsum.photos/seed/veggie2/200/200" class="absolute bottom-0 left-0 w-28 h-28 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform delay-75">
-                             <img src="https://picsum.photos/seed/fruit3/200/200" class="absolute bottom-8 right-8 w-20 h-20 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform delay-100">
-                         </div>
-                     </div>
-                 </div>
-             </div>
+        <!-- HERO BANNER (Updated with provided image & spacing) -->
+        <section class="bg-white py-8 md:py-0">
+            <div class="max-w-7xl mx-auto px-4 md:px-12">
+                <div onclick="location.href='category.html?cat=all'" class="relative rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
+                    <img src="https://z-cdn-media.chatglm.cn/files/7f22b8ca-7907-49f8-9950-5797fabddb42.jpg?auth_key=1875148578-c83eae0f6c76436cbb3267a08fb282e2-0-0c9666ea74acc3aaf4f53c66689b5357" alt="Grocery Banner" class="w-full h-auto object-cover">
+                    <!-- Overlay Content positioned absolutely over image for mobile, or hidden if image has text -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex-col justify-center p-8 md:p-12 hidden md:flex">
+                        <h2 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">Stock up on daily essentials</h2>
+                        <p class="text-white/90 text-lg mb-4 max-w-md drop-shadow">Get farm-fresh goodness & a range of exotic fruits, vegetables, eggs & more</p>
+                        <button class="bg-white text-green-600 font-bold py-3 px-8 rounded-full shadow-xl hover:bg-gray-100 transition-colors w-fit">Shop Now</button>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <!-- 3-COLUMN PROMO -->
+        <!-- 3-COLUMN PROMO (Updated with provided images) -->
         <section class="py-12 bg-brand-dark">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
                     <!-- Pharmacy -->
-                    <div class="bg-blue-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('pharmacy')">
-                        <div>
-                            <h3 class="text-lg font-bold text-white mb-2">Pharmacy at your doorstep!</h3>
-                            <button class="mt-2 bg-white text-blue-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
-                        </div>
-                        <img src="https://picsum.photos/seed/meds/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer hover:shadow-xl transition-all" onclick="filterByCategory('pharmacy')">
+                        <img src="https://z-cdn-media.chatglm.cn/files/d756300a-3b92-4f35-b16b-f659995b5fb4.png?auth_key=1875148578-fbdf385c208743c83debcc3d962b8ae-0-a17e7a5d9c4475686bdb16a9622a036c" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     </div>
 
                     <!-- Pet Care -->
-                    <div class="bg-orange-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('pets')">
-                        <div>
-                            <h3 class="text-lg font-bold text-white mb-2">Pet care supplies at your door</h3>
-                            <button class="mt-2 bg-white text-orange-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
-                        </div>
-                        <img src="https://picsum.photos/seed/petcare/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    <div class="rounded-2xl overflow-hidden relative group cursor-pointer hover:shadow-xl transition-all" onclick="filterByCategory('pets')">
+                        <img src="https://z-cdn-media.chatglm.cn/files/b8a240a0-b4fd-4f63-970d-cd79b87c5b30.png?auth_key=1875148578-4b1accf2015f4b54b4bb3b6cd669129d-0-0d258bb24ef08af227f02a2c4ad75ae0" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     </div>
 
-                    <!-- Baby Care -->
+                    <!-- Baby Care (Keeping existing design as no image provided) -->
                     <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('baby')">
                         <div>
                             <h3 class="text-lg font-bold text-white mb-2">No time for a diaper run?</h3>
@@ -385,7 +366,6 @@
     <footer class="bg-brand-black border-t border-white/5 pt-16 pb-8">
         <div class="max-w-7xl mx-auto px-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-                <!-- Logo & Desc -->
                 <div class="md:col-span-1">
                     <a href="index.html" class="flex items-center mb-4">
                          <svg width="100" height="40" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -400,8 +380,6 @@
                         <a href="#" class="w-10 h-10 bg-brand-gray rounded-full flex items-center justify-center hover:bg-brand-accent hover:text-black transition-colors"><iconify-icon icon="lucide:facebook" width="18"></iconify-icon></a>
                     </div>
                 </div>
-
-                <!-- Links -->
                 <div>
                     <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
                     <ul class="space-y-2 text-sm text-neutral-500">
@@ -410,7 +388,6 @@
                         <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
                     </ul>
                 </div>
-
                 <div>
                     <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Support</h4>
                     <ul class="space-y-2 text-sm text-neutral-500">
@@ -419,8 +396,6 @@
                         <li><a href="#" class="hover:text-white transition-colors">Partner with us</a></li>
                     </ul>
                 </div>
-
-                <!-- App Download -->
                 <div>
                     <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Download App</h4>
                     <div class="space-y-3">
@@ -441,7 +416,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 <p class="text-neutral-600 text-xs">© 2024 Night Cart Technologies Pvt. Ltd.</p>
                 <div class="flex gap-6 text-xs text-neutral-500">
@@ -586,19 +560,21 @@
                     <div class="relative overflow-hidden">
                         <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105">
                         ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
-                        <button onclick="event.stopPropagation(); addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
-                            <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
-                        </button>
                     </div>
-                    <div class="p-4">
-                        <p class="text-xs text-neutral-500 uppercase tracking-wide mb-1">${product.category}</p>
-                        <h3 class="font-medium text-sm mb-1 line-clamp-1">${product.name}</h3>
-                        <p class="text-xs text-neutral-500 mb-3">${product.weight}</p>
-                        <div class="flex items-center justify-between">
+                    <div class="p-3">
+                        <p class="text-xs text-neutral-500 uppercase tracking-wide mb-0.5">${product.category}</p>
+                        <h3 class="font-medium text-sm mb-0.5 line-clamp-1">${product.name}</h3>
+                        <p class="text-[10px] text-neutral-500 mb-2">${product.weight}</p>
+                        
+                        <!-- Price and ADD Button Row -->
+                        <div class="flex items-center justify-between mt-1">
                             <div>
-                                <span class="text-lg font-semibold">₹${product.price}</span>
-                                <span class="text-sm text-neutral-500 line-through ml-2">₹${product.originalPrice}</span>
+                                <span class="text-sm font-bold">₹${product.price}</span>
+                                <span class="text-[10px] text-neutral-500 line-through ml-1">₹${product.originalPrice}</span>
                             </div>
+                            <button onclick="event.stopPropagation(); addToCart(${product.id})" class="bg-brand-accent text-black font-bold text-[10px] px-3 py-1.5 rounded hover:bg-brand-yellow transition-colors">
+                                ADD
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -669,7 +645,6 @@
             else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
             
             if(searchTerm.length > 0) {
-                // Redirect to category page with search query
                 window.location.href = `category.html?search=${encodeURIComponent(searchTerm)}`;
             }
         }
