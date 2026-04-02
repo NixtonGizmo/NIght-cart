@@ -23,7 +23,6 @@
 <body class="bg-brand-black text-white font-sans antialiased">
     <div id="cursor-dot"></div><div id="cursor-ring"></div>
     <div id="orderSuccessModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-hidden"><div class="absolute inset-0 pointer-events-none" id="confettiContainer"></div><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-white/10 shadow-2xl text-center popup-animate relative z-10"><div class="p-10"><div class="w-24 h-24 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-brand-accent/20"><iconify-icon icon="lucide:check" width="48" class="text-brand-accent"></iconify-icon></div><h2 class="text-3xl font-bold mb-2">Order Placed!</h2><p class="text-neutral-400 mb-8">Order ID: <span id="modalOrderId" class="text-white font-mono"></span></p><button onclick="location.href='index.html'" class="w-full bg-brand-accent text-black font-semibold py-4 rounded-full hover:bg-brand-yellow transition-colors">Continue Shopping</button></div></div></div>
-    <div id="errorModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm"><div class="bg-brand-gray rounded-3xl w-full max-w-md border border-red-500/20 shadow-2xl text-center"><div class="p-10"><div class="w-24 h-24 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-red-500/20"><iconify-icon icon="lucide:wifi-off" width="48" class="text-red-500"></iconify-icon></div><h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2><button onclick="this.closest('.fixed').classList.add('hidden')" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button></div></div></div>
 
     <!-- Map Modal -->
     <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
@@ -78,7 +77,7 @@
             
             const a = JSON.parse(addrStr); 
             
-            // FIX: Ensure we have coordinates
+            // FIX: Ensure we have coordinates (Fallback check)
             const lat = a.lat || localStorage.getItem('nc_location_lat');
             const lng = a.lng || localStorage.getItem('nc_location_lng');
 
@@ -119,27 +118,17 @@
             }
         }
 
-        // Map Logic (Standard OSM)
+        // Map Logic
         function openLocationModal() { document.getElementById('locationModal').classList.remove('hidden'); document.getElementById('locationModal').classList.add('flex'); setTimeout(()=>{ if(!locationMap) initMap(); else locationMap.invalidateSize(); }, 100); }
         function closeLocationModal() { document.getElementById('locationModal').classList.add('hidden'); document.getElementById('locationModal').classList.remove('flex'); }
         function initMap() { 
             const lat = parseFloat(localStorage.getItem('nc_location_lat'))||20.59; 
             const lng = parseFloat(localStorage.getItem('nc_location_lng'))||78.96; 
             locationMap = L.map('locationMap', {center:[lat,lng], zoom:13, zoomControl:false}); 
-            
-            // --- STANDARD OSM TILES ---
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(locationMap);
-            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(locationMap);
             locationMarker = L.marker([lat,lng]).addTo(locationMap); 
             tempSelectedLat=lat; tempSelectedLng=lng; 
-            
-            locationMap.on('click', async e => { 
-                locationMarker.setLatLng(e.latlng); 
-                tempSelectedLat=e.latlng.lat; tempSelectedLng=e.latlng.lng; 
-                try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; }catch(e){} 
-            }); 
+            locationMap.on('click', async e => { locationMarker.setLatLng(e.latlng); tempSelectedLat=e.latlng.lat; tempSelectedLng=e.latlng.lng; try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${tempSelectedLat}&lon=${tempSelectedLng}`); const d = await r.json(); document.getElementById('selectedAreaText').textContent = d.display_name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; }catch(e){} }); 
         }
         async function searchLocation() { const q = document.getElementById('locationSearchInput').value; if(q.length<3) return; const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${q}&limit=5`); const d = await r.json(); document.getElementById('searchResults').classList.remove('hidden'); document.getElementById('searchResults').innerHTML = d.map(r=>`<div onclick="selectSearch(${r.lat},${r.lon},'${r.display_name}')" class="p-2 text-xs hover:bg-white/5 cursor-pointer">${r.display_name}</div>`).join(''); }
         function selectSearch(lat,lng,name) { document.getElementById('selectedAreaText').textContent = name.split(',').slice(0,3).join(', '); tempSelectedArea = document.getElementById('selectedAreaText').textContent; locationMap.setView([lat,lng],15); locationMarker.setLatLng([lat,lng]); tempSelectedLat=lat; tempSelectedLng=lng; document.getElementById('searchResults').classList.add('hidden'); }
@@ -147,29 +136,16 @@
         
         async function saveNewAddress() {
             const house = document.getElementById('inputHouse').value;
-            // NUCLEAR FIX: Ensure coords exist
             if(locationMap){ if(tempSelectedLat===null) tempSelectedLat = locationMap.getCenter().lat; if(tempSelectedLng===null) tempSelectedLng = locationMap.getCenter().lng; }
             if(!house || !tempSelectedLat) return alert("Fill details and select location");
             const phone = localStorage.getItem('nc_userPhone');
             
-            // Save to DB
             await fetch(`${API_URL}/api/addresses`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ phone, label:currentLabel, houseNo:house, building:document.getElementById('inputBuilding').value, area:tempSelectedArea, lat:tempSelectedLat, lng:tempSelectedLng }) });
             
-            // FIX: Save coordinates to localStorage object too!
-            const addr = { 
-                _id:'new', 
-                label:currentLabel, 
-                houseNo:house, 
-                building:document.getElementById('inputBuilding').value, 
-                area:tempSelectedArea, 
-                lat: tempSelectedLat, 
-                lng: tempSelectedLng 
-            };
-            
+            // FIX: Save coordinates to localStorage
+            const addr = { _id:'new', label:currentLabel, houseNo:house, building:document.getElementById('inputBuilding').value, area:tempSelectedArea, lat: tempSelectedLat, lng: tempSelectedLng };
             localStorage.setItem('nc_selected_address', JSON.stringify(addr));
-            closeLocationModal(); 
-            loadAddresses(); 
-            showNotification("Saved");
+            closeLocationModal(); loadAddresses(); showNotification("Saved");
         }
 
         async function loadAddresses() { 
@@ -179,6 +155,8 @@
             const d = await r.json(); 
             const s = localStorage.getItem('nc_selected_address'); 
             let selId = s ? JSON.parse(s)._id : null; 
+            
+            // FIX: Pass lat and lng in onclick
             document.getElementById('addressListContainer').innerHTML = d.map(a=>`
                 <div onclick="selectAddr('${a._id}','${a.label}','${a.houseNo}','${a.building}','${a.area}',${a.lat},${a.lng})" class="flex items-center gap-2 p-2 rounded-lg cursor-pointer border ${selId===a._id?'bg-brand-accent/10 border-brand-accent':'bg-black/50 border-white/5'}">
                     <iconify-icon icon="lucide:map-pin" width="14" class="text-brand-accent"></iconify-icon>
@@ -190,17 +168,9 @@
             `).join(''); 
         }
 
-        // FIX: Save coordinates when selecting an address
+        // FIX: Save coordinates when selecting
         function selectAddr(id,l,h,b,a,lat,lng) { 
-            const addr = {
-                _id: id,
-                label: l,
-                houseNo: h,
-                building: b,
-                area: a,
-                lat: lat,
-                lng: lng
-            }; 
+            const addr = { _id:id, label:l, houseNo:h, building:b, area:a, lat:lat, lng:lng }; 
             localStorage.setItem('nc_selected_address',JSON.stringify(addr)); 
             loadAddresses(); 
             showNotification("Selected"); 
