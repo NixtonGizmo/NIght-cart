@@ -53,7 +53,7 @@ const Address = mongoose.model('Address', new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }));
 
-// Order Model (Updated with userAddress)
+// Order Model (FIXED: Added lat/lng to userAddress)
 const Order = mongoose.model('Order', new mongoose.Schema({
   orderId: String, 
   userName: String, 
@@ -62,7 +62,9 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     houseNo: String,
     building: String,
     landmark: String,
-    area: String
+    area: String,
+    lat: Number, // <--- ADDED THIS
+    lng: Number  // <--- ADDED THIS
   }, 
   items: Array, 
   totalAmount: Number, 
