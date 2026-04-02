@@ -14,6 +14,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -53,12 +54,14 @@
         .widget-items { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
         .widget-items.open { max-height: 300px; opacity: 1; }
 
+        /* Leaflet Overrides */
         #locationMap { height: 200px; width: 100%; background: #e5e5e5; z-index: 10; border-radius: 12px; }
         .leaflet-control-zoom { display: none; }
         
         .address-input { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; font-size: 14px; width: 100%; color: white; outline: none; transition: border 0.2s; }
         .address-input:focus { border-color: rgba(140, 255, 0, 0.5); }
 
+        /* AI Chatbot Styles */
         .chatbot-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; }
         .chatbot-window { width: 350px; height: 500px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; margin-bottom: 10px; }
         .chatbot-window.open { display: flex; animation: scaleIn 0.3s ease-out; }
@@ -68,6 +71,24 @@
         .chat-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; }
         .bot-bubble { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; color: #fff; }
         .user-bubble { background: #8CFF00; color: black; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+
+        /* Light Mode Overrides */
+        html.light body { background-color: #ffffff; color: #171717; }
+        html.light .bg-brand-black { background-color: #ffffff; }
+        html.light .bg-brand-dark { background-color: #f5f5f5; }
+        html.light .bg-brand-gray { background-color: #f0f0f0; border-color: rgba(0,0,0,0.1); }
+        html.light .text-white { color: #000000; }
+        html.light .text-neutral-400 { color: #666666; }
+        html.light .border-white\/5 { border-color: rgba(0,0,0,0.05); }
+        html.light .border-white\/10 { border-color: rgba(0,0,0,0.1); }
+        html.light .bg-white\/5 { background-color: rgba(0,0,0,0.05); }
+        html.light .hover\:bg-white\/10:hover { background-color: rgba(0,0,0,0.05); }
+        html.light .chatbot-window { background: #fff; border-color: #eee; }
+        html.light .bot-bubble { background: #eee; color: #000; }
+        html.light #cursor-dot { background: #000; }
+        html.light #cursor-ring { border-color: rgba(0,0,0,0.3); }
+        html.light .address-input { background: #fff; color: #000; border-color: rgba(0,0,0,0.1); }
+        html.light .profile-dropdown { background: #fff; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -142,16 +163,21 @@
                     </svg>
                 </a>
 
-                <div class="flex-1 flex items-center gap-3">
+                <div class="flex-1 flex items-center justify-center gap-3">
                     <button onclick="openLocationModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors flex-shrink-0">
                         <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
                         <span id="navLocationText" class="text-sm font-medium truncate max-w-[100px] lg:max-w-[200px]">Select</span>
                         <iconify-icon icon="lucide:chevron-down" width="14"></iconify-icon>
                     </button>
-                    <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search products..." class="hidden md:block w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-5 text-sm focus:outline-none focus:border-brand-accent/50 transition-all">
                 </div>
 
                 <div class="flex items-center gap-3 pl-4">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button onclick="toggleTheme()" id="themeToggle" class="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                        <iconify-icon icon="lucide:sun" width="18" class="text-yellow-500 hidden" id="sunIcon"></iconify-icon>
+                        <iconify-icon icon="lucide:moon" width="18" class="text-white" id="moonIcon"></iconify-icon>
+                    </button>
+
                     <button onclick="openLocationModal()" class="md:hidden p-2 bg-white/5 border border-white/10 rounded-full"><iconify-icon icon="lucide:map-pin" width="18" class="text-brand-accent"></iconify-icon></button>
 
                     <a id="loginBtn" href="login.html" class="hidden items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-sm font-medium hover:bg-white/10 transition-colors">
@@ -174,10 +200,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="md:hidden pb-4 flex gap-2">
-                <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search products..." class="flex-1 bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none transition-all">
             </div>
         </div>
     </nav>
@@ -222,90 +244,188 @@
         </div>
     </div>
 
-    <!-- HERO SECTION -->
-    <section id="heroSection" class="relative min-h-[70vh] md:min-h-[80vh] flex items-center pt-28 md:pt-20">
-        <div class="absolute inset-0 z-0">
-            <img src="https://picsum.photos/seed/grocery-hero/1920/1080" alt="Hero Background" class="w-full h-full object-cover opacity-20 grayscale">
-            <div class="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
-        </div>
-        <div class="relative z-10 max-w-7xl mx-auto px-6 w-full">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
+    <!-- MAIN CONTENT -->
+    <main class="pt-20">
+        
+        <!-- HERO BANNER (Based on Image) -->
+        <section class="relative overflow-hidden bg-green-500 text-white">
+            <div class="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-sm font-semibold mb-4">Low Prices</span>
+                        <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">Stock up on daily essentials</h1>
+                        <p class="text-lg opacity-90 mb-6">Fresh fruits & vegetables delivered to your door in 10 mins.</p>
+                        <button onclick="openLocationModal()" class="bg-white text-green-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg">
+                            Order Now
+                        </button>
+                    </div>
+                    <div class="relative hidden md:block">
+                        <!-- Decorative Images -->
+                        <img src="https://picsum.photos/seed/fruit1/200/200" class="absolute top-0 right-10 w-40 h-40 object-cover rounded-full shadow-xl border-4 border-white/20">
+                        <img src="https://picsum.photos/seed/veggie2/200/200" class="absolute bottom-0 right-40 w-32 h-32 object-cover rounded-full shadow-xl border-4 border-white/20">
+                        <img src="https://picsum.photos/seed/fruit3/200/200" class="absolute top-10 right-52 w-24 h-24 object-cover rounded-full shadow-xl border-4 border-white/20">
+                    </div>
+                </div>
+            </div>
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10 bg-grain"></div>
+        </section>
+
+        <!-- 3-COLUMN PROMO (Based on Image) -->
+        <section class="py-12 bg-brand-dark">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Pharmacy -->
+                    <div class="bg-blue-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Pharmacy at your doorstep!</h3>
+                            <button onclick="filterByCategory('pharmacy')" class="mt-2 bg-white text-blue-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                        </div>
+                        <img src="https://picsum.photos/seed/meds/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+
+                    <!-- Pet Care -->
+                    <div class="bg-orange-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Pet care supplies at your door</h3>
+                            <button onclick="filterByCategory('pets')" class="mt-2 bg-white text-orange-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                        </div>
+                        <img src="https://picsum.photos/seed/petcare/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+
+                    <!-- Baby Care -->
+                    <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">No time for a diaper run?</h3>
+                            <button onclick="filterByCategory('baby')" class="mt-2 bg-white text-pink-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                        </div>
+                        <img src="https://picsum.photos/seed/babycare/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="py-16 md:py-24">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="text-3xl md:text-4xl font-semibold tracking-tight">Shop by Category</h2>
+                    <a href="category.html?cat=all" class="text-brand-accent text-sm font-medium hover:underline">View All</a>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                        <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                            <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
+                        </div>
+                        <h3 class="font-medium text-sm">Fruits</h3>
+                    </a>
+                    <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                        <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                            <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
+                        </div>
+                        <h3 class="font-medium text-sm">Snacks</h3>
+                    </a>
+                    <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                        <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                            <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
+                        </div>
+                        <h3 class="font-medium text-sm">Beverages</h3>
+                    </a>
+                    <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                        <div class="w-12 h-12 bg-amber-700/20 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
+                            <iconify-icon icon="lucide:candy" width="24" class="text-amber-600"></iconify-icon>
+                        </div>
+                        <h3 class="font-medium text-sm">Chocolates</h3>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- POPULAR ITEMS -->
+        <section class="py-16 bg-brand-dark">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center justify-between mb-10">
+                    <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">Popular Items</h2></div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="popularGrid">
+                    <div class="col-span-full text-center py-12 text-neutral-400">Loading...</div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-brand-black border-t border-white/5 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <!-- Logo & Desc -->
+                <div class="md:col-span-1">
+                    <a href="index.html" class="flex items-center mb-4">
+                         <svg width="100" height="40" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M35 5 A25 25 0 1 1 35 55 A20 20 0 1 0 35 5" fill="white"/>
+                            <text x="85" y="60" font-family="'Inter', sans-serif" font-weight="700" font-size="32"><tspan fill="white">Night</tspan><tspan fill="#8CFF00">cart</tspan></text>
+                        </svg>
+                    </a>
+                    <p class="text-neutral-500 text-sm mb-4">Delivering happiness in 10 minutes.</p>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 bg-brand-gray rounded-full flex items-center justify-center hover:bg-brand-accent hover:text-black transition-colors"><iconify-icon icon="lucide:instagram" width="18"></iconify-icon></a>
+                        <a href="#" class="w-10 h-10 bg-brand-gray rounded-full flex items-center justify-center hover:bg-brand-accent hover:text-black transition-colors"><iconify-icon icon="lucide:twitter" width="18"></iconify-icon></a>
+                        <a href="#" class="w-10 h-10 bg-brand-gray rounded-full flex items-center justify-center hover:bg-brand-accent hover:text-black transition-colors"><iconify-icon icon="lucide:facebook" width="18"></iconify-icon></a>
+                    </div>
+                </div>
+
+                <!-- Links -->
                 <div>
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-brand-accent/10 border border-brand-accent/20 rounded-full mb-6 animate-fade-in">
-                        <div class="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
-                        <span class="text-sm font-medium text-brand-accent">Delivery in 10 Minutes</span>
-                    </div>
-                    <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter uppercase leading-none mb-6 animate-fade-in delay-100">
-                        <span class="text-white">Groceries</span><br><span class="text-brand-accent">Delivered</span><br><span class="text-neutral-400">Fast</span>
-                    </h1>
-                    <p class="text-lg text-neutral-400 mb-8 max-w-md animate-fade-in delay-200">Order fresh groceries, snacks, fruits, and daily essentials.</p>
+                    <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm text-neutral-500">
+                        <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                    </ul>
                 </div>
-                <div class="hidden md:block relative animate-fade-in delay-300">
-                    <div class="relative">
-                        <img src="https://picsum.photos/seed/grocery-basket/600/600" alt="Grocery Basket" class="w-full max-w-lg mx-auto rounded-3xl shadow-2xl">
-                        <div class="absolute -top-4 -right-4 bg-brand-accent text-black px-4 py-2 rounded-full font-bold">10 MIN</div>
+
+                <div>
+                    <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Support</h4>
+                    <ul class="space-y-2 text-sm text-neutral-500">
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Safety</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Partner with us</a></li>
+                    </ul>
+                </div>
+
+                <!-- App Download -->
+                <div>
+                    <h4 class="font-semibold text-sm uppercase tracking-wider mb-4">Download App</h4>
+                    <div class="space-y-3">
+                        <a href="#" class="flex items-center gap-3 bg-brand-gray rounded-xl p-3 hover:bg-white/10 transition-colors">
+                            <iconify-icon icon="lucide:smartphone" width="24" class="text-brand-accent"></iconify-icon>
+                            <div>
+                                <p class="text-[10px] text-neutral-500">Get it on</p>
+                                <p class="font-semibold text-sm">Google Play</p>
+                            </div>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 bg-brand-gray rounded-xl p-3 hover:bg-white/10 transition-colors">
+                            <iconify-icon icon="lucide:apple" width="24" class="text-brand-accent"></iconify-icon>
+                            <div>
+                                <p class="text-[10px] text-neutral-500">Download on</p>
+                                <p class="font-semibold text-sm">App Store</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Categories Section -->
-    <section class="py-16 md:py-24">
-        <div class="max-w-7xl mx-auto px-6">
-            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-10">Shop by Category</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-                
-                <!-- Fruits -->
-                <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Fruits</h3>
-                </a>
-
-                <!-- Snacks -->
-                <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Snacks</h3>
-                </a>
-
-                <!-- Beverages -->
-                <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Beverages</h3>
-                </a>
-
-                <!-- Chocolates (UPDATED) -->
-                <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
-                    <div class="w-12 h-12 bg-amber-700/20 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
-                        <iconify-icon icon="lucide:candy" width="24" class="text-amber-600"></iconify-icon>
-                    </div>
-                    <h3 class="font-medium text-sm">Chocolates</h3>
-                </a>
-
+            <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-neutral-600 text-xs">© 2024 Night Cart Technologies Pvt. Ltd.</p>
+                <div class="flex gap-6 text-xs text-neutral-500">
+                    <a href="#" class="hover:text-white">Privacy Policy</a>
+                    <a href="#" class="hover:text-white">Terms of Service</a>
+                </div>
             </div>
         </div>
-    </section>
-    
-    <!-- Products Section -->
-    <section class="py-16 md:py-24 bg-brand-dark">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-between mb-10">
-                <div><h2 class="text-3xl md:text-4xl font-semibold tracking-tight">All Products</h2></div>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6" id="productsGrid">
-                <div class="col-span-full text-center py-12 text-neutral-400">Loading products...</div>
-            </div>
-        </div>
-    </section>
-    
-    <footer class="py-16 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6 text-center text-neutral-500 text-sm"><p>© 2024 Night Cart. All rights reserved.</p></div>
     </footer>
 
     <!-- FLOATING CART WIDGET -->
@@ -346,7 +466,7 @@
                 </div>
             </div>
             <div id="chatMessages" class="chat-messages">
-                <div class="chat-bubble bot-bubble">Hi! 👋 Tell me what you want to add. <br><span class="text-neutral-400 text-xs">e.g., "Add 2kg Onions", "apl", "bnana"</span></div>
+                <div class="chat-bubble bot-bubble">Hi! 👋 Tell me what you want to add.</div>
             </div>
             <div class="p-3 border-t border-white/10">
                 <div class="flex gap-2">
@@ -381,7 +501,36 @@
             loadProductsFromDB(); 
             setupCursor(); 
             loadSavedLocation(); 
+            loadTheme();
         });
+
+        // --- THEME LOGIC ---
+        function loadTheme() {
+            const theme = localStorage.getItem('nc_theme');
+            if (theme === 'light') {
+                document.documentElement.classList.add('light');
+                document.getElementById('sunIcon').classList.remove('hidden');
+                document.getElementById('moonIcon').classList.add('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+
+            if (html.classList.contains('light')) {
+                html.classList.remove('light');
+                localStorage.setItem('nc_theme', 'dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                html.classList.add('light');
+                localStorage.setItem('nc_theme', 'light');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        }
 
         // --- POPUP LOGIC ---
         function showErrorModal() { const m=document.getElementById('errorModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -393,19 +542,19 @@
                 const response = await fetch(`${API_URL}/api/products`);
                 if (!response.ok) throw new Error("Server error");
                 allProducts = await response.json(); 
-                renderProducts(allProducts);
+                renderPopularItems(allProducts.slice(0, 6)); // Only render first 6
             } catch (error) {
                 console.error('Error loading products:', error);
                 showErrorModal();
-                document.getElementById('productsGrid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400">Could not load products.</div>';
+                document.getElementById('popularGrid').innerHTML = '<div class="col-span-full text-center py-12 text-red-400">Could not load products.</div>';
             }
         }
 
-        // --- 2. RENDER LOGIC ---
-        function renderProducts(productsToRender) {
-            const grid = document.getElementById('productsGrid');
+        // --- 2. RENDER LOGIC (Popular Items) ---
+        function renderPopularItems(productsToRender) {
+            const grid = document.getElementById('popularGrid');
             if (!productsToRender || productsToRender.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No products found.</div>';
+                grid.innerHTML = '<div class="col-span-full text-center py-12 text-neutral-400">No popular items found.</div>';
                 return;
             }
             grid.innerHTML = productsToRender.map(product => `
@@ -484,15 +633,8 @@
             closeProductModal();
         }
 
-        // --- 3. FILTER LOGIC ---
-        function filterProducts() {
-            const desktopInput = document.getElementById('searchInputDesktop');
-            const mobileInput = document.getElementById('searchInputMobile');
-            let searchTerm = '';
-            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
-            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
-            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(searchTerm));
-            renderProducts(filtered);
+        function filterByCategory(cat) {
+            window.location.href = `category.html?cat=${cat}`;
         }
 
         // --- 4. CART LOGIC ---
@@ -519,17 +661,14 @@
         // --- 5. AUTH LOGIC ---
         function checkLoginStatus() {
             const isLoggedIn = localStorage.getItem('nc_isLoggedIn');
-            const heroSection = document.getElementById('heroSection');
             const userName = localStorage.getItem('nc_userName') || 'User';
             
             if (isLoggedIn === 'true') {
-                if (heroSection) heroSection.style.display = 'none';
                 document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfile').classList.remove('hidden');
                 document.getElementById('navUserName').textContent = userName;
                 document.getElementById('dropName').textContent = userName;
             } else {
-                if (heroSection) heroSection.style.display = 'flex';
                 document.getElementById('loginBtn').classList.remove('hidden');
                 document.getElementById('userProfile').classList.add('hidden');
             }
@@ -736,7 +875,7 @@
                 localStorage.setItem('nc_location_lat', tempSelectedLat); 
                 localStorage.setItem('nc_location_lng', tempSelectedLng); 
                 localStorage.setItem('nc_location_text', displayText);
-                const addressObj = { label: currentLabel, houseNo: house, building: building, area: area };
+                const addressObj = { label: currentLabel, houseNo: house, building: building, area: area, lat: tempSelectedLat, lng: tempSelectedLng };
                 localStorage.setItem('nc_selected_address', JSON.stringify(addressObj));
                 
                 if (data.serviceable) {
