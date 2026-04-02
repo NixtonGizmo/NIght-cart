@@ -33,10 +33,10 @@
         ::selection { background: white; color: black; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scaleIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         .animate-fade-in { animation: fadeInUp 0.6s ease-out forwards; }
-        .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+        .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .bg-grain { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); opacity: 0.03; mix-blend-mode: overlay; }
         
         .product-card:hover .product-image { transform: scale(1.05); }
@@ -87,6 +87,55 @@
                 <h2 class="text-3xl font-bold mb-2 text-red-400">Server Error</h2>
                 <p class="text-neutral-400 mb-2">Couldn't connect to the server.</p>
                 <button onclick="closeErrorModal()" class="w-full bg-red-500/10 text-red-500 font-semibold py-4 rounded-full border border-red-500/20 hover:bg-red-500/20 transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUCT DETAIL MODAL -->
+    <div id="productModal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm" onclick="closeProductModal()">
+        <div class="bg-brand-gray rounded-3xl w-full max-w-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col md:flex-row animate-scale-in relative" onclick="event.stopPropagation()">
+            <!-- Image Section -->
+            <div class="w-full md:w-1/2 bg-brand-dark p-6 flex items-center justify-center">
+                <img id="modalImg" src="" alt="" class="max-h-[300px] object-contain rounded-2xl transition-transform duration-500 hover:scale-105">
+            </div>
+            
+            <!-- Details Section -->
+            <div class="w-full md:w-1/2 p-8 flex flex-col justify-between relative">
+                <button onclick="closeProductModal()" class="absolute top-4 right-4 text-neutral-500 hover:text-white z-10">
+                    <iconify-icon icon="lucide:x" width="24"></iconify-icon>
+                </button>
+
+                <div>
+                    <p class="text-xs font-medium text-brand-accent uppercase tracking-wider mb-2" id="modalCategory">Category</p>
+                    <h2 class="text-2xl font-bold mb-1" id="modalName">Product Name</h2>
+                    <p class="text-neutral-500 text-sm mb-4" id="modalWeight">Weight</p>
+                    
+                    <p class="text-neutral-400 text-sm leading-relaxed mb-6">
+                        Fresh and high quality product sourced directly from local farms. Perfect for your daily needs.
+                    </p>
+
+                    <div class="flex items-baseline gap-3 mb-8">
+                        <span class="text-3xl font-bold text-white" id="modalPrice">₹0</span>
+                        <span class="text-lg text-neutral-500 line-through" id="modalOriginal">₹0</span>
+                        <span class="text-sm text-brand-green font-semibold" id="modalDiscount"></span>
+                    </div>
+                </div>
+
+                <!-- Bottom Actions -->
+                <div>
+                    <div class="flex items-center gap-4 mb-4">
+                         <div class="flex items-center border border-white/10 rounded-lg overflow-hidden">
+                            <button onclick="updateModalQty(-1)" class="px-4 py-2 text-white hover:bg-white/10 transition-colors">-</button>
+                            <span id="modalQty" class="px-4 py-2 text-white font-bold w-12 text-center">1</span>
+                            <button onclick="updateModalQty(1)" class="px-4 py-2 text-white hover:bg-white/10 transition-colors">+</button>
+                        </div>
+                    </div>
+
+                    <button id="modalAddBtn" onclick="addToCartFromModal()" class="w-full bg-brand-accent text-black font-bold py-4 rounded-full hover:bg-brand-yellow transition-colors flex items-center justify-center gap-2">
+                        <iconify-icon icon="lucide:shopping-bag" width="20"></iconify-icon>
+                        Add to Cart
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -324,6 +373,8 @@
         let tempSelectedLng = null;
         let tempSelectedArea = "";
         let currentLabel = "Home";
+        let currentModalProduct = null;
+        let modalQty = 1;
 
         document.addEventListener('DOMContentLoaded', () => { 
             loadCart(); 
@@ -359,11 +410,11 @@
                 return;
             }
             grid.innerHTML = productsToRender.map(product => `
-                <div class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group">
+                <div onclick="openProductModal(${product.id})" class="product-card bg-brand-gray rounded-2xl overflow-hidden border border-white/5 hover:border-brand-accent/20 transition-all group cursor-pointer">
                     <div class="relative overflow-hidden">
                         <img src="${product.image}" alt="${product.name}" class="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105">
                         ${product.discount > 0 ? `<div class="absolute top-3 left-3 px-2 py-1 bg-brand-accent text-black text-xs font-bold rounded">${product.discount}% OFF</div>` : ''}
-                        <button onclick="addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
+                        <button onclick="event.stopPropagation(); addToCart(${product.id})" class="absolute bottom-3 right-3 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 hover:bg-brand-accent">
                             <iconify-icon icon="lucide:plus" width="20"></iconify-icon>
                         </button>
                     </div>
@@ -380,6 +431,58 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // --- MODAL LOGIC ---
+        function openProductModal(id) {
+            const product = allProducts.find(p => p.id === id);
+            if(!product) return;
+
+            currentModalProduct = product;
+            modalQty = 1;
+
+            document.getElementById('modalImg').src = product.image;
+            document.getElementById('modalName').textContent = product.name;
+            document.getElementById('modalCategory').textContent = product.category;
+            document.getElementById('modalWeight').textContent = product.weight;
+            document.getElementById('modalPrice').textContent = `₹${product.price}`;
+            document.getElementById('modalOriginal').textContent = `₹${product.originalPrice}`;
+            document.getElementById('modalDiscount').textContent = product.discount > 0 ? `${product.discount}% OFF` : '';
+            document.getElementById('modalQty').textContent = 1;
+
+            const modal = document.getElementById('productModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentModalProduct = null;
+        }
+
+        function updateModalQty(change) {
+            if(!currentModalProduct) return;
+            modalQty += change;
+            if(modalQty < 1) modalQty = 1;
+            document.getElementById('modalQty').textContent = modalQty;
+        }
+
+        function addToCartFromModal() {
+            if(!currentModalProduct) return;
+            const existingIndex = cart.findIndex(item => item.id === currentModalProduct.id);
+            
+            if(existingIndex > -1) {
+                cart[existingIndex].quantity += modalQty;
+            } else {
+                cart.push({...currentModalProduct, quantity: modalQty});
+            }
+
+            saveCart();
+            updateFloatingWidget();
+            showNotification(`${currentModalProduct.name} (x${modalQty}) added!`);
+            closeProductModal();
         }
 
         // --- 3. FILTER LOGIC ---
@@ -706,54 +809,37 @@
             }, 600);
         }
 
-        // Smart Search Algorithm
         function fuzzyFindProduct(text) {
             text = text.toLowerCase();
-            
-            // 1. Exact Match
             let match = allProducts.find(p => p.name.toLowerCase() === text);
             if(match) return match;
-
-            // 2. Includes Match
             match = allProducts.find(p => p.name.toLowerCase().includes(text));
             if(match) return match;
-            
-            // 3. Partial Word Match
             const words = text.split(' ');
             for(let word of words) {
-                if(word.length < 3) continue; // Skip small words
+                if(word.length < 3) continue;
                 match = allProducts.find(p => p.name.toLowerCase().includes(word));
                 if(match) return match;
             }
-
-            // 4. Levenshtein Distance (Typo Tolerance)
             let bestMatch = null;
             let bestScore = Infinity;
-
             for(let p of allProducts) {
                 const pName = p.name.toLowerCase();
                 const dist = levenshteinDistance(text, pName);
-                
-                // Normalize score by length
                 const score = dist / pName.length;
-                
-                if(score < bestScore && score < 0.5) { // Threshold: 50% difference allowed
+                if(score < bestScore && score < 0.5) {
                     bestScore = score;
                     bestMatch = p;
                 }
             }
-
             return bestMatch;
         }
 
-        // Levenshtein Distance Algorithm (for typos)
         function levenshteinDistance(s1, s2) {
             const m = s1.length, n = s2.length;
             const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-            
             for (let i = 0; i <= m; i++) dp[i][0] = i;
             for (let j = 0; j <= n; j++) dp[0][j] = j;
-            
             for (let i = 1; i <= m; i++) {
                 for (let j = 1; j <= n; j++) {
                     if (s1[i - 1] === s2[j - 1]) {
