@@ -43,9 +43,15 @@
         .product-card:hover .product-image { transform: scale(1.05); }
         .category-card:hover { transform: translateY(-5px); }
         
-        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s; }
+        /* Cursor Styles */
+        #cursor-dot { width: 8px; height: 8px; background: white; position: fixed; pointer-events: none; z-index: 99999; border-radius: 50%; mix-blend-mode: difference; transition: background 0.2s; }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.5); position: fixed; pointer-events: none; z-index: 9998; border-radius: 50%; transition: width 0.2s, border-color 0.2s; }
         #cursor-ring.hover { width: 60px; height: 60px; background: rgba(255,255,255,0.1); }
+
+        /* Light Mode Cursor Fix */
+        html.light #cursor-dot { background: #000; mix-blend-mode: normal; }
+        html.light #cursor-ring { border-color: rgba(0,0,0,0.5); }
+        html.light #cursor-ring.hover { background: rgba(0,0,0,0.05); }
         
         .profile-dropdown { display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #171717; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 250px; z-index: 100; }
         .profile-dropdown.open { display: block; }
@@ -72,23 +78,23 @@
         .bot-bubble { background: #262626; align-self: flex-start; border-bottom-left-radius: 4px; color: #fff; }
         .user-bubble { background: #8CFF00; color: black; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
 
-        /* Light Mode Overrides */
-        html.light body { background-color: #ffffff; color: #171717; }
-        html.light .bg-brand-black { background-color: #ffffff; }
-        html.light .bg-brand-dark { background-color: #f5f5f5; }
-        html.light .bg-brand-gray { background-color: #f0f0f0; border-color: rgba(0,0,0,0.1); }
+        /* Light Mode Overrides (Softer Theme) */
+        html.light body { background-color: #f4f4f5; color: #18181b; }
+        html.light .bg-brand-black { background-color: #f4f4f5; }
+        html.light .bg-brand-dark { background-color: #ffffff; }
+        html.light .bg-brand-gray { background-color: #ffffff; border-color: #e4e4e7; }
         html.light .text-white { color: #000000; }
-        html.light .text-neutral-400 { color: #666666; }
-        html.light .border-white\/5 { border-color: rgba(0,0,0,0.05); }
-        html.light .border-white\/10 { border-color: rgba(0,0,0,0.1); }
-        html.light .bg-white\/5 { background-color: rgba(0,0,0,0.05); }
-        html.light .hover\:bg-white\/10:hover { background-color: rgba(0,0,0,0.05); }
-        html.light .chatbot-window { background: #fff; border-color: #eee; }
-        html.light .bot-bubble { background: #eee; color: #000; }
-        html.light #cursor-dot { background: #000; }
-        html.light #cursor-ring { border-color: rgba(0,0,0,0.3); }
-        html.light .address-input { background: #fff; color: #000; border-color: rgba(0,0,0,0.1); }
+        html.light .text-neutral-400 { color: #71717a; }
+        html.light .text-neutral-500 { color: #a1a1aa; }
+        html.light .border-white\/5 { border-color: #e4e4e7; }
+        html.light .border-white\/10 { border-color: #d4d4d8; }
+        html.light .bg-white\/5 { background-color: #f4f4f5; }
+        html.light .hover\:bg-white\/10:hover { background-color: #e4e4e7; }
+        html.light .chatbot-window { background: #fff; border-color: #e4e4e7; }
+        html.light .bot-bubble { background: #f4f4f5; color: #000; }
+        html.light .address-input { background: #fff; color: #000; border-color: #d4d4d8; }
         html.light .profile-dropdown { background: #fff; }
+        html.light #locationMap { background: #e4e4e7; }
     </style>
 </head>
 <body class="bg-brand-black text-white font-sans antialiased">
@@ -163,16 +169,24 @@
                     </svg>
                 </a>
 
+                <!-- Center Group: Location + Search -->
                 <div class="flex-1 flex items-center justify-center gap-3">
                     <button onclick="openLocationModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full hover:border-brand-accent/50 transition-colors flex-shrink-0">
                         <iconify-icon icon="lucide:map-pin" width="16" class="text-brand-accent"></iconify-icon>
-                        <span id="navLocationText" class="text-sm font-medium truncate max-w-[100px] lg:max-w-[200px]">Select</span>
+                        <span id="navLocationText" class="text-sm font-medium truncate max-w-[80px] lg:max-w-[150px]">Select</span>
                         <iconify-icon icon="lucide:chevron-down" width="14"></iconify-icon>
                     </button>
+
+                    <!-- Search Input with Icon -->
+                    <div class="hidden md:flex items-center w-full max-w-md bg-white/5 border border-white/10 rounded-full py-2 px-4 focus-within:border-brand-accent/50 transition-all">
+                        <iconify-icon icon="lucide:search" width="16" class="text-neutral-400 mr-2"></iconify-icon>
+                        <input type="text" id="searchInputDesktop" onkeyup="filterProducts()" placeholder="Search for groceries..." class="w-full bg-transparent text-sm focus:outline-none">
+                    </div>
                 </div>
 
+                <!-- Right Side -->
                 <div class="flex items-center gap-3 pl-4">
-                    <!-- Dark/Light Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button onclick="toggleTheme()" id="themeToggle" class="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                         <iconify-icon icon="lucide:sun" width="18" class="text-yellow-500 hidden" id="sunIcon"></iconify-icon>
                         <iconify-icon icon="lucide:moon" width="18" class="text-white" id="moonIcon"></iconify-icon>
@@ -201,10 +215,18 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Mobile Search -->
+            <div class="md:hidden pb-4 flex gap-2">
+                <div class="flex-1 flex items-center bg-white/5 border border-white/10 rounded-full py-2 px-4">
+                    <iconify-icon icon="lucide:search" width="16" class="text-neutral-400 mr-2"></iconify-icon>
+                    <input type="text" id="searchInputMobile" onkeyup="filterProducts()" placeholder="Search..." class="flex-1 bg-transparent text-sm focus:outline-none">
+                </div>
+            </div>
         </div>
     </nav>
 
-    <!-- LOCATION PICKER MODAL -->
+    <!-- LOCATION MODAL -->
     <div id="locationModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
         <div class="bg-brand-gray rounded-3xl w-full max-w-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
             <div class="p-6 border-b border-white/5 flex items-center justify-between flex-shrink-0">
@@ -247,60 +269,62 @@
     <!-- MAIN CONTENT -->
     <main class="pt-20">
         
-        <!-- HERO BANNER (Based on Image) -->
-        <section class="relative overflow-hidden bg-green-500 text-white">
-            <div class="max-w-7xl mx-auto px-6 py-16 md:py-24 relative z-10">
-                <div class="grid md:grid-cols-2 gap-8 items-center">
-                    <div>
-                        <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-sm font-semibold mb-4">Low Prices</span>
-                        <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">Stock up on daily essentials</h1>
-                        <p class="text-lg opacity-90 mb-6">Fresh fruits & vegetables delivered to your door in 10 mins.</p>
-                        <button onclick="openLocationModal()" class="bg-white text-green-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg">
-                            Order Now
-                        </button>
-                    </div>
-                    <div class="relative hidden md:block">
-                        <!-- Decorative Images -->
-                        <img src="https://picsum.photos/seed/fruit1/200/200" class="absolute top-0 right-10 w-40 h-40 object-cover rounded-full shadow-xl border-4 border-white/20">
-                        <img src="https://picsum.photos/seed/veggie2/200/200" class="absolute bottom-0 right-40 w-32 h-32 object-cover rounded-full shadow-xl border-4 border-white/20">
-                        <img src="https://picsum.photos/seed/fruit3/200/200" class="absolute top-10 right-52 w-24 h-24 object-cover rounded-full shadow-xl border-4 border-white/20">
-                    </div>
-                </div>
-            </div>
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 opacity-10 bg-grain"></div>
+        <!-- HERO BANNER (Curved & Compact) -->
+        <section onclick="location.href='category.html?cat=all'" class="relative overflow-hidden bg-green-500 cursor-pointer group">
+             <!-- Curved Partition Shape -->
+             <div class="absolute inset-0 bg-green-600" style="clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);"></div>
+             
+             <div class="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16">
+                 <div class="grid md:grid-cols-2 gap-8 items-center">
+                     <div class="text-white">
+                         <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mb-3">Low Prices</span>
+                         <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">Stock up on daily essentials</h1>
+                         <p class="text-base opacity-90 mb-6 max-w-md">Fresh produce delivered to your doorstep in minutes.</p>
+                         <button class="bg-white text-green-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg text-sm">
+                             Shop Now
+                         </button>
+                     </div>
+                     <div class="hidden md:flex justify-end pr-8">
+                         <div class="relative w-64 h-64">
+                             <img src="https://picsum.photos/seed/fruit1/200/200" class="absolute top-0 right-0 w-32 h-32 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform">
+                             <img src="https://picsum.photos/seed/veggie2/200/200" class="absolute bottom-0 left-0 w-28 h-28 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform delay-75">
+                             <img src="https://picsum.photos/seed/fruit3/200/200" class="absolute bottom-8 right-8 w-20 h-20 object-cover rounded-full shadow-xl border-4 border-white/30 group-hover:scale-105 transition-transform delay-100">
+                         </div>
+                     </div>
+                 </div>
+             </div>
         </section>
 
-        <!-- 3-COLUMN PROMO (Based on Image) -->
+        <!-- 3-COLUMN PROMO -->
         <section class="py-12 bg-brand-dark">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
                     <!-- Pharmacy -->
-                    <div class="bg-blue-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="bg-blue-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('pharmacy')">
                         <div>
-                            <h3 class="text-xl font-bold text-white mb-2">Pharmacy at your doorstep!</h3>
-                            <button onclick="filterByCategory('pharmacy')" class="mt-2 bg-white text-blue-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                            <h3 class="text-lg font-bold text-white mb-2">Pharmacy at your doorstep!</h3>
+                            <button class="mt-2 bg-white text-blue-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
                         </div>
-                        <img src="https://picsum.photos/seed/meds/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                        <img src="https://picsum.photos/seed/meds/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
                     </div>
 
                     <!-- Pet Care -->
-                    <div class="bg-orange-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="bg-orange-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('pets')">
                         <div>
-                            <h3 class="text-xl font-bold text-white mb-2">Pet care supplies at your door</h3>
-                            <button onclick="filterByCategory('pets')" class="mt-2 bg-white text-orange-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                            <h3 class="text-lg font-bold text-white mb-2">Pet care supplies at your door</h3>
+                            <button class="mt-2 bg-white text-orange-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
                         </div>
-                        <img src="https://picsum.photos/seed/petcare/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                        <img src="https://picsum.photos/seed/petcare/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
                     </div>
 
                     <!-- Baby Care -->
-                    <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[200px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="bg-pink-500 rounded-2xl p-6 flex flex-col justify-between min-h-[180px] relative overflow-hidden group cursor-pointer hover:scale-[1.02] transition-transform" onclick="filterByCategory('baby')">
                         <div>
-                            <h3 class="text-xl font-bold text-white mb-2">No time for a diaper run?</h3>
-                            <button onclick="filterByCategory('baby')" class="mt-2 bg-white text-pink-600 font-semibold py-2 px-4 rounded-full text-sm hover:bg-gray-100 transition-colors">Order Now</button>
+                            <h3 class="text-lg font-bold text-white mb-2">No time for a diaper run?</h3>
+                            <button class="mt-2 bg-white text-pink-600 font-semibold py-1.5 px-4 rounded-full text-xs hover:bg-gray-100 transition-colors">Order Now</button>
                         </div>
-                        <img src="https://picsum.photos/seed/babycare/100/100" class="absolute right-4 bottom-4 w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                        <img src="https://picsum.photos/seed/babycare/100/100" class="absolute right-4 bottom-4 w-20 h-20 object-contain opacity-80 group-hover:opacity-100 transition-opacity">
                     </div>
 
                 </div>
@@ -308,32 +332,32 @@
         </section>
 
         <!-- Categories Section -->
-        <section class="py-16 md:py-24">
+        <section class="py-16 md:py-20">
             <div class="max-w-7xl mx-auto px-6">
                 <div class="flex justify-between items-center mb-10">
                     <h2 class="text-3xl md:text-4xl font-semibold tracking-tight">Shop by Category</h2>
                     <a href="category.html?cat=all" class="text-brand-accent text-sm font-medium hover:underline">View All</a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <a href="category.html?cat=fruits" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all group text-center block">
                         <div class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                             <iconify-icon icon="lucide:apple" width="24" class="text-orange-500"></iconify-icon>
                         </div>
                         <h3 class="font-medium text-sm">Fruits</h3>
                     </a>
-                    <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <a href="category.html?cat=snacks" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all group text-center block">
                         <div class="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                             <iconify-icon icon="lucide:popcorn" width="24" class="text-yellow-500"></iconify-icon>
                         </div>
                         <h3 class="font-medium text-sm">Snacks</h3>
                     </a>
-                    <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <a href="category.html?cat=beverages" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all group text-center block">
                         <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                             <iconify-icon icon="lucide:wine" width="24" class="text-purple-500"></iconify-icon>
                         </div>
                         <h3 class="font-medium text-sm">Beverages</h3>
                     </a>
-                    <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all cursor-pointer group text-center block">
+                    <a href="category.html?cat=chocolates" class="category-card bg-brand-gray rounded-2xl p-6 border border-white/5 hover:border-brand-accent/30 transition-all group text-center block">
                         <div class="w-12 h-12 bg-amber-700/20 rounded-xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform">
                             <iconify-icon icon="lucide:candy" width="24" class="text-amber-600"></iconify-icon>
                         </div>
@@ -542,7 +566,7 @@
                 const response = await fetch(`${API_URL}/api/products`);
                 if (!response.ok) throw new Error("Server error");
                 allProducts = await response.json(); 
-                renderPopularItems(allProducts.slice(0, 6)); // Only render first 6
+                renderPopularItems(allProducts.slice(0, 6)); 
             } catch (error) {
                 console.error('Error loading products:', error);
                 showErrorModal();
@@ -635,6 +659,19 @@
 
         function filterByCategory(cat) {
             window.location.href = `category.html?cat=${cat}`;
+        }
+        
+        function filterProducts() {
+            const desktopInput = document.getElementById('searchInputDesktop');
+            const mobileInput = document.getElementById('searchInputMobile');
+            let searchTerm = '';
+            if (desktopInput && desktopInput.value) searchTerm = desktopInput.value.toLowerCase();
+            else if (mobileInput && mobileInput.value) searchTerm = mobileInput.value.toLowerCase();
+            
+            if(searchTerm.length > 0) {
+                // Redirect to category page with search query
+                window.location.href = `category.html?search=${encodeURIComponent(searchTerm)}`;
+            }
         }
 
         // --- 4. CART LOGIC ---
